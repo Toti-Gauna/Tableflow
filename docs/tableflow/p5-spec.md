@@ -130,8 +130,9 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 |---|---|---|---|---|---|
 | Recorridos RP/RO | C P (base existente) | C P (existente) | E | E | E |
 | Retiro con pago en local | E (hoy: pago DEMO en caja) | n/a | E | n/a | E |
-| Propuestas visuales (L2) | C P · 3 conceptos | C P · 3 conceptos | C P · 3 conceptos | C P · 3 conceptos | C P · 3 conceptos |
-| Identidad visual elegida (L2) | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio |
+| Propuestas visuales (L2, 1.ª ronda) | rechazada por genérica | rechazada | rechazada | rechazada | rechazada |
+| Identidad propia (L2b) | C P · confitería notable | C P · bodegón de pizarra | C P · la vitrina es el menú | C P · club de jazz | C P · brasa a la vista |
+| Aprobación de la identidad | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio |
 | Shell, header, modo oscuro (L3) | E | E | E | E | E |
 | Arte propio (L4) | C (estilo actual) | C (estilo actual) | E | E | E |
 | Juego infantil propio (L5) | C compartido → E | C compartido → E | E | E | E |
@@ -144,11 +145,14 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 **Aceptación de L1**: cada requisito nuevo tiene ID y lote; ningún negocio queda reducido a una portada o a una escena (cada uno tiene al menos un RP y un RO de punta a punta).
 
 ## Registro de elección visual (L2)
-| Negocio | Recomendada | Elección de Ignacio |
+- **1.ª ronda (17/10/2026):** 15 conceptos, tres por negocio, sobre una misma plantilla de pantalla. Ignacio los rechazó todos: "demasiado AI slop", sin diferencia real entre negocios. Se conserva solo como historial: el código se reemplazó y esa versión quedó en `main` con el PR #3.
+- **2.ª ronda, L2b (17/10/2026):** una identidad propia por negocio, rehecha desde cero (composición, SVG, animación y tipografía propias, sin plantilla compartida). Pedido de Ignacio: el café inspirado en confiterías notables porteñas (cita La Fonte d'Oro y "El Cóndor"); la comida rápida, en McDonald's, Burger King y "Atilos". "El Cóndor" y "Atilos" no se encontraron en la búsqueda; se interpretaron como confitería o bar notable porteño y como cadena de comida rápida.
+
+| Negocio | Identidad L2b | Aprobación de Ignacio |
 |---|---|---|
-| Cafetería | cafe-2 Kissaten | pendiente |
-| Restaurante | resto-2 Bodegón contemporáneo | pendiente |
-| Heladería | hela-1 Escultórica lúdica | pendiente |
-| Bar gastronómico | bar-3 Compás musical | pendiente |
-| Comida rápida | rapida-1 Energía brutal | pendiente |
+| Cafetería · Ritual Café | Confitería notable porteña | pendiente |
+| Heladería · Copo | La vitrina es el menú | pendiente |
+| Restaurante · Mesa Clara | Bodegón de pizarra y pingüino | pendiente |
+| Bar gastronómico · Taberna Compás | Club de jazz y tapas | pendiente |
+| Comida rápida · Brasa Rápida | Brasa a la vista | pendiente |
 Detalle y evidencia: `p5-l2-propuestas.md`.

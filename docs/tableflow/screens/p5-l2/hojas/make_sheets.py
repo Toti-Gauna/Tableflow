@@ -1,36 +1,44 @@
-import sys, os
+"""Hojas comparativas de L2b: una por identidad (pública claro/oscuro, móvil, comercio y confirmación).
+Uso: python3 -I make_sheets.py <carpeta de capturas> <carpeta de salida>"""
+import os
+import sys
 from PIL import Image, ImageDraw, ImageFont
+
 src, out = sys.argv[1], sys.argv[2]
-B = {'cafe': ('Cafetería · Ritual Café', ['Barra editorial', 'Kissaten ★ recomendada', 'Merienda retro']),
-     'resto': ('Restaurante / bodegón · Mesa Clara', ['Cocina de autor', 'Bodegón contemporáneo ★ recomendada', 'Materia sobria']),
-     'hela': ('Heladería · Copo (contenido provisional)', ['Escultórica lúdica ★ recomendada', 'Pop geométrico', 'Pastel sereno']),
-     'bar': ('Bar gastronómico · Taberna Compás (contenido provisional)', ['Nocturno sofisticado', 'Neo-brutal gastronómico', 'Compás musical ★ recomendada']),
-     'rapida': ('Comida rápida · Brasa Rápida (contenido provisional)', ['Energía brutal ★ recomendada', 'Retro dinámico', 'Contraste mínimo'])}
-F = lambda s, b=False: ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans%s.ttf' % ('-Bold' if b else ''), s)
-COLW, GAP, PAD = 760, 28, 40
-for biz, (title, names) in B.items():
-    cols = []
-    for n in (1, 2, 3):
-        cid = f'{biz}-{n}'
-        imgs = [Image.open(os.path.join(src, f'{cid}-publica-{m}.png')).convert('RGB') for m in ('claro', 'oscuro')]
-        imgs = [i.resize((COLW, round(i.height * COLW / i.width)), Image.LANCZOS) for i in imgs]
-        ph = Image.open(os.path.join(src, f'{cid}-movil.png')).convert('RGB')
-        ph = ph.resize((round(ph.width * 0.82), round(ph.height * 0.82)), Image.LANCZOS)
-        cols.append((names[n - 1], imgs, ph))
-    h_pub = max(c[1][0].height for c in cols); h_dark = max(c[1][1].height for c in cols); h_ph = max(c[2].height for c in cols)
-    W = PAD * 2 + COLW * 3 + GAP * 2
-    H = PAD + 70 + 50 + h_pub + GAP + 30 + h_dark + GAP + 30 + h_ph + PAD
-    sheet = Image.new('RGB', (W, H), (239, 238, 233))
+NAMES = {
+    'cafe': 'Ritual Café · confitería notable porteña',
+    'hela': 'Copo · heladería: la vitrina es el menú',
+    'resto': 'Mesa Clara · bodegón de pizarra y pingüino',
+    'bar': 'Taberna Compás · club de jazz y tapas',
+    'rapida': 'Brasa Rápida · brasa a la vista',
+}
+font = lambda s, b=False: ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans%s.ttf' % ('-Bold' if b else ''), s)
+for biz, title in NAMES.items():
+    get = lambda n: Image.open(os.path.join(src, f'{biz}-{n}.png')).convert('RGB')
+    big = get('publica-claro' if biz in ('hela', 'resto', 'rapida') else 'publica-oscuro')
+    alt = get('publica-oscuro' if biz in ('hela', 'resto', 'rapida') else 'publica-claro')
+    W = 1500
+    big = big.resize((W, round(big.height * W / big.width)))
+    side_w = 700
+    alt = alt.resize((side_w, round(alt.height * side_w / alt.width)))
+    phone = get('movil')
+    phone = phone.resize((round(phone.width * 0.9), round(phone.height * 0.9)))
+    ops = get('comercio')
+    ops = ops.resize((side_w, round(ops.height * side_w / ops.width)))
+    sig = get('confirmacion')
+    sig = sig.resize((W + side_w + 40, round(sig.height * (W + side_w + 40) / sig.width)))
+    right_h = alt.height + 30 + phone.height + 30 + ops.height
+    H = 110 + max(big.height, right_h) + 40 + sig.height + 40
+    sheet = Image.new('RGB', (W + side_w + 120, H), (236, 235, 230))
     d = ImageDraw.Draw(sheet)
-    d.text((PAD, PAD), title, fill=(27, 27, 26), font=F(34, True))
-    d.text((PAD, PAD + 44), 'Propuestas visuales L2 · DEMO · pantalla pública en claro y oscuro, y móvil en el modo principal', fill=(92, 90, 84), font=F(18))
-    for i, (name, imgs, ph) in enumerate(cols):
-        x = PAD + i * (COLW + GAP); y = PAD + 80
-        d.text((x, y), f'{i + 1}. {name}', fill=(27, 27, 26), font=F(24, True)); y += 40
-        sheet.paste(imgs[0], (x, y)); y += h_pub + GAP
-        d.text((x, y - 4), 'Oscuro', fill=(92, 90, 84), font=F(18, True)); y += 26
-        sheet.paste(imgs[1], (x, y)); y += h_dark + GAP
-        d.text((x, y - 4), 'Móvil', fill=(92, 90, 84), font=F(18, True)); y += 26
-        sheet.paste(ph, (x + (COLW - ph.width) // 2, y))
-    sheet.save(os.path.join(out, f'L2-{biz}.jpg'), quality=86, optimize=True)
-    print(biz, sheet.size, os.path.getsize(os.path.join(out, f'L2-{biz}.jpg')) // 1024, 'KB')
+    d.text((40, 30), title, fill=(22, 22, 21), font=font(40, True))
+    d.text((40, 80), 'L2b · DEMO · pantalla pública en ambos modos, móvil propio, comercio y animación de confirmación', fill=(90, 88, 82), font=font(20))
+    sheet.paste(big, (40, 120))
+    x = 40 + W + 40
+    y = 120
+    sheet.paste(alt, (x, y)); y += alt.height + 30
+    sheet.paste(phone, (x + (side_w - phone.width) // 2, y)); y += phone.height + 30
+    sheet.paste(ops, (x, y))
+    sheet.paste(sig, (40, 120 + max(big.height, right_h) + 40))
+    sheet.save(os.path.join(out, f'L2b-{biz}.jpg'), quality=84, optimize=True)
+    print(biz, sheet.size, os.path.getsize(os.path.join(out, f'L2b-{biz}.jpg')) // 1024, 'KB')

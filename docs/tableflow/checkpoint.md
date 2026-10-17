@@ -1,26 +1,28 @@
-# Checkpoint P5 · TableFlow: cinco negocios (L1–L2 hechos; puerta de elección visual)
+# Checkpoint P5 · TableFlow: cinco negocios (L1 hecho, L2 rehecho como L2b; puerta de aprobación visual)
 
-> Prompt P5: una fase en diez lotes. L1 (especificación) y L2 (15 propuestas) están terminados. **L3–L10 esperan la elección visual de Ignacio.**
+> Prompt P5: una fase en diez lotes. L1 (especificación) se mergeó con el PR #3. La primera ronda de L2 (15 conceptos) también entró con ese PR, pero Ignacio la rechazó por genérica. **L2b la reemplaza con una identidad propia por negocio.** L3–L10 esperan su aprobación.
 
 ## Identificación
-- Fecha real: 17/10/2026. HEAD de entrada: `3088fdc` en `claude/tableflow-demo`, el mismo contenido que se mergeó en `main` con el PR #2. El trabajo de P5 sigue **sin commitear** hasta que se autorice el PR.
-- `SCHEMA_VERSION` sigue en 2: L1–L2 no tocan el dominio.
+- Fecha real: 17/10/2026. HEAD de entrada: `def55b5` (merge del PR #3 en `main`). Rama `claude/tableflow-p5-l2b`, creada desde `main`.
+- `SCHEMA_VERSION` sigue en 2: L2b no toca el dominio.
 
 ## Archivos
-- Nuevos: `docs/tableflow/p5-spec.md`, `docs/tableflow/p5-l2-propuestas.md`, `src/pages/propuestas/{concepts.ts,content.ts,art.tsx,fonts.ts,Propuestas.tsx,propuestas.css}`, `tests/propuestas.test.ts`, `e2e/p5.spec.ts` y `docs/tableflow/screens/p5-l2/` (46 capturas y 5 hojas).
-- Modificados: `src/App.tsx` (rutas `#/propuestas` y `#/propuestas/:id`, diferidas y fuera del chrome), `package.json` y `package-lock.json` (26 tipografías OFL locales), `e2e/screens.spec.ts` (bloque "capturas P5-L2"), `e2e/quality.spec.ts` (timeout de la prueba de axe de 25 pantallas).
+- Reemplazados: `src/pages/propuestas/*`. Se borraron `concepts.ts`, `content.ts`, `art.tsx` y `propuestas.css`. Se agregaron `identities.ts`, `shared.tsx`, `studio.css` y, por identidad, `cafe`, `helado`, `bodegon`, `bar` y `rapida` (`.tsx` y `.css`). Se reescribieron `Propuestas.tsx` y `fonts.ts`.
+- `package.json` y `package-lock.json`: se sacaron 23 tipografías de la primera ronda; se sumaron Bodoni Moda, EB Garamond, Pinyon Script, Ultra, Caveat Brush, Bitter y Fredoka (OFL, locales).
+- Pruebas: `tests/propuestas.test.ts` y `e2e/p5.spec.ts` reescritas; bloque de capturas "P5-L2b" en `e2e/screens.spec.ts`.
+- Capturas: `docs/tableflow/screens/p5-l2/` regeneradas (26 capturas y 5 hojas `L2b-*.jpg`).
 
 ## Comandos y resultados
 | Comando | Exit | Resultado |
 |---|---|---|
 | `npx tsc --noEmit` | 0 | sin errores |
-| `npx vitest run` | 0 | 13 archivos, 224 pruebas (193 + 31 nuevas) |
-| `npm run build` | 0 | OK (chunk de `Propuestas`: 54 kB JS y 47 kB CSS, diferido) |
-| `npx playwright test` | 0 | 74 pasadas (70 + 4 de `p5.spec.ts`), 4 omitidas (capturas) |
-| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L2"` | 0 | 46 capturas en `screens/p5-l2/` |
+| `npx vitest run` | 0 | 13 archivos, 205 pruebas (193 + 12) |
+| `npm run build` | 0 | OK (chunk diferido `Propuestas`: 120 kB JS y 67 kB CSS) |
+| `npx playwright test` | 0 | 73 pasadas (70 + 3), 5 omitidas (capturas) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L2b"` | 0 | 26 capturas |
 
 ## Siguiente tarea exacta
-Ignacio elige una dirección por negocio (o una combinación) mirando `#/propuestas` o las hojas de `screens/p5-l2/hojas/`. Con la elección registrada en `p5-spec.md` empieza **L3**: tokens por identidad, modo oscuro completo, header limpio, botonera flotante, selector de rol después de la carga y las correcciones FX-01…03.
+Ignacio revisa `#/propuestas` o las hojas `screens/p5-l2/hojas/L2b-*.jpg` y aprueba, combina o pide cambios por negocio. También confirma la grafía de "Atilos". Con la aprobación registrada en `p5-spec.md` empieza **L3**: tokens por identidad aplicados a la app, modo oscuro, header limpio, botonera flotante, selector de rol después de la carga y FX-01…03.
 
 ---
 

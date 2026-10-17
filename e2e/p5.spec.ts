@@ -1,80 +1,67 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-// P5-L2 · Estudio de propuestas visuales (#/propuestas): ruta aislada, quince conceptos comparables.
+// P5-L2b · Estudio de identidades (#/propuestas): una identidad propia por negocio, ruta aislada.
 const ORIGIN = 'http://127.0.0.1:4173'
+const BIZ = ['cafe', 'hela', 'resto', 'bar', 'rapida']
 
-test('L2: índice con 15 conceptos (3 por negocio, 1 recomendado en cada uno), sin red externa ni errores', async ({ page }) => {
+test('L2b: índice con cinco identidades, sin red externa ni errores de consola', async ({ page }) => {
   const external: string[] = []
   const errors: string[] = []
   page.on('request', (r) => { if (!r.url().startsWith(ORIGIN)) external.push(r.url()) })
   page.on('pageerror', (e) => errors.push(String(e)))
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
   await page.goto('/#/propuestas')
-  await expect(page.getByRole('heading', { level: 1, name: 'Quince direcciones, tres por negocio' })).toBeVisible()
-  await expect(page.locator('[data-testid^="pz-card-"]')).toHaveCount(15)
-  for (const b of ['cafe', 'resto', 'hela', 'bar', 'rapida']) {
-    await expect(page.locator(`[data-testid^="pz-card-${b}-"]`)).toHaveCount(3)
+  await expect(page.getByRole('heading', { level: 1, name: 'Cinco negocios, cinco identidades' })).toBeVisible()
+  await expect(page.locator('[data-testid^="pzx-card-"]')).toHaveCount(5)
+  await expect(page.getByTestId('pzx-card-cafe')).toContainText('Confitería notable porteña')
+  await expect(page.getByTestId('pzx-card-rapida')).toContainText('Brasa a la vista')
+  for (const b of BIZ) {
+    await page.goto(`/#/propuestas/${b}`)
+    await expect(page.locator('h1')).toBeVisible()
+    await expect(page.locator('.pzx-fig .pzx-root')).toHaveClass(new RegExp(`id-${b}`))
   }
-  await expect(page.locator('.pz-card .pz-rec')).toHaveCount(5)
-  // Café y restaurante muestran la carta del fixture; los nuevos se rotulan provisionales.
-  await expect(page.getByTestId('pz-card-resto-2')).toContainText('Bodegón contemporáneo')
-  await expect(page.getByRole('heading', { level: 2, name: /Heladería.*contenido provisional/ })).toBeVisible()
   expect(external).toEqual([])
   expect(errors).toEqual([])
 })
 
-test('L2: estudio con modo claro/oscuro por URL, recorrido entre conceptos y boceto de motion', async ({ page }) => {
-  await page.goto('/#/propuestas/cafe-2')
-  await expect(page.getByRole('heading', { level: 1, name: /Kissaten/ })).toBeVisible()
-  // Precio real del fixture (Flat white RC-04) en la pantalla pública.
-  await expect(page.locator('.pz-fig')).toContainText('$ 5.800')
-  const frame = page.locator('.pz-fig .pz-frame').first()
-  await expect(frame).toHaveAttribute('data-mode', 'light')
-  await page.getByRole('radio', { name: 'Oscuro' }).click()
-  await expect(frame).toHaveAttribute('data-mode', 'dark')
-  await expect(page).toHaveURL(/modo=oscuro/)
-  const bg = await frame.evaluate((el) => getComputedStyle(el).backgroundColor)
-  expect(bg).toBe('rgb(18, 19, 17)')
-  await page.getByRole('link', { name: '3. Merienda retro' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: /Merienda retro/ })).toBeVisible()
-  // El boceto solo se anima al pedirlo; con movimiento reducido no hay animación.
-  const art = page.locator('.pz-motion .pz-art')
-  await expect(art).not.toHaveAttribute('data-play', /.+/)
+test('L2b: modo por URL, contenido del fixture, animación a pedido y movimiento reducido', async ({ page }) => {
+  await page.goto('/#/propuestas/cafe')
+  // Ritual Café nace en modo oscuro (salón); el claro es la mañana de mármol.
+  const root = page.locator('.pzx-fig .pzx-root').first()
+  await expect(root).toHaveAttribute('data-mode', 'dark')
+  await expect(page.locator('.pzx-fig')).toContainText('$ 4.500') // Espresso RC-01 del fixture
+  await page.getByRole('radio', { name: 'Mañana de mármol' }).click()
+  await expect(root).toHaveAttribute('data-mode', 'light')
+  await expect(page).toHaveURL(/modo=claro/)
+  expect(await root.evaluate((el) => getComputedStyle(el).getPropertyValue('--bg').trim().toLowerCase())).toBe('#f3ecdf')
+  await page.goto('/#/propuestas/resto')
+  await expect(page.locator('.pzx-fig')).toContainText('$ 20.200') // Milanesa napolitana MC-13
+  // La animación solo corre al pedirla y se apaga con movimiento reducido.
+  const stage = page.locator('.bd-sig-stage')
+  await expect(stage).not.toHaveAttribute('data-play', /.+/)
   await page.getByRole('button', { name: 'Reproducir confirmación' }).click()
-  await expect(page.locator('.pz-motion .pz-art')).toHaveAttribute('data-play', '1')
+  await expect(page.locator('.bd-sig-stage')).toHaveAttribute('data-play', 'true')
   await page.getByLabel('Movimiento reducido').check()
-  const anim = await page.locator('.pz-motion [data-step]').first().evaluate((el) => getComputedStyle(el).animationName)
-  expect(anim).toBe('none')
+  expect(await page.locator('.bd-sig-stage .bd-sig-plate').evaluate((el) => getComputedStyle(el).animationName)).toBe('none')
   await page.goto('/#/propuestas/no-existe')
-  await expect(page.getByRole('heading', { name: 'No encontramos esa propuesta' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'No encontramos esa identidad' })).toBeVisible()
 })
 
-test('L2: 390 px sin scroll horizontal y axe sin violaciones serias en índice y estudio', async ({ page }) => {
+test('L2b: 390 px sin scroll horizontal y axe sin violaciones serias en las 10 páginas (5 × claro/oscuro)', async ({ page }) => {
+  test.setTimeout(180_000)
   await page.setViewportSize({ width: 390, height: 844 })
   const bad: string[] = []
-  for (const p of ['/#/propuestas', '/#/propuestas/hela-1', '/#/propuestas/bar-1?modo=oscuro']) {
-    await page.goto(p)
-    await expect(page.locator('h1')).toBeVisible()
-    await page.waitForTimeout(300)
-    const sw = await page.evaluate(() => document.documentElement.scrollWidth)
-    expect(sw, p).toBeLessThanOrEqual(390)
-    const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
-    for (const v of r.violations.filter((x) => ['serious', 'critical'].includes(x.impact ?? ''))) bad.push(`${p}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.html.slice(0, 120)}`)
-  }
-  expect(bad).toEqual([])
-})
-
-test('L2: los 15 conceptos en claro y oscuro sin violaciones serias de axe (30 páginas)', async ({ page }) => {
-  test.setTimeout(240_000)
-  const ids = ['cafe', 'resto', 'hela', 'bar', 'rapida'].flatMap((b) => [1, 2, 3].map((n) => `${b}-${n}`))
-  const bad: string[] = []
-  for (const id of ids) {
+  await page.goto('/#/propuestas')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  for (const b of BIZ) {
     for (const modo of ['claro', 'oscuro']) {
-      await page.goto(`/#/propuestas/${id}?modo=${modo}`)
+      await page.goto(`/#/propuestas/${b}?modo=${modo}`)
       await expect(page.locator('h1')).toBeVisible()
+      await page.waitForTimeout(200)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${b} ${modo}`).toBeLessThanOrEqual(390)
       const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
-      for (const v of r.violations.filter((x) => ['serious', 'critical'].includes(x.impact ?? ''))) bad.push(`${id} ${modo}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.html.slice(0, 100)}`)
+      for (const v of r.violations.filter((x) => ['serious', 'critical'].includes(x.impact ?? ''))) bad.push(`${b} ${modo}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.html.slice(0, 120)}`)
     }
   }
   expect(bad).toEqual([])
