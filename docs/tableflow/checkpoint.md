@@ -1,3 +1,67 @@
+# Checkpoint P5-L5 · TableFlow: cinco negocios completos, pago en el local y cinco juegos
+
+> L3 (PR #5) y L4 (PR #6) están en `main`, con CI verde (run 39064515482). Especificación SDD, cambios en lo existente y límites: `p5-spec.md`, sección "L5".
+
+## Identificación
+- Fecha real: 17/10/2026. Rama `claude/tableflow-p5-l5`, creada desde `main` (`c66c6bd`).
+- **Esquema:** la versión detectada al entrar era 2. Sube a **3** con el migrador explícito `MIGRATIONS[2]` (v2 → v3). Solo agrega registros por id y es idempotente; `migrate()` encadena desde cualquier versión guardada.
+
+## Qué se hizo
+- **Dominio:**
+  - `domain/business.ts` define los cinco negocios (`BIZ_IDS`, prefijos y la regex de rutas).
+  - `fixtures/nuevos.ts` arma Copo, Taberna Compás y Brasa Rápida con sedes, franjas, carta, modificadores, insumos, recetas y agenda.
+  - Ritual suma cuatro clásicos. La semilla agrega actividad en curso para los tres negocios nuevos.
+- **Numeración por negocio:** los negocios nuevos usan prefijo propio (`O-BR-001`, `R-TC-001`, `P-BR-001`…). Los folios de Mesa Clara y Ritual Café no cambian.
+- **Pago en el local:** `orderPayment` deriva pendiente o pagado del saldo de caja. Se ve en:
+  - el seguimiento del cliente;
+  - el detalle del pedido en el comercio, con «Cobrar en caja», que abre la cuenta;
+  - la comanda.
+- **UI de los cinco negocios:**
+  - tokens claro/oscuro y tipografías propias;
+  - inicio propio con la ilustración firma de L2b: vitrina de bachas, agenda de música o tablero de números;
+  - portada con cinco tapas;
+  - secciones según el tipo de negocio;
+  - estaciones de cocina tomadas de la carta;
+  - pantalla de números de retiro;
+  - casos y guía del dock;
+  - regalos sin alcohol, bloqueados también en el dominio.
+- **Juegos:**
+  - un juego distinto por negocio, todos dentro del mismo `GameFrame`: inicio, instrucciones, nivel, progreso, pausa, éxito, reintento y salida;
+  - lógica pura en `domain/games.ts`;
+  - teclado y táctil, sin tiempo, "Sin animaciones" además de la preferencia del sistema.
+
+## Pruebas
+- **Nuevas:**
+  - `tests/l5.test.ts` (18): negocios, folios, pago en el local, reglas por negocio, aislamiento, migración v2 → v3 idempotente y alcohol.
+  - `tests/games.test.ts` (9): los cinco juegos y que sus piezas existan.
+  - `e2e/p5-l5.spec.ts` (7): los cinco juegos jugados hasta ganar dos niveles, con pausa (botón y Escape), reintento y salida. También cubre:
+    - café con medialuna, aceptado pero con pago pendiente hasta la caja;
+    - combo de Brasa hasta "listo" en la pantalla de números, sin que aparezca en los otros cuatro negocios;
+    - vitrina y cupo de gustos de Copo;
+    - agenda de Compás;
+    - axe en claro y oscuro, a 1280 y 390 px.
+- **Actualizadas, con el motivo anotado en cada una:**
+  - conteos globales de la semilla (más reservas, pedidos y pagos por la actividad de los negocios nuevos), en unitarios y e2e;
+  - la migración v1, que ahora llega a la v3;
+  - el memotest de P3, reemplazado por la memoria de Ritual Café;
+  - la cobertura de arte, que ahora abarca los cinco negocios;
+  - el contraste, extendido a las tres identidades nuevas.
+- No se quitó ningún test.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 17 archivos, 868 pruebas |
+| `npm run build` | 0 | OK. JS inicial 763 kB (main: 728 kB): suman los datos de los tres negocios. El inicio de los negocios nuevos (7 kB) y los juegos (30 kB) van en chunks diferidos |
+| `npx playwright test` | RESULT_E2E_EXIT | RESULT_E2E |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L5"` | 0 | 35 capturas en `screens/p5-l5/`, cuantizadas a 256 colores: 2,9 MB |
+
+## Siguiente tarea exacta
+PR de L5 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L6**: growth y asistentes, incluida la fidelización de los tres negocios nuevos.
+
+---
+
 # Checkpoint P5-L4 · TableFlow: arte SVG por identidad, mockups y galería
 
 > L4 se construyó sobre la rama de L3 (PR #5, todavía abierto) porque usa sus tokens. Especificación SDD, revisión de la muestra y límites: `p5-spec.md`, sección "L4".
