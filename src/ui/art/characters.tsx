@@ -258,7 +258,7 @@ export function Character({ who, mood = 'feliz', size = 120, label, animate = fa
   const Draw = DRAW[who]
   const text = label === true ? `${CHARACTER_NAME[who]}, ${MOOD_TEXT[mood]}` : label
   return (
-    <Art size={size} view={120} label={text} className={`char char-${who} mood-${mood} ${animate ? 'char-anim' : ''} ${className ?? ''}`}>
+    <Art size={size} view={120} finish={false} label={text} className={`char char-${who} mood-${mood} ${animate ? 'char-anim' : ''} ${className ?? ''}`}>
       <Draw mood={mood} />
     </Art>
   )

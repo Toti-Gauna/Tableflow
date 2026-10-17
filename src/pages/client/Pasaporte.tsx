@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Badge, Callout, DemoHint } from '../../ui/kit'
-import { Glyph } from '../../ui/glyphs'
-import { BADGE_LABEL, PassportSteps, SavedPick } from '../../ui/passport'
+import { BADGE_LABEL, PassportSteps, SavedPick, StampSeal } from '../../ui/passport'
 import { getPassport, stampsOf } from '../../domain/cmd-engage'
 import { STAMPS_FOR_BADGE } from '../../domain/content'
 import { fmtDateShort } from '../../domain/time'
@@ -20,8 +19,8 @@ export function Pasaporte() {
     <main>
       <PageHead title="Mi pasaporte" eyebrow={customer ? `Pasaporte de ${customer.alias}` : 'Pasaporte de invitado'} sub="Descubrí sabores en tres tarjetas y sumá sellos con cada visita." />
       {biz.passportPaused && <Callout tone="warn" role="alert">El encargado pausó la mecánica: no se suman tarjetas ni sellos por ahora. Lo que ya tenés se conserva.</Callout>}
-      <div className="passport-grid">
-        <section className="card" aria-labelledby="expl">
+      <div className="passport-book">
+        <section className="pp-page" aria-labelledby="expl">
           <p className="eyebrow">Exploración</p>
           <h2 id="expl">Pasaporte de sabores</h2>
           <PassportSteps pass={pass} />
@@ -39,19 +38,22 @@ export function Pasaporte() {
           )}
 
         </section>
-        <section className="card" aria-labelledby="sellos">
+        <section className="pp-page" aria-labelledby="sellos">
           <p className="eyebrow">Fidelidad</p>
           <h2 id="sellos">Sellos de visita</h2>
           {customer ? (
             <>
               <p><strong data-testid="stamps">{stamps}</strong> de {STAMPS_FOR_BADGE} sellos {stamps >= STAMPS_FOR_BADGE && <Badge tone="ok" icon="★" label="Insignia de fidelidad" />}</p>
               <ol className="stamps" aria-label={`${stamps} de ${STAMPS_FOR_BADGE} sellos obtenidos`}>
-                {Array.from({ length: STAMPS_FOR_BADGE }, (_, i) => (
-                  <li key={i} className={`stamp ${i < stamps ? 'on' : ''}`}>
-                    {i < stamps ? <Glyph name="stamp" size={30} /> : <span aria-hidden="true">{i + 1}</span>}
-                    <span className="sr-only">{i < stamps ? `Sello ${i + 1} obtenido` : `Sello ${i + 1} pendiente`}</span>
-                  </li>
-                ))}
+                {Array.from({ length: STAMPS_FOR_BADGE }, (_, i) => {
+                  const v = visits.filter((x) => x.status === 'acreditada')[i]
+                  return (
+                    <li key={i} className={`stamp-slot ${i < stamps ? 'on' : ''}`}>
+                      <StampSeal n={i + 1} on={i < stamps} bizName={biz.name} date={v ? v.dateKey.slice(8, 10) + '/' + v.dateKey.slice(5, 7) : undefined} />
+                      <span className="sr-only">{i < stamps ? `Sello ${i + 1} obtenido` : `Sello ${i + 1} pendiente`}</span>
+                    </li>
+                  )
+                })}
               </ol>
               {stamps >= STAMPS_FOR_BADGE ? (
                 <p className="ok-text">Llegaste a la quinta visita: insignia de fidelidad. No incluye premio ni descuento.</p>

@@ -3,6 +3,7 @@ import { PageHead } from '../ui/Shell'
 import { DishArt } from '../ui/art'
 import { Character, CHARACTER_NAME, MOODS, type CharacterId } from '../ui/art/characters'
 import { SeasonArt } from '../ui/art/season'
+import { HeroBarra, HeroMesa } from '../ui/art/hero'
 import { SEASON_IDS, SEASON_NAME } from '../domain/season'
 
 const CAST: { who: CharacterId; role: string }[] = [
@@ -19,6 +20,13 @@ export function Arte() {
   return (
     <main className="wrap art-gallery">
       <PageHead title="Ilustraciones de la casa" eyebrow="Sistema de ilustración · propio de la demo" sub="Cada plato y bebida tiene su ilustración dibujada para TableFlow: misma luz, misma vajilla, sin fotos ni assets de terceros." />
+      <section className="art-sec" aria-labelledby="g-hero">
+        <h2 id="g-hero">Ilustraciones firma</h2>
+        <div className="art-heroes">
+          <figure data-biz="mesa-clara"><HeroMesa size={420} label="Mesa Clara: la mesa larga, vista desde arriba" /><figcaption>Mesa Clara · la mesa larga</figcaption></figure>
+          <figure data-biz="ritual-cafe"><HeroBarra size={420} label="Ritual Café: la barra, vista desde arriba" /><figcaption>Ritual Café · la barra</figcaption></figure>
+        </div>
+      </section>
       <section className="art-sec" aria-labelledby="g-cast">
         <h2 id="g-cast">Personajes</h2>
         {CAST.map((c) => (

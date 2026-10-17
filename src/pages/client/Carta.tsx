@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useBiz, useCart } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, Dialog, Empty, ErrorText } from '../../ui/kit'
-import { Glyph, glyphForCategory, Plate } from '../../ui/glyphs'
+import { CategoryMark, Glyph, Plate } from '../../ui/glyphs'
 import { allergenKey, AllergenCodes, fmtMenu, foodNoteText, isVeg } from '../../ui/food'
 import { categoriesOf, checkLine, groupsOf, itemUnavailable, menuFor, searchItems, UNAVAILABLE_TEXT } from '../../domain/menu'
 import { optionStockOk } from '../../domain/stock'
@@ -147,7 +147,7 @@ export function Carta() {
             filtered.map(({ c, list }) =>
               BAR_CATS.includes(c) ? (
                 <section key={c} className="barboard" aria-labelledby={`cat-${c}`}>
-                  <h2 id={`cat-${c}`}><Glyph name={glyphForCategory(c)} size={18} /> {c}</h2>
+                  <h2 id={`cat-${c}`}><CategoryMark cat={c} /> {c}</h2>
                   <div className="head-row" aria-hidden="true">
                     <span>En la barra</span>
                     <span>Chico</span>
@@ -159,7 +159,7 @@ export function Carta() {
               ) : (
                 <section key={c} aria-labelledby={`cat-${c}`}>
                   <div className="vitrina-head">
-                    <h2 id={`cat-${c}`}><Glyph name={glyphForCategory(c)} size={18} /> {c}</h2>
+                    <h2 id={`cat-${c}`}><CategoryMark cat={c} /> {c}</h2>
                     <span className="small muted">Ilustraciones de la casa · no son fotos</span>
                   </div>
                   <div className="vitrina">
@@ -172,7 +172,7 @@ export function Carta() {
             filtered.map(({ c, list }) => (
               <section key={c} className="menu-cat" aria-labelledby={`cat-${c}`}>
                 <header>
-                  <h2 id={`cat-${c}`}><Glyph name={glyphForCategory(c)} size={18} /> {c}</h2>
+                  <h2 id={`cat-${c}`}><CategoryMark cat={c} /> {c}</h2>
                 </header>
                 {list.map((i) => (
                   <Dish key={i.id} item={i} {...row} fav={prefs.favorites.includes(i.id)} onFav={() => toggleFav(i.id)} />

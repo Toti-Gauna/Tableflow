@@ -4,12 +4,25 @@ import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { Glyph } from '../../ui/glyphs'
 import { orderCovered, orderDue } from '../../domain/sessions'
-import { HouseChar } from '../../ui/art/characters'
+import { HouseChar, type Mood } from '../../ui/art/characters'
 import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { ORDER_LABEL, sedeShort } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
 import type { Order, OrderStatus } from '../../domain/types'
+
+/** Estado protagonista del seguimiento: personaje, titular y una línea clara por estado. */
+const STATUS_COPY: Record<OrderStatus, { mood: Mood; title: string; text: (o: Order) => string }> = {
+  enviado: { mood: 'pensando', title: 'Recibimos tu pedido', text: () => 'Solicitud recibida; el equipo todavía debe aceptarla.' },
+  aceptado: { mood: 'feliz', title: 'Pedido aceptado', text: () => 'Ya está en la cola de cocina y barra.' },
+  en_preparacion: { mood: 'guino', title: 'En preparación', text: (o) => (o.kind === 'retiro' ? 'Te avisamos cuando esté listo para retirar.' : 'En unos minutos llega a tu mesa.') },
+  listo: { mood: 'festejo', title: '¡Listo!', text: (o) => (o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.') },
+  servido: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Cuando quieras, pedí la cuenta.' },
+  retirado: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Gracias por pasar por la barra.' },
+  cerrado: { mood: 'dormido', title: 'Cuenta cerrada', text: () => 'Este pedido ya está cerrado. ¡Gracias!' },
+  rechazado: { mood: 'triste', title: 'No pudimos tomarlo', text: (o) => o.reason ?? 'El equipo rechazó el pedido.' },
+  cancelado: { mood: 'triste', title: 'Pedido cancelado', text: (o) => o.reason ?? 'El pedido se canceló.' },
+}
 
 const FLOW: OrderStatus[] = ['enviado', 'aceptado', 'en_preparacion', 'listo', 'servido', 'cerrado']
 
@@ -70,23 +83,24 @@ export function PedidoDetalle() {
         sub={`${loc ? sedeShort(loc.name) : ''} · ${o.kind === 'mesa' ? `mesa ${table ?? ''}` : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} a nombre de ${o.alias}`}`}
       >
         <StatusBadge s={ORDER_LABEL[o.status]} />
+      </PageHead>
+      <section className="status-hero" data-status={o.status} role="status" aria-live="polite">
+        <HouseChar biz={biz.id} mood={STATUS_COPY[o.status].mood} size={112} animate={o.status === 'listo'} />
+        <div className="sh-copy">
+          <h2>{STATUS_COPY[o.status].title}</h2>
+          <p>
+            {STATUS_COPY[o.status].text(o)}
+            {o.status === 'listo' && notice && notice.status !== 'fallida' && <span className="sh-note"> {notice.detail}</span>}
+          </p>
+        </div>
         {o.kind === 'retiro' && !['rechazado', 'cancelado'].includes(o.status) && (
           <div className="pickup-code" aria-label={`Código de retiro ${o.pickupCode}`}>
             <small>Código de retiro</small>
             <span className="num">{o.pickupCode}</span>
           </div>
         )}
-      </PageHead>
+      </section>
       <OrderTimeline o={o} />
-      {o.status === 'enviado' && <Callout>Solicitud recibida; el equipo todavía debe aceptarla.</Callout>}
-      {o.status === 'listo' && (
-        <Callout tone="ok" role="status">
-          <strong>¡Listo!</strong> {o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.'}{' '}
-          {notice ? (
-            notice.status === 'fallida' ? null : <span>{notice.detail}</span>
-          ) : null}
-        </Callout>
-      )}
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}
       {o.cancelRequested && <Callout tone="warn">Pediste cancelar con el pedido ya en marcha. El encargado debe decidir; la comanda no se borra.</Callout>}
       {notice?.status === 'fallida' && <DemoHint>El aviso por WhatsApp de este pedido falló (simulado): el equipo lo reintenta desde Automatizaciones. El pedido sigue listo.</DemoHint>}

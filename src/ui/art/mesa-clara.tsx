@@ -578,23 +578,39 @@ function Salmon() {
 // ------------------------------------------------------------------ postres
 
 function Flan() {
+  // vista de tres cuartos: el flan se reconoce por su perfil (tronco de cono con caramelo que chorrea)
   const id = useArtId()
   return (
     <>
-      <Plate tone="dessert" />
-      <Sauce cx={78} cy={80} r={34} color="caramelo" seed={111} />
       <defs>
-        <Grad id={id('flan')} stops={['#e48a2c', '#b8601a', '#7e3a0e']} />
+        <radialGradient id={id('dplate')} cx="42%" cy="35%" r="70%"><stop offset="0" stopColor="#ffffff" /><stop offset="0.8" stopColor="#f3eee4" /><stop offset="1" stopColor="#d9cfbb" /></radialGradient>
+        <linearGradient id={id('custard')} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#e9b14c" /><stop offset="0.35" stopColor="#f8d98a" /><stop offset="0.75" stopColor="#efc160" /><stop offset="1" stopColor="#c98a2c" /></linearGradient>
+        <radialGradient id={id('caramel')} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#d7802f" /><stop offset="0.7" stopColor="#a5501a" /><stop offset="1" stopColor="#6f300c" /></radialGradient>
         <Grad id={id('ddl')} stops={['#c88446', '#94531f', '#5f300f']} />
       </defs>
-      <circle cx={78} cy={78} r={25} fill="#f2c766" />
-      <circle cx={78} cy={78} r={21} fill={url(id('flan'))} />
-      <Gloss x={70} y={70} rx={9} ry={4} />
-      <ellipse cx={108} cy={98} rx="12" ry="7" fill={url(id('ddl'))} transform="rotate(-20 108 98)" />
-      <path d="M102 95 C 106 92, 112 93, 114 96" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.2" fill="none" />
-      <circle cx={52} cy={100} r={10} fill="#ffffff" />
-      <path d={`${arc(52, 100, 7, 0, 300)} ${arc(52, 100, 4, 300, 600).replace('M', 'L')}`} stroke="#e7dfcf" strokeWidth="1.2" fill="none" />
-      <Basil x={92} y={58} rot={50} s={0.7} />
+      {/* plato de postre en perspectiva */}
+      <ellipse cx="84" cy="108" rx="68" ry="34" fill="#3b2a1a" opacity="0.18" />
+      <ellipse cx="80" cy="102" rx="68" ry="33" fill={url(id('dplate'))} stroke="#d9cfbb" />
+      <ellipse cx="80" cy="102" rx="50" ry="23" fill="none" stroke="#e8dfcf" strokeWidth="1.4" />
+      <ellipse cx="80" cy="102" rx="60" ry="28" fill="none" stroke="#c9764f" strokeWidth="1" strokeDasharray="1.5 4" opacity="0.7" />
+      {/* caramelo en el plato */}
+      <ellipse cx="80" cy="104" rx="42" ry="15" fill={url(id('caramel'))} opacity="0.92" />
+      {/* cuerpo del flan */}
+      <path d="M46 101 C 46 108, 114 108, 114 101 L106 58 C 106 52, 54 52, 54 58 Z" fill={url(id('custard'))} />
+      <path d="M60 64 C 60 78, 58 92, 56 102" stroke="#fff3cf" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.7" />
+      {/* tapa de caramelo con chorreado */}
+      <ellipse cx="80" cy="58" rx="26" ry="8" fill={url(id('caramel'))} />
+      <path d="M56 59 C 56 66, 60 70, 61 76 C 62 80, 66 80, 66 75 C 66 70, 68 66, 72 65 C 74 72, 76 74, 79 73 C 82 72, 82 66, 86 65 C 89 70, 92 82, 96 80 C 99 78, 98 70, 104 60 Z" fill={url(id('caramel'))} />
+      <ellipse cx="72" cy="56" rx="9" ry="2.6" fill="#ffd9a8" opacity="0.7" />
+      {/* dulce de leche y crema */}
+      <ellipse cx="124" cy="100" rx="13" ry="7" fill={url(id('ddl'))} transform="rotate(-12 124 100)" />
+      <path d="M116 97 C 120 94, 127 94, 131 97" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.3" fill="none" />
+      <g transform="translate(34 98)">
+        <ellipse cx="0" cy="4" rx="11" ry="4.5" fill="#3b2a1a" opacity="0.12" />
+        <path d="M-10 2 C -10 -6, 10 -6, 10 2 C 6 -2, 2 -9, 0 -13 C -2 -9, -6 -2, -10 2 Z" fill="#fffdf6" stroke="#e7dfcf" />
+        <path d="M-5 0 C -3 -5, 3 -5, 5 0" stroke="#e7dfcf" strokeWidth="1" fill="none" />
+      </g>
+      <Basil x={96} y={50} rot={40} s={0.6} />
     </>
   )
 }

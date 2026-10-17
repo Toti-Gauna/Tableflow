@@ -63,6 +63,7 @@ const P: Record<string, string> = {
   compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z',
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17h.01',
   envelope: 'M3.5 6h17v12h-17zM3.5 6.5l8.5 6.5 8.5-6.5',
+  menu: 'M4 7h16M4 12h16M4 17h10',
   music: 'M9 18V6l10-2v12M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
 }
 export type GlyphName = keyof typeof P
@@ -123,6 +124,17 @@ export function Plate({ item, size = 96, caption, decorative }: { item: Pick<Men
       {caption && <figcaption className="plate-cap">Ilustración · sin foto de muestra</figcaption>}
     </figure>
   )
+}
+
+/** Viñeta ilustrada de una sección de la carta: el plato más representativo, en miniatura. */
+const CATEGORY_ITEM: Record<string, string> = {
+  Entradas: 'MC-02', Pastas: 'MC-06', 'Minutas y carnes': 'MC-12', Pescados: 'MC-20', Postres: 'MC-22', Bebidas: 'MC-28',
+  'Café de barra': 'RC-04', 'Métodos': 'RC-07', 'Pastelería': 'RC-11', Salado: 'RC-13',
+}
+export function CategoryMark({ cat, size = 30 }: { cat: string; size?: number }) {
+  const id = CATEGORY_ITEM[cat]
+  if (!id || !hasArt(id)) return <Glyph name={glyphForCategory(cat)} size={18} />
+  return <DishArt item={{ id, name: cat }} size={size} decorative className="cat-mark" />
 }
 
 /** Separador tipográfico de carta impresa. */

@@ -30,8 +30,14 @@ function Heart({ x, y, s = 1, fill }: { x: number; y: number; s?: number; fill: 
   return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0 14 C -18 2, -16 -12, -7 -12 C -3 -12, 0 -9, 0 -6 C 0 -9, 3 -12, 7 -12 C 16 -12, 18 2, 0 14 Z" fill={fill} />
 }
 
+/** Destello de grabado: punto con rayos finos (no la estrella de cuatro puntas de banco de íconos). */
 function Sparkle({ x, y, s = 1, c = '#f6c84a' }: { x: number; y: number; s?: number; c?: string }) {
-  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0 -6 C 1 -1, 1 -1, 6 0 C 1 1, 1 1, 0 6 C -1 1, -1 1, -6 0 C -1 -1, -1 -1, 0 -6 Z" fill={c} />
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} stroke={c} strokeLinecap="round">
+      <circle r="1.6" fill={c} stroke="none" />
+      {[0, 45, 90, 135].map((a) => <path key={a} d="M0 -6 V -3.4 M0 3.4 V 6" strokeWidth={a % 90 ? 0.9 : 1.3} transform={`rotate(${a})`} />)}
+    </g>
+  )
 }
 
 function Primavera() {

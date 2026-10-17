@@ -9,15 +9,48 @@ const IdCtx = createContext<(n: string) => string>((n) => n)
 export const useArtId = () => useContext(IdCtx)
 export const url = (id: string) => `url(#${id})`
 
-export function Art({ size, label, children, className, view = 160 }: { size: number; label?: string; children: ReactNode; className?: string; view?: number }) {
+/** Acabado de grabado: línea de tinta por detección de bordes + grano de papel. Solo en tamaños donde se aprecia. */
+function Finish({ id, ink, grain }: { id: (n: string) => string; ink: boolean; grain: boolean }) {
+  return (
+    <filter id={id('finish')} x="-4%" y="-4%" width="108%" height="108%" colorInterpolationFilters="sRGB">
+      {ink && (
+        <>
+          <feColorMatrix in="SourceGraphic" type="luminanceToAlpha" result="lum" />
+          <feConvolveMatrix in="lum" order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" kernelUnitLength="0.9" edgeMode="duplicate" preserveAlpha="false" result="edge" />
+          <feComponentTransfer in="edge" result="edgeA"><feFuncA type="linear" slope="2.4" intercept="-0.12" /></feComponentTransfer>
+          <feFlood floodColor="#3a2414" floodOpacity="0.56" result="inkC" />
+          <feComposite in="inkC" in2="edgeA" operator="in" result="lines" />
+          <feComposite in="lines" in2="SourceAlpha" operator="in" result="linesIn" />
+        </>
+      )}
+      {grain && (
+        <>
+          <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" stitchTiles="stitch" result="noise" />
+          <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.24  0 0 0 0 0.16  0 0 0 0 0.09  0 0 0 0.3 -0.11" result="tint" />
+          <feComposite in="tint" in2="SourceAlpha" operator="in" result="grainIn" />
+        </>
+      )}
+      <feMerge>
+        <feMergeNode in="SourceGraphic" />
+        {grain && <feMergeNode in="grainIn" />}
+        {ink && <feMergeNode in="linesIn" />}
+      </feMerge>
+    </filter>
+  )
+}
+
+export function Art({ size, label, children, className, view = 160, finish = true, ratio, slice }: { size: number; label?: string; children: ReactNode; className?: string; view?: number; finish?: boolean; ratio?: [number, number]; slice?: boolean }) {
   const raw = useId().replace(/[^a-zA-Z0-9]/g, '')
   const id = (n: string) => `a${raw}-${n}`
+  const ink = finish && size >= 64
+  const grain = finish && size >= 96
   return (
     <svg
       className={`art ${className ?? ''}`}
       width={size}
-      height={size}
-      viewBox={`0 0 ${view} ${view}`}
+      height={ratio ? Math.round((size * ratio[1]) / ratio[0]) : size}
+      viewBox={ratio ? `0 0 ${ratio[0]} ${ratio[1]}` : `0 0 ${view} ${view}`}
+      preserveAspectRatio={slice ? 'xMidYMid slice' : undefined}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
@@ -25,7 +58,14 @@ export function Art({ size, label, children, className, view = 160 }: { size: nu
     >
       <IdCtx.Provider value={id}>
         <CommonDefs />
-        {children}
+        {ink || grain ? (
+          <>
+            <defs><Finish id={id} ink={ink} grain={grain} /></defs>
+            <g filter={url(id('finish'))}>{children}</g>
+          </>
+        ) : (
+          children
+        )}
       </IdCtx.Provider>
     </svg>
   )

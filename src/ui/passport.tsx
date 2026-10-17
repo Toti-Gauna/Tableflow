@@ -84,3 +84,29 @@ export function SavedPick({ state, biz, locationId, compact }: { state: AppState
     </div>
   )
 }
+
+/** Matasellos de visita: doble anillo, nombre del negocio en arco y fecha al centro (dibujado, no un ícono). */
+export function StampSeal({ n, date, bizName, on }: { n: number; date?: string; bizName: string; on: boolean }) {
+  const uid = `seal-${n}-${bizName.replace(/\W/g, '')}`
+  if (!on) {
+    return (
+      <svg viewBox="0 0 80 80" width="76" height="76" aria-hidden="true" className="seal-svg off">
+        <circle cx="40" cy="40" r="33" fill="none" stroke="currentColor" strokeWidth="1.6" strokeDasharray="4 5" />
+        <text x="40" y="47" textAnchor="middle" fontSize="20" fontWeight="700" fill="currentColor">{n}</text>
+      </svg>
+    )
+  }
+  return (
+    <svg viewBox="0 0 80 80" width="76" height="76" aria-hidden="true" className="seal-svg on" style={{ transform: `rotate(${(n * 37) % 24 - 12}deg)` }}>
+      <defs>
+        <path id={uid} d="M14 40 A 26 26 0 0 1 66 40" />
+      </defs>
+      <circle cx="40" cy="40" r="35" fill="none" stroke="currentColor" strokeWidth="2.6" />
+      <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" strokeWidth="1" />
+      <circle cx="40" cy="40" r="20" fill="none" stroke="currentColor" strokeWidth="0.8" strokeDasharray="1.5 2.5" />
+      <text fontSize="7.4" fontWeight="800" letterSpacing="1.6" fill="currentColor"><textPath href={`#${uid}`} startOffset="50%" textAnchor="middle">{bizName.toUpperCase()}</textPath></text>
+      <text x="40" y="44" textAnchor="middle" fontSize="11" fontWeight="800" fill="currentColor">{date ?? `N.º ${n}`}</text>
+      <text x="40" y="57" textAnchor="middle" fontSize="6.4" fontWeight="700" letterSpacing="1.2" fill="currentColor">VISITA {n}</text>
+    </svg>
+  )
+}

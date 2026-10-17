@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBiz, useOperation } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
-import { act, Callout, ErrorText, Field, StatusBadge, Empty } from '../../ui/kit'
+import { act, Callout, DemoHint, ErrorText, Field, StatusBadge, Empty } from '../../ui/kit'
+import { HeroMesa } from '../../ui/art/hero'
 import { RES_LABEL } from '../../ui/format'
 import { slotStarts, slotAvailable, windowsFor } from '../../domain/availability'
 import { addDays, dateKeyOf, dayName, fmtDateShort, hhmm, monthName } from '../../domain/time'
@@ -95,7 +96,7 @@ export function Reservar() {
       <PageHead
         title="Reservar una mesa"
         eyebrow={`Reservas · ${loc ? sedeShort(loc.name) : biz.name}`}
-        sub={`Servicio de ${biz.serviceMinutes} min + ${biz.bufferMinutes} de margen · cada solicitud la confirma el equipo`}
+        sub="Elegí día, personas y horario. El equipo confirma cada solicitud." 
       />
       <div className="res-layout">
         <form className="card res-form" onSubmit={(e) => { e.preventDefault(); submit() }} noValidate aria-labelledby="form-h">
@@ -167,7 +168,22 @@ export function Reservar() {
           <p className="small muted">Enviar crea una <strong>solicitud</strong>: el equipo todavía debe confirmarla.</p>
         </form>
 
-        <div className="stack">
+        <div className="stack res-side">
+          <aside className="res-summary" aria-label="Resumen de tu solicitud">
+            <div className="res-art" aria-hidden="true"><HeroMesa size={360} slice /></div>
+            <div className="res-ticket">
+              <p className="eyebrow">{biz.name} · {loc ? sedeShort(loc.name) : ''}</p>
+              <h2>Tu mesa</h2>
+              <dl>
+                <div><dt>Día</dt><dd>{fmtDateShort(dateKey)}{dateKey === today ? ' · hoy' : ''}</dd></div>
+                <div><dt>Personas</dt><dd>{Number.isInteger(party) && party > 0 ? party : '—'}</dd></div>
+                <div><dt>Hora</dt><dd>{startMin !== null ? hhmm(startMin) : <span className="muted">elegí un horario</span>}</dd></div>
+                <div><dt>Sector</dt><dd>{sector === 'cualquiera' ? 'Sin preferencia' : sector === 'salon' ? 'Salón' : 'Terraza'}</dd></div>
+                {diet.trim() && <div><dt>Consulta</dt><dd>Alimentaria · la revisa el equipo</dd></div>}
+              </dl>
+              <p className="small muted" style={{ margin: 0 }}>Servicio de {biz.serviceMinutes} min. {big ? 'Grupo grande: el equipo arma la mesa.' : 'Te confirmamos por el canal que elijas.'}</p>
+            </div>
+          </aside>
           {res && !res.ok && (
             <div data-testid="res-result">
               <Callout tone={res.code === 'espera' ? 'ok' : 'warn'} role="alert">
@@ -185,12 +201,12 @@ export function Reservar() {
               </Callout>
             </div>
           )}
+          {myReservations.length === 0 ? (
+            <DemoHint><button className="linklike" type="button" onClick={() => { dispatch({ type: 'session/setRole', role: 'cliente-recurrente' }) }}>Verme como Ana (cliente recurrente)</button> para ver reservas existentes.</DemoHint>
+          ) : (
           <section className="card" aria-labelledby="mias">
             <p className="eyebrow">Tus reservas</p>
             <h2 id="mias">Mis reservas</h2>
-            {myReservations.length === 0 ? (
-              <p className="muted">Todavía no tenés reservas.</p>
-            ) : (
               <ul className="order-list">
                 {myReservations.map((r) => (
                   <li key={r.id}>
@@ -201,9 +217,8 @@ export function Reservar() {
                   </li>
                 ))}
               </ul>
-            )}
-            <button className="btn ghost small" type="button" onClick={() => { dispatch({ type: 'session/setRole', role: 'cliente-recurrente' }) }}>Verme como Ana (cliente recurrente)</button>
           </section>
+          )}
         </div>
       </div>
     </main>

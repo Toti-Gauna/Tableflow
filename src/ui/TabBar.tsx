@@ -44,7 +44,7 @@ export function TabBar({ label, tabs, sheet, sheetTitle, className }: { label: s
         ))}
         <button type="button" className="tab" aria-haspopup="dialog" aria-expanded={open} aria-current={inSheet ? 'page' : undefined} onClick={() => setOpen(true)}>
           <span className="ico" aria-hidden="true">
-            <Glyph name="grid" size={22} />
+            <Glyph name="menu" size={22} />
           </span>
           <span className="lbl">Secciones</span>
           {sheetBadge ? <span className="badge" aria-hidden="true">{sheetBadge}</span> : null}

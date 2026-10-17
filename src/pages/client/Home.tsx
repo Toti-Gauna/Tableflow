@@ -11,8 +11,10 @@ import { dateKeyOf, fmtDateShort, hhmm, minutesOfDay } from '../../domain/time'
 import { eventSeats } from '../../domain/cmd-engage'
 import { BOARD_PICKS, ORIGINS } from '../../domain/content'
 import { SeasonBand } from '../../ui/season'
+import { HeroBarra, HeroMesa } from '../../ui/art/hero'
 import type { AppState, BusinessProfile, ServiceWindow } from '../../domain/types'
 
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 const DAY_FROM = 8 * 60
 const DAY_TO = 24 * 60
 const pct = (m: number) => `${((Math.min(DAY_TO, Math.max(DAY_FROM, m)) - DAY_FROM) / (DAY_TO - DAY_FROM)) * 100}%`
@@ -112,8 +114,8 @@ export function Home() {
   const methods = state.menuItems.filter((m) => m.businessId === biz.id && m.category === 'Métodos')
   return (
     <main>
-      <section className="hero">
-        <div className="fx-scene">
+      <section className="hero hero-v2">
+        <div className="fx-scene hero-copy">
           <PageHead
             title={biz.name}
             eyebrow={isRest ? 'Bodegón contemporáneo' : 'Café de especialidad · barra y vitrina'}
@@ -136,7 +138,12 @@ export function Home() {
             </div>
           )}
         </div>
-        {isRest ? <DayBoard state={state} biz={biz} locationId={locationId} /> : <BarRhythm state={state} biz={biz} locationId={locationId} />}
+        <div className="hero-figure">
+          {isRest ? <HeroMesa size={520} /> : <HeroBarra size={520} />}
+          <div className="hero-board">
+            {isRest ? <DayBoard state={state} biz={biz} locationId={locationId} /> : <BarRhythm state={state} biz={biz} locationId={locationId} />}
+          </div>
+        </div>
       </section>
 
       <SeasonBand state={state} biz={biz.id} />
@@ -193,27 +200,34 @@ export function Home() {
         </>
       )}
 
-      <div className="grid cols-2 home-sec">
-        <section className="card" aria-labelledby="catas">
+      <section className="home-sec events" aria-labelledby="catas">
+        <div className="sec-head">
           <p className="eyebrow">Con cupo y lista de espera</p>
           <h2 id="catas">Próximas catas</h2>
-          {events.length === 0 ? (
-            <p className="muted">No hay catas programadas.</p>
-          ) : (
-            <ul className="plain-list">
-              {events.map((e) => {
-                const { free } = eventSeats(state, e)
-                return (
-                  <li key={e.id}>
-                    <Link to={`/${biz.id}/catas`}>{e.title}</Link>
-                    <span className="muted small"> · {fmtDateShort(e.dateKey)} {hhmm(e.startMin)} · {free > 0 ? `${free} lugar(es)` : 'cupo completo: lista de espera'}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </section>
-      </div>
+        </div>
+        {events.length === 0 ? (
+          <p className="muted">No hay catas programadas.</p>
+        ) : (
+          <ul className="event-list">
+            {events.map((e) => {
+              const { free } = eventSeats(state, e)
+              const [, m, d] = e.dateKey.split('-')
+              return (
+                <li key={e.id}>
+                  <Link to={`/${biz.id}/catas`} className="event-card">
+                    <span className="ev-date" aria-hidden="true"><b>{Number(d)}</b><span>{MONTHS[Number(m) - 1]}</span></span>
+                    <span className="ev-main">
+                      <strong>{e.title}</strong>
+                      <span className="muted small">{fmtDateShort(e.dateKey)} · {hhmm(e.startMin)} · {free > 0 ? `${free} lugar${free === 1 ? '' : 'es'} libre${free === 1 ? '' : 's'}` : 'cupo completo: lista de espera'}</span>
+                    </span>
+                    <span className="ev-cta">Ver <Glyph name="arrow" size={16} /></span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
     </main>
   )
 }
