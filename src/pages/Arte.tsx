@@ -2,6 +2,8 @@ import { useApp } from '../store'
 import { PageHead } from '../ui/Shell'
 import { DishArt } from '../ui/art'
 import { Character, CHARACTER_NAME, MOODS, type CharacterId } from '../ui/art/characters'
+import { SeasonArt } from '../ui/art/season'
+import { SEASON_IDS, SEASON_NAME } from '../domain/season'
 
 const CAST: { who: CharacterId; role: string }[] = [
   { who: 'noqui', role: 'Mesa Clara' },
@@ -32,6 +34,17 @@ export function Arte() {
             </ul>
           </div>
         ))}
+      </section>
+      <section className="art-sec" aria-labelledby="g-season">
+        <h2 id="g-season">Temporadas</h2>
+        <ul className="art-cast">
+          {SEASON_IDS.map((s) => (
+            <li key={s} data-season={s}>
+              <SeasonArt id={s} size={112} label={`Ornamento de ${SEASON_NAME[s]}`} />
+              <span>{SEASON_NAME[s]}</span>
+            </li>
+          ))}
+        </ul>
       </section>
       {biz.map((b) => (
         <section key={b.id} data-biz={b.id} className="art-sec" aria-labelledby={`g-${b.id}`}>

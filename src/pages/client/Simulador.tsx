@@ -61,7 +61,7 @@ export function SimPanel({ biz, guided }: { biz: BusinessId; guided: boolean }) 
         <label className="field" style={{ margin: 0 }}>
           <span className="label small">Hilo</span>
           <select value={conv?.id ?? ''} onChange={(e) => setConvId(e.target.value)} data-testid="thread-select">
-            {convs.map((c) => <option key={c.id} value={c.id}>{c.id} · {state.customers.find((x) => x.id === c.customerId)?.alias ?? 'sin identificar'}</option>)}
+            {convs.map((c) => <option key={c.id} value={c.id}>{c.id} · {state.customers.find((x) => x.id === c.customerId)?.alias ?? (c.title.startsWith('Regalo') ? c.title : 'sin identificar')}</option>)}
           </select>
         </label>
         <button className="btn secondary small" type="button" onClick={newThread} data-testid="new-thread">Nuevo hilo</button>

@@ -1,6 +1,6 @@
 import type { BaseUnit, Unit } from './units'
 
-export const SCHEMA_VERSION = 1 as const
+export const SCHEMA_VERSION = 2 as const
 export const STORAGE_NS = 'tableflow.demo.v1'
 
 export type BusinessId = 'mesa-clara' | 'ritual-cafe'
@@ -175,6 +175,8 @@ export interface CartLine {
   note: string
   /** Precio unitario (con modificadores) visto por el cliente al armar la línea. */
   unitCentsSeen: number
+  /** Línea agregada al canjear una invitación (regalo): el plato base queda cubierto en la demo. */
+  giftId?: string
 }
 export interface Cart {
   id: string
@@ -211,6 +213,9 @@ export interface OrderLine {
   station: 'cocina' | 'barra'
   selections: { groupId: string; groupName: string; optionId: string; optionName: string; deltaCents: number }[]
   note: string
+  /** Invitación canjeada en esta línea y el importe que cubre (simulado, sin cobro real). */
+  giftId?: string
+  coveredCents?: number
 }
 export interface Order extends Entity {
   locationId: string
@@ -494,6 +499,37 @@ export interface AuditEvent extends Entity {
   summary: string
 }
 
+export type SeasonId = 'primavera' | 'verano' | 'otono' | 'invierno' | 'madre' | 'padre' | 'amigo' | 'fiestas' | 'enamorados'
+export type GiftStatus = 'enviado' | 'abierto' | 'canjeado' | 'cancelado' | 'vencido'
+
+/** Invitación a comer: un plato regalado con mensaje y tarjeta de temporada. Simulada: sin cobro ni envío real. */
+export interface GiftInvite extends Entity {
+  code: string
+  fromAlias: string
+  toAlias: string
+  itemId: string
+  itemName: string
+  /** Precio base del plato al regalar: lo que el regalo cubre al canjearse (los extras los paga quien canjea). */
+  coveredCents: number
+  message: string
+  theme: SeasonId
+  delivery: 'enlace' | 'whatsapp-simulado'
+  status: GiftStatus
+  expiresAt: number
+  openedAt: number | null
+  redeemedAt: number | null
+  orderId: string | null
+  reason: string | null
+  operationId: string
+  conversationId: string | null
+}
+
+/** Ajustes de la demo que no son de un negocio puntual del dominio. */
+export interface DemoSettings {
+  /** Temática por época: automática según el reloj simulado o forzada desde Configuración. */
+  seasonByBusiness: Record<BusinessId, SeasonId | 'auto'>
+}
+
 export interface Session {
   role: Role
   businessId: BusinessId
@@ -538,6 +574,8 @@ export interface AppState {
   redemptions: Redemption[]
   audit: AuditEvent[]
   campaignPreviews: { id: string; businessId: BusinessId; at: number; included: number; excluded: number }[]
+  gifts: GiftInvite[]
+  settings: DemoSettings
 }
 
 export type CollectionKey = {

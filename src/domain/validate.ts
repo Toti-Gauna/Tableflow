@@ -3,7 +3,7 @@ import { SCHEMA_VERSION, type AppState } from './types'
 const ENTITY_COLLECTIONS = [
   'businesses', 'locations', 'serviceWindows', 'tables', 'reservations', 'waitlist', 'menuItems', 'orders', 'tickets',
   'tableSessions', 'payments', 'cashSessions', 'ingredients', 'recipes', 'stockMovements', 'customers', 'conversations',
-  'messages', 'callSessions', 'tasks', 'rules', 'runs', 'tastingEvents', 'eventBookings', 'passports', 'visits', 'redemptions', 'audit',
+  'messages', 'callSessions', 'tasks', 'rules', 'runs', 'tastingEvents', 'eventBookings', 'passports', 'visits', 'redemptions', 'audit', 'gifts',
 ] as const
 const PLAIN_COLLECTIONS = ['modifierGroups', 'carts', 'campaignPreviews'] as const
 
@@ -24,6 +24,7 @@ export function validateState(input: unknown): string[] {
   if (!isObj(s.counters) || Object.values(s.counters).some((v) => !isInt(v))) err('Los contadores de IDs son inválidos.')
   if (!isObj(s.session) || !isObj(s.session.locationByBusiness) || !isObj(s.session.customerByBusiness)) err('La sesión de vista es inválida.')
   for (const k of [...ENTITY_COLLECTIONS, ...PLAIN_COLLECTIONS]) if (!Array.isArray(s[k])) err(`Falta la colección ${k}.`)
+  if (!isObj(s.settings) || !isObj(s.settings.seasonByBusiness)) err('Faltan los ajustes de la demo (temporada).')
   if (errors.length) return errors
 
   const st = s as AppState
@@ -81,6 +82,10 @@ export function validateState(input: unknown): string[] {
       const item = index.menuItems.get(l.itemId)
       if (!item) err(`orders/${o.id}: ítem ${l.itemId} inexistente.`)
       else if (item.businessId !== o.businessId) err(`orders/${o.id}: ítem de otro negocio.`)
+      if (l.giftId !== undefined) {
+        same('gifts', l.giftId, o.businessId, `orders/${o.id}`)
+        if (!isInt(l.coveredCents) || (l.coveredCents as number) < 0 || (l.coveredCents as number) > l.lineCents) err(`orders/${o.id}: importe cubierto por regalo inválido.`)
+      }
     }
     if (sum !== o.totalCents) err(`orders/${o.id}: el total no coincide con las líneas.`)
   }
@@ -125,6 +130,16 @@ export function validateState(input: unknown): string[] {
     else if (i.onHand < 0 || i.reserved < 0 || i.reserved > i.onHand) err(`ingredients/${i.id}: stock negativo o reserva mayor al stock.`)
   }
   for (const m of st.messages) same('conversations', m.conversationId, m.businessId, `messages/${m.id}`)
+  const giftCodes = new Set<string>()
+  for (const g of st.gifts) {
+    same('menuItems', g.itemId, g.businessId, `gifts/${g.id}`)
+    same('orders', g.orderId, g.businessId, `gifts/${g.id}`)
+    same('conversations', g.conversationId, g.businessId, `gifts/${g.id}`)
+    if (!isInt(g.coveredCents) || g.coveredCents < 0) err(`gifts/${g.id}: importe inválido.`)
+    if (giftCodes.has(g.code)) err(`gifts: código duplicado ${g.code}.`)
+    giftCodes.add(g.code)
+    if ((g.status === 'canjeado') !== !!g.orderId) err(`gifts/${g.id}: estado de canje inconsistente.`)
+  }
   for (const c of st.conversations) same('customers', c.customerId, c.businessId, `conversations/${c.id}`)
   for (const r of st.runs) same('rules', r.ruleId, r.businessId, `runs/${r.id}`)
   const runKeys = new Set<string>()

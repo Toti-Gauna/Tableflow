@@ -11,10 +11,12 @@ import { windowsFor } from '../../domain/availability'
 import { sedeShort } from '../../ui/format'
 import { SavedPick } from '../../ui/passport'
 import { HouseChar } from '../../ui/art/characters'
+import { giftByCode, giftCart, giftUsable } from '../../domain/gifts'
+import { lineGiftCover } from '../../domain/cmd-commerce'
 import { dateKeyOf, hhmm } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
 import { setPrefs, useSnapshot } from '../../store'
-import type { AppState, BusinessProfile, MenuItem } from '../../domain/types'
+import type { AppState, BusinessProfile, GiftInvite, MenuItem } from '../../domain/types'
 
 /** Categorías que el café sirve en la pizarra de barra; el resto va a la vitrina. */
 const BAR_CATS = ['Café de barra', 'Métodos']
@@ -41,8 +43,9 @@ export function MiniCart({ biz, locationId, state }: { biz: string; locationId: 
             <div>
               <strong>{l.qty}× {it.name}</strong>
               <div className="opts">{chk.picked.map((p) => p.optionName).join(' · ')}</div>
+              {l.giftId && <div className="gift-line"><Glyph name="gift" size={14} /> Invitación · cubre {fmtARS(lineGiftCover(state, l, chk.unitCents))}</div>}
             </div>
-            <span className="money">{fmtARS(chk.unitCents * l.qty)}</span>
+            <span className="money">{fmtARS(chk.unitCents * l.qty - lineGiftCover(state, l, chk.unitCents))}</span>
           </div>
         )
       })}
@@ -65,6 +68,7 @@ export function Carta() {
   const { itemId } = useParams()
   const [params] = useSearchParams()
   const fromPassport = params.get('origen') === 'pasaporte'
+  const giftParam = params.get('regalo')
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [onlyAvail, setOnlyAvail] = useState(false)
@@ -185,9 +189,18 @@ export function Carta() {
           </div>
         </aside>
       </div>
-      <ItemDialog item={selected} biz={biz} locationId={locationId} state={state} fromPassport={fromPassport && !!selected && saved === selected.id} fav={!!selected && prefs.favorites.includes(selected.id)} onFav={() => selected && toggleFav(selected.id)} onClose={() => nav(`/${biz.id}/carta`)} />
+      <ItemDialog item={selected} biz={biz} locationId={locationId} state={state} gift={giftFor(state, giftParam, selected)} fromPassport={fromPassport && !!selected && saved === selected.id} fav={!!selected && prefs.favorites.includes(selected.id)} onFav={() => selected && toggleFav(selected.id)} onClose={() => nav(`/${biz.id}/carta`)} />
     </main>
   )
+}
+
+/** Invitación válida para el plato abierto (de `?regalo=CÓDIGO`), o el motivo por el que no se puede usar. */
+function giftFor(state: AppState, code: string | null, item?: MenuItem): { gift: GiftInvite; problem: string | null } | undefined {
+  if (!code || !item) return undefined
+  const g = giftByCode(state, code)
+  if (!g || g.businessId !== item.businessId || g.itemId !== item.id) return undefined
+  const problem = !giftUsable(g, state.clock.nowMs) ? 'Esta invitación ya no está disponible (canjeada, cancelada o vencida).' : giftCart(state, g.id) ? 'Esta invitación ya está en tu pedido.' : null
+  return { gift: g, problem }
 }
 
 type RowProps = { item: MenuItem; state: AppState; locationId: string; biz: string; saved?: string | null }
@@ -308,7 +321,7 @@ function reqText(required: boolean, min: number, max: number, done: boolean) {
   return max > 1 ? `Opcional · hasta ${max}` : 'Opcional'
 }
 
-function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPassport }: { item?: MenuItem; biz: BusinessProfile; locationId: string; state: AppState; fav: boolean; onFav: () => void; onClose: () => void; fromPassport?: boolean }) {
+function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPassport, gift }: { item?: MenuItem; biz: BusinessProfile; locationId: string; state: AppState; fav: boolean; onFav: () => void; onClose: () => void; fromPassport?: boolean; gift?: { gift: GiftInvite; problem: string | null } }) {
   const [sel, setSel] = useState<Record<string, string[]>>({})
   const [qty, setQty] = useState(1)
   const [note, setNote] = useState('')
@@ -329,6 +342,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
   const groups = groupsOf(state, item)
   const chk = checkLine(state, item, sel, qty)
   const fn = foodNoteText(item.foodNote)
+  const giftOn = !!gift && !gift.problem
   const toggle = (gid: string, oid: string, max: number) => {
     setErrors((e) => ({ ...e, [gid]: '' }))
     setSel((s) => {
@@ -338,7 +352,8 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
     })
   }
   const add = () => {
-    const o = act({ type: 'cart/add', businessId: biz.id, locationId, itemId: item.id, qty, selections: sel, note, source: fromPassport ? 'pasaporte' : undefined }, `${item.name} agregado al pedido`)
+    const useGift = gift && !gift.problem ? gift.gift.code : undefined
+    const o = act({ type: 'cart/add', businessId: biz.id, locationId, itemId: item.id, qty: useGift ? 1 : qty, selections: sel, note, source: fromPassport ? 'pasaporte' : undefined, giftCode: useGift }, `${item.name} agregado al pedido`)
     if (!o.ok) {
       const errs = ((o.data as { errors?: Record<string, string> } | undefined)?.errors ?? {}) as Record<string, string>
       setErrors(Object.keys(errs).length ? errs : { _item: o.message })
@@ -367,6 +382,12 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
           <Glyph name="heart" size={22} />
         </button>
       </div>
+      {gift && (
+        <p className={`gift-note ${gift.problem ? 'off' : ''}`} data-testid="gift-note">
+          <Glyph name="gift" size={16} />
+          {gift.problem ?? <>Invitación de <strong>{gift.gift.fromAlias}</strong> ({gift.gift.code}): el plato base ({fmtARS(gift.gift.coveredCents)}) queda cubierto. Elegí las opciones; los extras se pagan.</>}
+        </p>
+      )}
       {fromPassport && (
         <p className="from-passport" data-testid="from-passport">
           <Glyph name="star" size={16} /> Tu selección del pasaporte, revalidada recién: elegí las opciones de hoy; el precio es el actual.
@@ -444,14 +465,18 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
             </div>
           </div>
           <div className="item-foot">
-            <div className="qty" role="group" aria-label="Cantidad">
-              <button type="button" onClick={() => setQty((v) => Math.max(1, v - 1))} aria-label="Menos"><Glyph name="minus" size={18} /></button>
-              <output aria-live="polite" data-testid="qty">{qty}</output>
-              <button type="button" onClick={() => setQty((v) => Math.min(item.maxQty, v + 1))} aria-label="Más"><Glyph name="plus" size={18} /></button>
-            </div>
+            {giftOn ? (
+              <span className="gift-qty"><Glyph name="gift" size={16} /> 1 invitada</span>
+            ) : (
+              <div className="qty" role="group" aria-label="Cantidad">
+                <button type="button" onClick={() => setQty((v) => Math.max(1, v - 1))} aria-label="Menos"><Glyph name="minus" size={18} /></button>
+                <output aria-live="polite" data-testid="qty">{qty}</output>
+                <button type="button" onClick={() => setQty((v) => Math.min(item.maxQty, v + 1))} aria-label="Más"><Glyph name="plus" size={18} /></button>
+              </div>
+            )}
             <button type="submit" className="btn lg" data-testid="add-to-cart">
-              <span className="cta-label">Agregar al pedido</span>
-              <span className="money" data-testid="subtotal">{fmtARS(chk.unitCents * qty)}</span>
+              <span className="cta-label">{giftOn ? 'Canjear y agregar' : 'Agregar al pedido'}</span>
+              <span className="money" data-testid="subtotal">{fmtARS(giftOn ? Math.max(0, chk.unitCents - Math.min(gift!.gift.coveredCents, chk.unitCents)) : chk.unitCents * qty)}</span>
             </button>
             <ErrorText>{errors._item || errors._qty}</ErrorText>
           </div>

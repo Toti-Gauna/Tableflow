@@ -10,6 +10,7 @@ import { pickupCount } from '../../domain/pickup'
 import { dateKeyOf, fmtDateShort, hhmm, minutesOfDay } from '../../domain/time'
 import { eventSeats } from '../../domain/cmd-engage'
 import { BOARD_PICKS, ORIGINS } from '../../domain/content'
+import { SeasonBand } from '../../ui/season'
 import type { AppState, BusinessProfile, ServiceWindow } from '../../domain/types'
 
 const DAY_FROM = 8 * 60
@@ -137,6 +138,8 @@ export function Home() {
         </div>
         {isRest ? <DayBoard state={state} biz={biz} locationId={locationId} /> : <BarRhythm state={state} biz={biz} locationId={locationId} />}
       </section>
+
+      <SeasonBand state={state} biz={biz.id} />
 
       <section className="day-strip" aria-labelledby="hoy">
         <div className="row between" style={{ alignItems: 'baseline' }}>

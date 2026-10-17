@@ -1,10 +1,18 @@
-import type { OrderStatus, ReservationStatus, Role } from '../domain/types'
+import type { GiftStatus, OrderStatus, ReservationStatus, Role } from '../domain/types'
 
 export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral' | 'review'
 export interface Label {
   label: string
   tone: Tone
   icon: string
+}
+
+export const GIFT_LABEL: Record<GiftStatus, Label> = {
+  enviado: { label: 'Sin abrir', tone: 'info', icon: '✉' },
+  abierto: { label: 'Abierta · sin canjear', tone: 'warn', icon: '◔' },
+  canjeado: { label: 'Canjeada', tone: 'ok', icon: '✓' },
+  cancelado: { label: 'Cancelada', tone: 'err', icon: '✕' },
+  vencido: { label: 'Vencida', tone: 'neutral', icon: '⌛' },
 }
 
 export const RES_LABEL: Record<ReservationStatus, Label> = {
@@ -43,6 +51,8 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const isClientRole = (r: Role) => r === 'cliente-invitado' || r === 'cliente-recurrente'
 
 export interface AdminSection {
+  /** Rótulo corto para la barra inferior móvil. */
+  short?: string
   key: string
   label: string
   roles: Role[]
@@ -52,14 +62,15 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { key: 'reservas', label: 'Reservas', roles: ['recepcion', 'encargado'] },
   { key: 'salon', label: 'Salón', roles: ['recepcion', 'mozo', 'encargado'] },
   { key: 'pedidos', label: 'Pedidos', roles: ['recepcion', 'mozo', 'caja', 'encargado'] },
-  { key: 'cocina', label: 'Cocina / barra', roles: ['cocina', 'encargado'] },
+  { key: 'cocina', label: 'Cocina / barra', short: 'Cocina', roles: ['cocina', 'encargado'] },
   { key: 'caja', label: 'Caja', roles: ['caja', 'encargado'] },
   { key: 'carta', label: 'Carta', roles: ['encargado'] },
   { key: 'stock', label: 'Stock', roles: ['cocina', 'encargado'] },
   { key: 'clientes', label: 'Clientes', roles: ['recepcion', 'encargado'] },
-  { key: 'automatizaciones', label: 'Automatizaciones', roles: ['encargado'] },
+  { key: 'regalos', label: 'Regalos', roles: ['recepcion', 'caja', 'encargado'] },
+  { key: 'automatizaciones', label: 'Automatizaciones', short: 'Reglas', roles: ['encargado'] },
   { key: 'reportes', label: 'Reportes', roles: ['encargado'] },
-  { key: 'configuracion', label: 'Configuración', roles: ['encargado'] },
+  { key: 'configuracion', label: 'Configuración', short: 'Ajustes', roles: ['encargado'] },
 ]
 export const DEFAULT_ADMIN: Record<Role, string> = {
   'cliente-invitado': 'resumen',

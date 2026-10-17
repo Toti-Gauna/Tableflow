@@ -46,11 +46,15 @@ export function openSession(
 }
 
 const DEAD: Order['status'][] = ['rechazado', 'cancelado']
+/** Importe a cobrar de una línea: lo cubierto por una invitación no se cobra (simulado). */
+export const lineDue = (l: Order['lines'][number]) => l.lineCents - (l.coveredCents ?? 0)
+export const orderDue = (o: Order) => o.lines.reduce((a, l) => a + lineDue(l), 0)
+export const orderCovered = (o: Order) => o.lines.reduce((a, l) => a + (l.coveredCents ?? 0), 0)
 export function billableOrders(s: AppState, sessionId: string): Order[] {
   return s.orders.filter((o) => o.sessionId === sessionId && !DEAD.includes(o.status))
 }
 export function sessionTotal(s: AppState, sessionId: string): number {
-  return billableOrders(s, sessionId).reduce((a, o) => a + o.totalCents, 0)
+  return billableOrders(s, sessionId).reduce((a, o) => a + orderDue(o), 0)
 }
 export function sessionPaid(s: AppState, sessionId: string): number {
   return s.payments.filter((p) => p.sessionId === sessionId && p.status === 'registrado').reduce((a, p) => a + p.amountCents, 0)
@@ -60,5 +64,6 @@ export const sessionBalance = (s: AppState, sessionId: string) => sessionTotal(s
 /** Líneas facturables con indicación de si ya fueron asignadas a un pago. */
 export function billableLines(s: AppState, sessionId: string) {
   const paid = new Set(s.payments.filter((p) => p.sessionId === sessionId && p.status === 'registrado').flatMap((p) => p.lineIds))
-  return billableOrders(s, sessionId).flatMap((o) => o.lines.map((l) => ({ order: o, line: l, paid: paid.has(l.id) })))
+  // una línea cubierta por completo por una invitación no queda pendiente de cobro
+  return billableOrders(s, sessionId).flatMap((o) => o.lines.map((l) => ({ order: o, line: l, paid: paid.has(l.id) || lineDue(l) === 0, due: lineDue(l) })))
 }

@@ -117,11 +117,14 @@ export function AdminCaja() {
           <div className="admin-grid">
             <div>
               <h3>Ítems</h3>
-              {billableLines(state, sel.id).map(({ order, line, paid }) => (
+              {billableLines(state, sel.id).map(({ order, line, paid, due }) => (
                 <label key={line.id} className="choice">
                   <input type="checkbox" disabled={paid} checked={lines.includes(line.id)} onChange={(e) => setLines((l) => (e.target.checked ? [...l, line.id] : l.filter((x) => x !== line.id)))} />
-                  <span className="grow">{line.qty}× {line.name} <span className="muted small">({order.id}{paid ? ' · pagado' : ''})</span></span>
-                  <span className="money">{fmtARS(line.lineCents)}</span>
+                  <span className="grow">
+                    {line.qty}× {line.name} <span className="muted small">({order.id}{paid ? (due === 0 && line.giftId ? ' · cubierto por invitación' : ' · pagado') : ''})</span>
+                    {line.giftId && due > 0 && <span className="gift-line"> Invitación cubre {fmtARS(line.coveredCents ?? 0)}</span>}
+                  </span>
+                  <span className="money">{fmtARS(due)}</span>
                 </label>
               ))}
               <div className="total-row"><span>Total</span><span className="money">{fmtARS(sessionTotal(state, sel.id))}</span></div>
@@ -167,7 +170,7 @@ export function AdminCaja() {
               <div className="stack tight">
                 <h3>Cobrar ítems elegidos o un monto parcial</h3>
                 <button className="btn secondary small" type="button" disabled={!lines.length} onClick={() => {
-                  const total = billableLines(state, sel.id).filter((x) => lines.includes(x.line.id)).reduce((a, x) => a + x.line.lineCents, 0)
+                  const total = billableLines(state, sel.id).filter((x) => lines.includes(x.line.id)).reduce((a, x) => a + x.due, 0)
                   pay({ type: 'pay/register', sessionId: sel.id, operationId: getOp(), amountCents: total, method, lineIds: lines })
                   setLines([])
                 }} data-testid="pay-items">Cobrar ítems seleccionados</button>

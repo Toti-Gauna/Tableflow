@@ -197,6 +197,8 @@ export function baseState(fixtureId: FixtureId): AppState {
     redemptions: [],
     audit: [],
     campaignPreviews: [],
+    gifts: [],
+    settings: { seasonByBusiness: { 'mesa-clara': 'auto', 'ritual-cafe': 'auto' } },
   }
 }
 

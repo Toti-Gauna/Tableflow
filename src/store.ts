@@ -108,6 +108,14 @@ export function useApp(): AppState {
   return useSnapshot().state
 }
 
+type CommandListener = (cmd: Command, outcome: Outcome) => void
+const commandListeners = new Set<CommandListener>()
+/** Observadores de comandos aplicados desde la UI (p. ej. sonidos de interfaz). No modifican el estado. */
+export function onCommand(l: CommandListener) {
+  commandListeners.add(l)
+  return () => commandListeners.delete(l)
+}
+
 export function dispatch(cmd: Command): Outcome {
   if (snap.phase !== 'ready') return { ok: false, code: 'recuperacion', message: 'La demo está en modo de recuperación.' }
   const { state, outcome } = applyCommand(snap.state, cmd)
@@ -116,6 +124,7 @@ export function dispatch(cmd: Command): Outcome {
     persist()
     emitChange()
   }
+  for (const l of commandListeners) l(cmd, outcome)
   return outcome
 }
 

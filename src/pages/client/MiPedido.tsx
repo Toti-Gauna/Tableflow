@@ -12,6 +12,7 @@ import { Glyph, Plate } from '../../ui/glyphs'
 import { sedeShort } from '../../ui/format'
 import { activeSessionAt } from '../../domain/sessions'
 import { fmtARS } from '../../domain/money'
+import { lineGiftCover } from '../../domain/cmd-commerce'
 import { dateKeyOf, hhmm, minutesOfDay, parseHHMM } from '../../domain/time'
 import { dispatch } from '../../store'
 import type { Outcome } from '../../domain/core'
@@ -106,6 +107,7 @@ export function MiPedido() {
                     <strong>{it.name}</strong>
                     <div className="opts">{chk.picked.map((p) => p.optionName).join(' · ') || 'Sin opciones'}</div>
                     {l.note && <div className="opts">Nota: {l.note}</div>}
+                    {l.giftId && <div className="gift-line" data-testid={`gift-line-${l.id}`}><Glyph name="gift" size={14} /> Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} de {state.gifts.find((g) => g.id === l.giftId)?.fromAlias} · cubre {fmtARS(lineGiftCover(state, l, chk.unitCents))}</div>}
                     {out && <ErrorText>{out.reason}. Quitalo o elegí otra opción.</ErrorText>}
                     <div className="line-qty">
                       <div className="qty" role="group" aria-label={`Cantidad de ${it.name}`}>
@@ -116,7 +118,7 @@ export function MiPedido() {
                       <button type="button" className="btn ghost small" onClick={() => act({ type: 'cart/remove', cartId: cart.id, lineId: l.id }, `${it.name} quitado`)}>Quitar<span className="sr-only"> {it.name}</span></button>
                     </div>
                   </div>
-                  <span className="money">{fmtARS(chk.unitCents * l.qty)}</span>
+                  <span className="money">{fmtARS(chk.unitCents * l.qty - lineGiftCover(state, l, chk.unitCents))}</span>
                 </div>
               )
             })}

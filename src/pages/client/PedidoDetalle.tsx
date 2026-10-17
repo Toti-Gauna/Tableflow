@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
+import { Glyph } from '../../ui/glyphs'
+import { orderCovered, orderDue } from '../../domain/sessions'
 import { HouseChar } from '../../ui/art/characters'
 import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { ORDER_LABEL, sedeShort } from '../../ui/format'
@@ -97,11 +99,18 @@ export function PedidoDetalle() {
               <strong>{l.qty}× {l.name}</strong> <span className="st-tag">{l.station}</span>
               <div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}</div>
               {l.note && <div className="opts">Nota: {l.note}</div>}
+              {l.giftId && <div className="gift-line"><Glyph name="gift" size={14} /> Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)}</div>}
             </div>
             <span className="money">{fmtARS(l.lineCents)}</span>
           </div>
         ))}
         <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
+        {orderCovered(o) > 0 && (
+          <>
+            <div className="total-row sub"><span>Cubierto por invitación</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>
+            <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>
+          </>
+        )}
         <p className="small muted">Canal: {o.channel} · operación {o.operationId} · hilo {o.correlationId}. Importe informativo: no se cobró nada.</p>
       </section>
       <div className="row" style={{ marginTop: 14 }}>

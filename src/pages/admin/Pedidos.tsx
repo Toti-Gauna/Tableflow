@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
+import { orderCovered, orderDue } from '../../domain/sessions'
 import { act, Badge, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { CHANNEL_LABEL, ORDER_LABEL } from '../../ui/format'
 import { OrderTimeline } from '../client/PedidoDetalle'
@@ -60,11 +61,12 @@ export function AdminPedidos() {
           <h2>Platos</h2>
           {o.lines.map((l) => (
             <div className="line" key={l.id}>
-              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div></div>
+              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div>{l.giftId && <div className="gift-line">Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)} (sin cobro)</div>}</div>
               <span className="money">{fmtARS(l.lineCents)}</span>
             </div>
           ))}
           <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
+          {orderCovered(o) > 0 && <div className="total-row sub"><span>Cubierto por invitación · a cobrar {fmtARS(orderDue(o))}</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>}
           <p className="small muted">{o.reviewed ? 'Editado con revisión. ' : ''}Operación {o.operationId} · correlación {o.correlationId} · versión {o.version}</p>
         </section>
         <div className="row" style={{ marginTop: 12 }}>

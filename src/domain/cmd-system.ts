@@ -94,6 +94,18 @@ const windowSet: Handler = (s, c, ctx) => {
   return ok()
 }
 
+const SEASONS_OK = ['auto', 'primavera', 'verano', 'otono', 'invierno', 'madre', 'padre', 'amigo', 'fiestas', 'enamorados']
+/** Temática por época: automática (según el reloj simulado) o forzada para mostrar otra temporada. */
+const seasonSet: Handler = (s, c, ctx) => {
+  const b = byId(s.businesses, c.businessId)
+  if (!b) return fail('negocio-inexistente', 'Negocio inexistente.')
+  if (!SEASONS_OK.includes(c.season)) return fail('temporada-invalida', 'Temporada inválida.')
+  if (s.settings.seasonByBusiness[b.id] === c.season) return dup()
+  s.settings.seasonByBusiness[b.id] = c.season
+  audit(s, ctx, b.id, 'config.season', 'BusinessProfile', b.id, c.season === 'auto' ? 'Temporada automática (según el reloj simulado)' : `Temporada forzada: ${c.season}`)
+  return ok()
+}
+
 /** Reserva un identificador de operación (contador persistente): el formulario lo reutiliza ante reintentos. */
 const opAlloc: Handler = (s) => ok({ operationId: nextId(s, 'OP', 4) })
 
@@ -106,5 +118,6 @@ export const systemHandlers: Record<string, Handler> = {
   'session/setLocation': setLocation,
   'config/set': configSet,
   'config/window': windowSet,
+  'config/season': seasonSet,
 }
 export { minutesOfDay }

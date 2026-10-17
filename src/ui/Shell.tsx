@@ -4,6 +4,7 @@ import { act, ConfirmDialog, DemoTag } from './kit'
 import { Glyph } from './glyphs'
 import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL, sedeShort } from './format'
 import { dismissNotice, dispatch, resetDemo, setPrefs, useSnapshot } from '../store'
+import { sfx } from './sfx'
 import { dateKeyOf, fmtDateLong, fmtDateShort, hhmm, minutesOfDay } from '../domain/time'
 import type { BusinessId, FixtureId, Role } from '../domain/types'
 
@@ -164,6 +165,21 @@ export function DemoBar() {
             </select>
           </label>
           <span className="sep" aria-hidden="true" />
+          <button
+            className="cbtn"
+            type="button"
+            aria-pressed={prefs.uiSounds}
+            data-testid="sfx-toggle"
+            title="Sonidos cortos al agregar, enviar o abrir un regalo. Apagados por defecto; el volumen se ajusta en Configuración."
+            onClick={() => {
+              const on = !prefs.uiSounds
+              setPrefs({ uiSounds: on })
+              if (on) sfx('tap', { force: true })
+            }}
+          >
+            <Glyph name={prefs.uiSounds ? 'volume' : 'mute'} size={16} />
+            <span className="wide-only">Sonidos de interfaz</span>
+          </button>
           <button
             className="cbtn"
             type="button"

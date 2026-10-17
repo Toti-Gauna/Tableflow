@@ -76,11 +76,28 @@ describe('Persistencia local tableflow.demo.v1', () => {
   })
   it('versión futura o sin migrador: no se pisa; se pide migrar o reiniciar', () => {
     const st = new FakeStorage()
-    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 2, savedAt: 0, state: {} }))
+    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 3, savedAt: 0, state: {} }))
     expect(loadState(st).kind).toBe('future')
     st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 0, savedAt: 0, state: {} }))
     expect(loadState(st).kind).toBe('needs-migration')
     expect(st.data.has(KEY_STATE)).toBe(true)
+  })
+  it('migración v1 → v2: un guardado de P2 se abre sin perder nada y suma regalos y temporada', () => {
+    const st = new FakeStorage()
+    const v2 = withCart()
+    const { gifts: _g, settings: _s, ...rest } = v2
+    const v1 = { ...rest, schemaVersion: 1 }
+    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 1, savedAt: 0, state: v1 }))
+    const r = loadState(st)
+    expect(r.kind).toBe('ok')
+    if (r.kind !== 'ok') return
+    expect(r.state.schemaVersion).toBe(2)
+    expect(r.state.gifts).toEqual([])
+    expect(r.state.settings.seasonByBusiness).toEqual({ 'mesa-clara': 'auto', 'ritual-cafe': 'auto' })
+    expect(r.state.carts[0].lines[0]).toMatchObject({ itemId: 'RC-01', qty: 2 })
+    expect(r.state.orders).toEqual(v2.orders)
+    // el original sigue guardado hasta la próxima escritura (no se pisa al leer)
+    expect(JSON.parse(st.data.get(KEY_STATE)!).schemaVersion).toBe(1)
   })
   it('S46: reiniciar borra solo las claves TableFlow, nunca localStorage.clear()', () => {
     const st = new FakeStorage()
