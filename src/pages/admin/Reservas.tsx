@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
-import { act, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
+import { act, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge, RowMenu } from '../../ui/kit'
 import { CHANNEL_LABEL, RES_LABEL } from '../../ui/format'
 import { alternatives, businessDuration, holdsTable } from '../../domain/availability'
 import { addDays, dateKeyOf, fmtDateShort, fmtDateTime, hhmm } from '../../domain/time'
@@ -32,18 +32,29 @@ export function AdminReservas() {
     if (!o.ok) setMsg({ tone: 'err', text: o.message, alts: (((o.data as { alternatives?: number[] } | undefined)?.alternatives) ?? []).map((m) => ({ id: r.id, min: m })) })
     else setMsg({ tone: 'ok', text: o.duplicate ? `${r.id} ya estaba confirmada.` : `${r.id} confirmada. Cliente y chat muestran el mismo estado.` })
   }
-  const actions = (r: Reservation) => (
-    <div className="row">
-      {r.status === 'solicitada' && <button className="btn small" type="button" onClick={() => accept(r)} data-testid={`accept-${r.id}`}>Aceptar</button>}
-      {r.status === 'revision_humana' && !r.reviewResolved && r.reviewReason === 'alimentaria' && <button className="btn small" type="button" onClick={() => setReview(r)} data-testid={`review-${r.id}`}>Resolver revisión</button>}
-      {r.status === 'revision_humana' && r.reviewReason === 'grupo-grande' && <span className="small muted">Coordinar a mano (no se asigna mesa)</span>}
-      {['solicitada', 'revision_humana'].includes(r.status) && <button className="btn secondary small" type="button" onClick={() => setAlt(r)}>Ofrecer alternativa</button>}
-      {r.status === 'confirmada' && <button className="btn secondary small" type="button" onClick={() => act({ type: 'res/arrive', id: r.id }, `${r.id}: llegó`)}>Marcar llegada</button>}
-      {['confirmada', 'llegada'].includes(r.status) && <Link className="btn secondary small" to="/admin/salon">Sentar</Link>}
-      {r.status === 'confirmada' && <button className="btn secondary small" type="button" onClick={() => act({ type: 'res/noShow', id: r.id }, `${r.id}: no-show`)}>No-show</button>}
-      {['solicitada', 'confirmada', 'alternativa_ofrecida', 'revision_humana', 'llegada'].includes(r.status) && <button className="btn danger small" type="button" onClick={() => setCancel(r)}>Cancelar</button>}
-    </div>
-  )
+  // una acción principal por estado; el resto en el menú de la fila
+  const actions = (r: Reservation) => {
+    const canCancel = ['solicitada', 'confirmada', 'alternativa_ofrecida', 'revision_humana', 'llegada'].includes(r.status)
+    const canAlt = ['solicitada', 'revision_humana'].includes(r.status)
+    const more = canAlt || canCancel || r.status === 'confirmada'
+    return (
+      <div className="row-actions">
+        {r.status === 'solicitada' && <button className="btn small" type="button" onClick={() => accept(r)} data-testid={`accept-${r.id}`}>Aceptar</button>}
+        {r.status === 'revision_humana' && !r.reviewResolved && r.reviewReason === 'alimentaria' && <button className="btn small" type="button" onClick={() => setReview(r)} data-testid={`review-${r.id}`}>Resolver revisión</button>}
+        {r.status === 'revision_humana' && r.reviewReason === 'grupo-grande' && <span className="small muted">Coordinar a mano</span>}
+        {r.status === 'confirmada' && <button className="btn secondary small" type="button" onClick={() => act({ type: 'res/arrive', id: r.id }, `${r.id}: llegó`)}>Marcar llegada</button>}
+        {r.status === 'llegada' && <Link className="btn small" to="/admin/salon">Sentar</Link>}
+        {more && (
+          <RowMenu label={`Otras acciones para ${r.id}`}>
+            {r.status === 'confirmada' && <Link to="/admin/salon">Sentar en el salón</Link>}
+            {canAlt && <button type="button" onClick={() => setAlt(r)}>Ofrecer alternativa</button>}
+            {r.status === 'confirmada' && <button type="button" onClick={() => act({ type: 'res/noShow', id: r.id }, `${r.id}: no-show`)}>Marcar no-show</button>}
+            {canCancel && <button type="button" className="danger" onClick={() => setCancel(r)}>Cancelar reserva</button>}
+          </RowMenu>
+        )}
+      </div>
+    )
+  }
   const tableName = (r: Reservation) => state.tables.find((t) => t.id === r.tableId)?.label ?? '—'
   return (
     <>
@@ -95,12 +106,12 @@ export function AdminReservas() {
           <div className="table-wrap responsive">
             <table>
               <caption className="sr-only">Reservas</caption>
-              <thead><tr><th>Folio</th><th>Hora</th><th>Personas</th><th>A nombre de</th><th>Canal</th><th>Mesa</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Hora</th><th>Folio</th><th className="num">Pers.</th><th>A nombre de</th><th>Canal</th><th>Mesa</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead>
               <tbody>
                 {list.map((r) => (
                   <tr key={r.id} data-testid={`res-row-${r.id}`} data-status={r.status}>
-                    <td><Link to={`/admin/reservas/${r.id}`}>{r.id}</Link></td>
-                    <td className="num">{id ? fmtDateShort(r.dateKey) + ' ' : ''}{hhmm(r.startMin)}</td>
+                    <td className="num time">{id ? fmtDateShort(r.dateKey) + ' ' : ''}<strong>{hhmm(r.startMin)}</strong></td>
+                    <td className="nowrap"><Link to={`/admin/reservas/${r.id}`}>{r.id}</Link></td>
                     <td className="num">{r.party}</td>
                     <td>{r.alias}{r.dietaryNote ? <div className="small">⚑ {r.dietaryNote}</div> : null}</td>
                     <td>{CHANNEL_LABEL[r.channel] ?? r.channel}</td>
@@ -160,7 +171,7 @@ export function AdminReservas() {
                     </div>
                     <div className="row">
                       {w.status === 'ofrecida' && <button className="btn small" type="button" onClick={() => { const o = act({ type: 'wait/confirm', id: w.id }, 'Oferta validada: reserva confirmada'); if (!o.ok) setMsg({ tone: 'err', text: o.message }) }} data-testid={`wait-confirm-${w.id}`}>Validar y confirmar</button>}
-                      <button className="btn ghost small" type="button" onClick={() => act({ type: 'wait/cancel', id: w.id }, 'Quitado de la lista de espera')}>Quitar</button>
+                      <button className="btn ghost small nowrap" type="button" onClick={() => act({ type: 'wait/cancel', id: w.id }, 'Quitado de la lista de espera')}>Quitar</button>
                     </div>
                   </li>
                 ))}

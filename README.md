@@ -6,6 +6,8 @@ Demo de gestión gastronómica con dos negocios **ficticios** — **Mesa Clara**
 
 **P3:** 42 ilustraciones SVG propias (una por plato y bebida) y personajes de la casa (Ñoqui, Granito y Tomatito); **invitar a alguien a comer** con tarjeta y mensaje de regalo (simulado) que se canjea en el pedido; temática por época según el reloj simulado; sección **para chicos** con memotest y "Armá tu plato"; barra inferior móvil para cliente y profesional; pantalla de carga y carga diferida por ruta; sonidos de interfaz opcionales (apagados por defecto). Galería en `#/arte`.
 
+**P4:** análisis por fases (`docs/tableflow/p4-analisis.md`) y mejoras de oficio: acabado de grabado en las ilustraciones, ilustraciones firma por negocio, portada/inicio/Reservar/seguimiento/pasaporte reestructurados, guía de la demo en la consola y tablas del equipo con acciones agrupadas y gráficos con eje.
+
 **Solo frontend local.** Sin backend, base remota, IA real, autenticación, SDK de pagos, mensajes, llamadas, micrófono ni integraciones. Los roles muestran vistas, no seguridad. Banner **DEMO** permanente; pagos “DEMO” sin validez fiscal. Todo el contenido es de muestra.
 
 ## Probarla
@@ -35,10 +37,10 @@ Invitar a comer: `#/mesa-clara/regalar` → elegí plato, nombres y mensaje → 
 npm run typecheck   # tsc --noEmit
 npm test            # Vitest: dominio, persistencia, migración, regalos, temporadas, invariantes, contraste (193 pruebas)
 npm run build       # tsc + vite build → dist/
-npm run e2e         # build + Playwright (65 pruebas, incluye el proyecto "movimiento-reducido"; usa Chromium instalado)
-npm run screens     # regenera docs/tableflow/screens/p2 y p3 (CAPTURE=1; P1 queda en screens/p1)
+npm run e2e         # build + Playwright (70 pruebas, incluye el proyecto "movimiento-reducido"; usa Chromium instalado)
+npm run screens     # regenera docs/tableflow/screens/p2, p3 y p4 (CAPTURE=1; P1 queda en screens/p1)
 ```
-No hay lint (no se instaló ESLint). La documentación de fase está en `docs/tableflow/`: `inspection.md`, `architecture.md`, `fixtures.md`, `design-system.md`, `motion.md`, `coverage.md`, `checkpoint.md`, `p3-analisis.md`.
+No hay lint (no se instaló ESLint). La documentación de fase está en `docs/tableflow/`: `inspection.md`, `architecture.md`, `fixtures.md`, `design-system.md`, `motion.md`, `coverage.md`, `checkpoint.md`, `p3-analisis.md`, `p4-analisis.md`.
 
 ## Deploy
 `.github/workflows/deploy.yml`: en cada PR a `main` corre typecheck, pruebas y build (más un job E2E informativo); al integrarse a `main` publica `dist/` en GitHub Pages. Requiere **Settings → Pages → Source: GitHub Actions**. La app usa `HashRouter` y `base: './'`, así que funciona bajo la subruta `/Tableflow/`.

@@ -1497,3 +1497,44 @@ dialog.guide { max-width: min(560px, calc(100vw - 24px)); }
 .seal-svg text { font-family: var(--sans); }
 .seal-svg.on { filter: url(#none); opacity: .92; }
 .status-hero .sh-note { display: block; font-size: .85rem; color: var(--muted); margin-top: 2px; }
+
+/* ==========================================================================
+   P4-E · lado profesional: filtros, tablas y acciones agrupadas
+   ========================================================================== */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin: 0 0 16px; padding: 12px 14px; background: var(--admin-surface, var(--surface)); border: 1px solid var(--admin-line, var(--line)); border-radius: 12px; }
+.filters .field label { font-size: .78rem; }
+.filters > .row { flex-wrap: nowrap; }
+td.nowrap, td.time, td.num { white-space: nowrap; }
+td.time strong { font-variant-numeric: tabular-nums; font-size: 1.02rem; }
+.row-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
+.row-menu { position: relative; }
+.row-menu-btn { width: 36px; height: 36px; min-width: 36px; border: 1px solid var(--admin-line, var(--line)); border-radius: 10px; font-size: 1.2rem; line-height: 1; }
+.row-menu-list { z-index: 70; min-width: 220px; display: grid; padding: 6px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line-strong); box-shadow: 0 18px 40px -18px rgba(20, 16, 10, .45); }
+.row-menu-list > button, .row-menu-list > a { text-align: left; padding: 10px 12px; border-radius: 8px; border: 0; background: none; font: inherit; font-weight: 650; color: var(--ink); text-decoration: none; cursor: pointer; min-height: 40px; }
+.row-menu-list > button:hover, .row-menu-list > a:hover { background: var(--paper-2); }
+.row-menu-list > .danger { color: var(--err); }
+/* gráfico de barras horizontales (una serie) */
+.hbar { margin: 4px 0 8px; }
+.hbar-title { font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
+.hbar-rows { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.hbar-row, .hbar-axis { display: grid; grid-template-columns: minmax(96px, 136px) minmax(0, 1fr) 36px; gap: 10px; align-items: center; }
+.hbar-row { min-height: 30px; border-radius: 6px; outline-offset: 2px; position: relative; }
+.hbar-label { font-size: .86rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hbar-track { position: relative; height: 100%; min-height: 30px; display: flex; align-items: center; background: repeating-linear-gradient(to right, var(--admin-line, var(--line)) 0 1px, transparent 1px calc(100% / var(--steps, 4))); }
+.hbar-bar { display: block; height: 14px; background: var(--brand); border-radius: 0 4px 4px 0; min-width: 0; }
+.hbar-val { font-variant-numeric: tabular-nums; font-weight: 800; font-size: .9rem; text-align: right; color: var(--ink); }
+.hbar-tip { position: absolute; left: 0; bottom: calc(100% - 2px); z-index: 5; white-space: nowrap; background: var(--ink); color: var(--paper); font-size: .78rem; padding: 4px 8px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity var(--dur-state) var(--ease); }
+.hbar-row:hover .hbar-tip, .hbar-row:focus-visible .hbar-tip { opacity: 1; }
+.hbar-row:hover .hbar-bar, .hbar-row:focus-visible .hbar-bar { opacity: .85; }
+.hbar-axis { margin-top: 2px; }
+.hbar-ticks { position: relative; height: 16px; border-top: 1px solid var(--line-strong); }
+.hbar-ticks > span { position: absolute; top: 2px; transform: translateX(-50%); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hbar-table { margin-top: 8px; font-size: .85rem; }
+.hbar-table summary { cursor: pointer; color: var(--muted); font-weight: 700; }
+.kv-list { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 8px; }
+.kv-list li { display: grid; gap: 2px; }
+.kv-dl { margin: 0; display: grid; }
+.kv-dl > div { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--admin-line, var(--line)); }
+.kv-dl dt { color: var(--muted); font-size: .86rem; }
+.kv-dl dd { margin: 0; font-size: .9rem; }
+.btn.nowrap { white-space: nowrap; }

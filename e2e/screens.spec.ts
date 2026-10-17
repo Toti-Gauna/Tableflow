@@ -138,3 +138,40 @@ test('capturas P3', async ({ page }) => {
   await page.getByRole('button', { name: 'Controles de la demo' }).click() // pliega la consola para ver la pantalla
   await shot('17-movil-admin-barra-inferior-390x844')
 })
+
+// P4: pantallas reestructuradas (portada, inicio, reservar, seguimiento, pasaporte, reservas y reportes del equipo).
+test('capturas P4', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  const P4 = process.env.OUT4 ?? 'docs/tableflow/screens/p4'
+  const shot = async (name: string, full = false) => {
+    await page.locator('#page-h1').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined)
+    await settle(page)
+    await page.screenshot({ path: `${P4}/${name}.png`, fullPage: full })
+  }
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await fresh(page, '/#/')
+  await shot('01-portada-1440', true)
+  await page.goto('/#/mesa-clara'); await shot('02-inicio-mesa-clara-1440')
+  await page.goto('/#/ritual-cafe'); await shot('03-inicio-ritual-cafe-1440')
+  await page.goto('/#/mesa-clara/carta'); await page.evaluate(() => window.scrollTo(0, 380)); await shot('04-carta-con-acabado-de-grabado-1440')
+  await page.goto('/#/mesa-clara/reservar'); await page.getByTestId('slot-780').click(); await shot('05-reservar-resumen-vivo-1440')
+  await page.goto('/#/ritual-cafe/pedido/O-008'); await shot('06-seguimiento-estado-protagonista-1440')
+  await page.getByTestId('guide-open').click(); await shot('07-guia-de-la-demo-en-la-consola-1440')
+  await page.keyboard.press('Escape')
+  await page.goto('/#/arte'); await page.locator('#g-hero').scrollIntoViewIfNeeded(); await shot('08-ilustraciones-firma-1440')
+  await setRole(page, /recurrente/)
+  await page.goto('/#/ritual-cafe/pasaporte'); await shot('09-pasaporte-libreta-con-sellos-1440')
+  await page.goto('/#/mesa-clara'); await page.locator('[data-biz="mesa-clara"]').first().waitFor()
+  await setRole(page, /Recepción/)
+  await page.goto('/#/admin/reservas'); await page.getByRole('button', { name: 'Otras acciones para R-001' }).click(); await shot('10-admin-reservas-acciones-agrupadas-1440')
+  await page.keyboard.press('Escape')
+  await page.getByTestId('biz-select').selectOption('ritual-cafe')
+  await setRole(page, /Encargado/)
+  await page.goto('/#/admin/reportes'); await shot('11-admin-reportes-grafico-con-eje-1440')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await setRole(page, /invitado/)
+  const toggle = page.getByRole('button', { name: 'Controles de la demo' })
+  if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click() // consola plegada para ver la pantalla
+  await page.goto('/#/mesa-clara'); await shot('12-movil-inicio-390')
+  await page.goto('/#/mesa-clara/reservar'); await shot('13-movil-reservar-390', true)
+})

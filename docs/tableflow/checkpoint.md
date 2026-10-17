@@ -1,3 +1,28 @@
+# Checkpoint P4 · TableFlow — análisis por fases y mejora de SVGs, estructura y UX/UI
+
+> Pedido del operador: menos "relleno genérico", más oficio en ilustraciones, estructura por página y UX/UI. Diagnóstico y resultado por fase en `p4-analisis.md`.
+
+## Identificación
+- Fecha real: 17/10/2026. Reloj simulado sin cambios (lun 19/10/2026 10:00 ART). Rama `claude/tableflow-demo` (PR #2). Commits P4: `c29acbb` (A/B), `6fa3474` (C/D) y el commit que contiene este archivo (E/F).
+- `schemaVersion`: 2 (sin cambios en P4: todo es presentación). Sin cambios de dominio.
+
+## Comandos y resultados (corrida final de P4)
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npm run typecheck` | 0 | sin errores |
+| `npm test` | 0 | 12 archivos, 193 pruebas OK |
+| `npm run build` | 0 | OK |
+| `npx playwright test` | 0 | 70 OK (63 previas + 5 de `p4.spec.ts` + 2 de `movimiento-reducido`), 4 omitidas (capturas) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "capturas P4"` | 0 | 13 capturas en `screens/p4/` |
+
+## Defectos encontrados y corregidos en P4
+`.filters` sin `display:flex` (los filtros se apilaban a ancho completo); hora y folio partidos en Reservas ("12:3 / 0"); botón "Quitar" partido en la lista de espera; el aviso fallido del pedido se mostraba como mensaje del producto; la ilustración del personaje se ensuciaba con el acabado de tinta (se excluye); dos textos del seguimiento con el mismo código confundían a la prueba (se unificaron en un párrafo).
+
+## Siguiente acción exacta
+Revisión del PR #2 por el operador (capturas `p1`→`p2`→`p3`→`p4`). Merge y deploy a Pages: decisión del equipo.
+
+---
+
 # Checkpoint P3 · TableFlow — ilustración propia, regalos, temporadas, sección infantil y plataforma (P3-A…F)
 
 > Checkpoint de trabajo de P3, no un cierre de demo. Lo que sigue es lo construido y medido en esta construcción. A continuación se encara P4 (auditoría por fases pedida por el operador: SVGs, estructura por página y UX/UI).

@@ -134,3 +134,17 @@ Formularios con `label` asociado y ayudas/errores por `aria-describedby`; errore
 - **Hoja "Secciones"**: diálogo modal (hoja inferior en móvil) con ícono, nombre y una línea de ayuda por sección.
 - **Carga**: pantalla estática en `index.html` y carga diferida por ruta (bundle inicial 307 KB / 93 KB gzip, antes 676 KB); cargador con esqueleto y personaje.
 - **Lado profesional**: entidades con nombre humano ("Reserva R-012 · Ana, 4 personas", "Insumo I-07 · Leche de avena"), tipo de tarea en español, detalle técnico plegable (IDs, hilo, claves de idempotencia), disponibilidad corta en la carta admin ("Agotado · sin insumos") con miniatura, filtros compactos, KPIs 2 × 2 en móvil, horas de 24 h sin cortes.
+
+
+---
+
+# P4 · oficio sobre relleno
+
+> Diagnóstico: `p4-analisis.md`. Capturas: `screens/p4/`.
+
+- **Capa de demo vs. producto.** El banner DEMO es el aviso general; dentro del producto solo se etiqueta lo simulado donde ocurre (pagos, canales, regalos). Lo que es de la demo (verme como Ana, avisos fallidos simulados, rol cliente en admin) usa `DemoHint`: sello DEMO + borde punteado, visualmente distinto de cualquier contenido. La guía de recorridos vive en la consola (*Guía de la demo*).
+- **Acabado de grabado** (`Finish` en `kit.tsx`): filtro SVG por pieza con línea de tinta (detección de bordes sobre la luminancia, color tinta 56 %) y grano de papel (ruido fractal al 30 %), activo desde 64 px (tinta) y 96 px (grano). Los personajes no lo usan.
+- **Ilustraciones firma** (`hero.tsx`): *la mesa larga* (mantel con guarda verde, milanesa, sorrentinos, provoleta, ensalada, copas, cubiertos, servilleta, panera) y *la barra* (mostrador de tablas, granos, tazas con latte art, medialuna, tostado, roll). Se usan en portada, inicio y Reservar, recortadas con `slice` según el contenedor.
+- **Viñetas de sección** (`CategoryMark`): cada sección de la carta abre con la miniatura de su plato representativo, no con un glifo de línea.
+- **Una acción principal por fila** en tablas del equipo; el resto en `RowMenu` (posición fija para no cortarse dentro del contenedor con scroll; Escape devuelve el foco).
+- **Gráficos** (`chart.tsx`): una serie en barras horizontales con eje y escala, grilla recesiva, valor al final de cada barra, detalle al pasar o enfocar y "Ver como tabla". Color de marca para la serie; el texto usa tinta, nunca el color de la serie.

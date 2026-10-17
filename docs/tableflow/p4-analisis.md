@@ -57,3 +57,14 @@ Dirección v2 ("ilustración editorial de carta"):
 | **P4-F · QA y cierre** | Pruebas nuevas y de regresión, capturas `screens/p4` antes/después, docs, PR | 193+ unitarias y 65+ E2E en verde; CI verde |
 
 Restricciones que se mantienen: solo frontend local, datos ficticios, banner DEMO y etiquetas de simulación donde corresponda, sin fotos de terceros, movimiento reducido respetado, sonidos apagados por defecto.
+
+## 6. Resultado de las fases (17/10/2026)
+| Fase | Hecho | Evidencia |
+|---|---|---|
+| P4-B · Voz y ruido | Pie de una línea; sin callout repetido en admin; aviso de rol cliente solo cuando aplica; **Guía de la demo** en la consola (recorridos y accesos fuera del producto); nota DEMO punteada para lo que es de la demo; metadatos técnicos plegados; copy sin "FICTICIO", "de muestra" ni "alias de muestra" en el cliente | `e2e/p4.spec.ts` (guía), `screens/p4/07` |
+| P4-C · Arte v2 | Acabado de grabado en todas las piezas (línea de tinta por bordes + grano sutil, desde 64/96 px); **ilustraciones firma** (mesa larga / barra) compuestas con platos reales; flan en tres cuartos; destellos de grabado; viñetas ilustradas por sección de la carta; ícono propio para "Secciones" | `screens/p4/04`, `08` |
+| P4-D · Estructura cliente | Portada con tapas ilustradas, tres momentos y accesos del equipo compactos; inicio con ilustración protagonista y pizarra superpuesta; catas como cartel con fecha; Reservar con **resumen vivo tipo ticket**; seguimiento con **estado protagonista** (personaje + titular + código); pasaporte como **libreta** con matasellos dibujados y reglas plegables | `screens/p4/01–03`, `05`, `06`, `09`, `12`, `13` |
+| P4-E · Estructura profesional | Barra de filtros real; Reservas con hora primero, folio sin cortes y **una acción principal + menú "⋯"** (Escape devuelve el foco); Reportes con franja de KPIs y **gráfico de barras con eje, valores, detalle al pasar/enfocar y vista de tabla** | `e2e/p4.spec.ts`, `screens/p4/10`, `11` |
+| P4-F · QA | 193 unitarias y 70 E2E en verde; axe sin violaciones serias en 25 pantallas; capturas `screens/p4` (13) | `checkpoint.md` |
+
+Pendiente para una próxima vuelta (no bloquea): aplicar el mismo patrón de acciones agrupadas a Pedidos y Clientes, viñetas ilustradas en la vitrina del café, y prueba con lector de pantalla y teléfono real.

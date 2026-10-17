@@ -98,6 +98,10 @@ Cada una probada en dominio con éxito, error/sin cupo, reintento, pausa y conse
 - `e2e/quality.spec.ts`: axe ahora también en Regalar, Para chicos, Regalos y la galería (25 pantallas), esperando a que la sección diferida esté montada.
 - Robustez de pruebas existentes: la espera de la hoja del configurador (S43) y el cambio de perfil antes del KDS (movimiento reducido) esperan el estado real en lugar de suponer tiempos.
 
+## P4 · pruebas agregadas
+- `e2e/p4.spec.ts` (5): la guía de la demo vive en la consola (y el inicio ya no tiene instrucciones de demo); resumen vivo de Reservar; seguimiento con detalle técnico plegado; acciones agrupadas en Reservas (menú, cancelación con motivo, Escape devuelve el foco); gráfico de Reportes con valores accesibles y vista de tabla.
+- Regresión completa (S01–S46, AU01–AU10, P3) en la misma corrida.
+
 ## No ejecutado / pendiente
 - Lector de pantalla real (NVDA/VoiceOver), revisión manual con usuarios, dispositivos móviles físicos (las pruebas emulan 320/390/768 y zoom 200 % por ancho CSS).
 - Contraste: medido sobre tokens (61 pares) y por axe en 21 pantallas renderizadas; no se midió cada combinación renderizada de forma exhaustiva. Esto **no certifica** accesibilidad.

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { dispatch } from '../store'
 import type { Outcome } from '../domain/core'
 import type { Command } from '../domain/reducer'
@@ -80,6 +80,38 @@ export function Empty({ title, children, action, art }: { title: string; childre
     </div>
   )
 }
+/** Acciones secundarias de una fila: un botón "⋯" que despliega la lista (Escape o clic afuera la cierra). */
+export function RowMenu({ label, children }: { label: string; children: ReactNode }) {
+  const [pos, setPos] = useState<CSSProperties | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const open = !!pos
+  // la lista se posiciona fija respecto del botón: no la recorta el contenedor con scroll de la tabla
+  const toggle = () => {
+    if (pos) return setPos(null)
+    const r = ref.current!.getBoundingClientRect()
+    const below = r.bottom + 230 < window.innerHeight
+    setPos({ position: 'fixed', right: Math.max(8, window.innerWidth - r.right), ...(below ? { top: r.bottom + 6 } : { bottom: window.innerHeight - r.top + 6 }) })
+  }
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setPos(null) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setPos(null); ref.current?.querySelector('button')?.focus() } }
+    const onScroll = () => setPos(null)
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, true)
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); window.removeEventListener('scroll', onScroll, true) }
+  }, [open])
+  return (
+    <div className="row-menu" ref={ref}>
+      <button type="button" className="icon-btn row-menu-btn" aria-expanded={open} aria-label={label} onClick={toggle}>
+        <span aria-hidden="true">⋯</span>
+      </button>
+      {pos && <div className="row-menu-list" style={pos} onClick={(e) => { if ((e.target as HTMLElement).closest('button, a')) setPos(null) }}>{children}</div>}
+    </div>
+  )
+}
+
 /** Nota de la capa de demo (no del producto): sello DEMO y borde punteado, siempre distinguible del contenido. */
 export function DemoHint({ children, className }: { children: ReactNode; className?: string }) {
   return (
