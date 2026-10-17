@@ -164,11 +164,3 @@ export const KIDS_MENU: Record<BusinessId, { itemId: string; note: string }[]> =
     { itemId: 'BR-10', note: 'Cono de helado de crema.' },
   ],
 }
-/** Parejas del memotest: platos de cada carta. */
-export const MEMO_ITEMS: Record<BusinessId, string[]> = {
-  'mesa-clara': ['MC-12', 'MC-07', 'MC-22', 'MC-01', 'MC-04', 'MC-02'],
-  'ritual-cafe': ['RC-05', 'RC-11', 'RC-12', 'RC-14', 'RC-09', 'RC-13'],
-  copo: [],
-  compas: [],
-  brasa: [],
-}

@@ -24,7 +24,7 @@ test.describe('Recorrido protagonista: restaurante (Mesa Clara)', () => {
     // doble clic: un solo folio
     await page.getByTestId('send-order').dblclick()
     await expect(page).toHaveURL(/pedido\/O-013/)
-    expect((await state(page)).orders.filter((o: any) => o.operationId).length).toBe(13)
+    expect((await state(page)).orders.filter((o: any) => o.operationId).length).toBe(18) // P5-L5: la semilla suma la actividad de los negocios nuevos
     await expect(page.getByRole('heading', { name: 'Pedido O-013' })).toBeVisible()
     await expect(page.getByText('Solicitud recibida; el equipo todavía debe aceptarla.')).toBeVisible()
 

@@ -11,6 +11,7 @@ import type { Order, Station as StationId } from '../../domain/types'
 import { orderPayment } from '../../domain/sessions'
 
 type Station = 'todas' | StationId
+const KDS_TITLE: Record<string, string> = { copo: 'Mostrador', brasa: 'Cocina · plancha y freidora', compas: 'Cocina y barra' }
 const STATION_ORDER: StationId[] = ['cocina', 'plancha', 'freidora', 'armado', 'barra', 'mostrador']
 const COLS: { status: Order['status']; title: string }[] = [
   { status: 'enviado', title: 'Nuevos' },
@@ -53,7 +54,7 @@ export function AdminCocina() {
       : `Retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} · N.º ${o.pickupCode}`
   return (
     <>
-      <PageHead title="Cocina / barra" sub="Cola por estación · tiempos según el reloj simulado" />
+      <PageHead title={KDS_TITLE[bizId] ?? 'Cocina / barra'} sub="Cola por estación · tiempos según el reloj simulado" />
       {msg && <Callout tone="err" role="alert">{msg.text}</Callout>}
       <div className="kds-board">
         <div className="kds-bar">

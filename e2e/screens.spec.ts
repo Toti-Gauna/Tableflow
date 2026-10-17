@@ -271,3 +271,40 @@ test('capturas P5-L4 (arte por identidad)', async ({ page }) => {
     }
   }
 })
+
+test('capturas P5-L5 (cinco negocios, pago en el local y juegos)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT8 ?? 'docs/tableflow/screens/p5-l5'
+  const nuevos = ['copo', 'compas', 'brasa']
+  await fresh(page, '/')
+  for (const mode of ['light', 'dark'] as const) {
+    const m = mode === 'light' ? 'claro' : 'oscuro'
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/#/'); await settle(page); await page.evaluate(() => window.scrollTo(0, 380)); await page.screenshot({ path: `${OUT}/0-portada-cinco-negocios-${m}-1440.png` })
+    for (const b of nuevos) {
+      await page.goto(`/#/${b}`); await settle(page); await page.screenshot({ path: `${OUT}/1-${b}-inicio-${m}-1440.png` })
+      await page.goto(`/#/${b}/carta`); await settle(page); await page.screenshot({ path: `${OUT}/2-${b}-carta-${m}-1440.png` })
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const b of nuevos) { await page.goto(`/#/${b}`); await settle(page); await page.screenshot({ path: `${OUT}/3-${b}-inicio-${m}-390.png` }) }
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/#/copo/carta/CO-02'); await settle(page)
+  await page.getByLabel('Frutilla a la crema').check(); await page.getByLabel('Dulce de leche granizado').check()
+  await page.getByRole('dialog').screenshot({ path: `${OUT}/4-copo-gustos-cupo-y-agotado.png` })
+  await page.goto('/#/compas/catas'); await settle(page); await page.screenshot({ path: `${OUT}/4-compas-agenda.png` })
+  await page.goto('/#/brasa/numeros'); await settle(page); await page.screenshot({ path: `${OUT}/4-brasa-numeros.png` })
+  await page.goto('/#/brasa'); await settle(page)
+  await page.goto('/#/admin/cocina'); await settle(page); await page.screenshot({ path: `${OUT}/5-brasa-cocina-estaciones-pago-pendiente.png` })
+  await page.goto('/#/admin/pedidos/O-BR-002'); await settle(page); await page.screenshot({ path: `${OUT}/5-brasa-pedido-pago-pendiente.png` })
+  const games: [string, string][] = [['ritual-cafe', 'memoria'], ['mesa-clara', 'mesa'], ['copo', 'helado'], ['brasa', 'hamburguesa'], ['compas', 'donde']]
+  for (const [i, [b, g]] of games.entries()) {
+    await page.goto(`/#/${b}/chicos`); await settle(page)
+    await page.getByTestId(`game-${g}`).screenshot({ path: `${OUT}/6${i}-${g}-a-inicio.png` })
+    await page.getByTestId(`${g}-start`).click(); await settle(page)
+    await page.getByTestId(`game-${g}`).screenshot({ path: `${OUT}/6${i}-${g}-b-jugando.png` })
+  }
+})

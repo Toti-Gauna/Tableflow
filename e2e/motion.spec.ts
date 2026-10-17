@@ -96,7 +96,7 @@ test('S33: detener durante el procesamiento cancela el turno; un callback tardí
   expect(late.duplicate).toBe(true)
   await page.waitForTimeout(900)
   const s = await state(page)
-  expect(s.reservations).toHaveLength(18)
+  expect(s.reservations).toHaveLength(21) // P5-L5: la semilla suma la actividad de los negocios nuevos
   expect(s.callSessions.at(-1).status).toBe('finalizada')
   await expect(page.getByTestId('transcript')).not.toContainText('no hay mesa de cuatro a las 20:00')
   // salir de la pantalla en pleno procesamiento también corta el temporizador
@@ -106,7 +106,7 @@ test('S33: detener durante el procesamiento cancela el turno; un callback tardí
   await page.goto('/#/mesa-clara/carta')
   await page.waitForTimeout(900)
   expect((await state(page)).callSessions.at(-1).status).toBe('procesando') // nadie respondió fuera de pantalla
-  expect((await state(page)).reservations).toHaveLength(18)
+  expect((await state(page)).reservations).toHaveLength(21) // P5-L5: la semilla suma la actividad de los negocios nuevos
 })
 
 test('S34 por la UI: la reserva web sigue por WhatsApp y por llamada con el mismo folio, sin duplicar', async ({ page }) => {
@@ -119,12 +119,12 @@ test('S34 por la UI: la reserva web sigue por WhatsApp y por llamada con el mism
   await expect(page.getByTestId('chat-log')).toContainText('Seguimos tu solicitud R-019 por WhatsApp')
   await page.getByTestId('chat-log').getByRole('button', { name: 'Confirmar solicitud' }).last().click()
   await expect(page.getByTestId('chat-log')).toContainText('R-019')
-  expect((await state(page)).reservations).toHaveLength(19)
+  expect((await state(page)).reservations).toHaveLength(22) // P5-L5: la semilla suma la actividad de los negocios nuevos
   await page.goto('/#/mesa-clara/reservas/R-019')
   await page.getByTestId('continue-voice').click()
   await expect(page.getByTestId('tab-voz')).toHaveAttribute('aria-selected', 'true')
   const s = await state(page)
-  expect(s.reservations).toHaveLength(19)
+  expect(s.reservations).toHaveLength(22) // P5-L5: la semilla suma la actividad de los negocios nuevos
   expect(s.reservations.filter((r: { alias: string }) => r.alias === 'Mora')).toHaveLength(1)
   expect(s.conversations.filter((c: { reservationIds: string[] }) => c.reservationIds.includes('R-019'))).toHaveLength(1)
 })

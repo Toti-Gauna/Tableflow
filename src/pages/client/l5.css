@@ -10,9 +10,10 @@
 
 /* Copo · vitrina */
 .vitrina ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
-.vitrina li { gap: 8px; padding: 6px 0; }
-.vitrina .g-name { flex: 1; min-width: 0; font-weight: 700; line-height: 1.2; }
-.vitrina .g-state { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--chalk-dim); white-space: nowrap; }
+.vitrina li { display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; row-gap: 0; align-items: center; padding: 6px 0; }
+.vitrina li > :first-child { grid-row: 1 / 3; }
+.vitrina .g-name { font-weight: 700; line-height: 1.2; overflow-wrap: normal; hyphens: manual; }
+.vitrina .g-state { font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--chalk-dim); }
 .vitrina li[data-state='bajo'] .g-state { color: #f3c77a; }
 .vitrina li[data-state='agotado'] .g-state { color: #ffb4a6; }
 .vitrina li[data-state='agotado'] svg { filter: grayscale(1); opacity: .55; }

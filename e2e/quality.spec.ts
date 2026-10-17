@@ -84,7 +84,7 @@ test.describe('Persistencia (S02, S45, S46)', () => {
     await page.getByTestId('dialog-confirm').click()
     const s = await state(page)
     expect(s.orders.find((o: any) => o.id === 'O-011').status).toBe('enviado')
-    expect(s.orders).toHaveLength(12)
+    expect(s.orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
     expect(await page.evaluate(() => localStorage.getItem('otra-app'))).toBe('x')
   })
 })
@@ -112,7 +112,7 @@ test('S15: perfil sin reservas → política de llegada, sin botón de confirmar
   await fresh(page, '/#/ritual-cafe/reservar')
   await expect(page.getByText('En este perfil atendemos por orden de llegada').first()).toBeVisible()
   await expect(page.getByTestId('res-submit')).toHaveCount(0)
-  expect((await state(page)).reservations).toHaveLength(18)
+  expect((await state(page)).reservations).toHaveLength(21) // P5-L5: la semilla suma la actividad de los negocios nuevos
 })
 
 test('S11/S16/S35 por la UI: sin cupo, grupo de 16 y alergia', async ({ page }) => {
@@ -236,7 +236,7 @@ test.describe('Llamada simulada, audio y movimiento reducido (S31–S33, S44)', 
     await page.getByTestId('call-stop').click()
     await page.waitForTimeout(900) // el callback tardío ya estaba cancelado
     const s = await state(page)
-    expect(s.reservations).toHaveLength(18)
+    expect(s.reservations).toHaveLength(21) // P5-L5: la semilla suma la actividad de los negocios nuevos
     expect(s.callSessions.every((c: any) => c.status === 'finalizada')).toBe(true)
   })
   test('audio opcional: motivos tras un gesto, con detención al salir', async ({ page }) => {

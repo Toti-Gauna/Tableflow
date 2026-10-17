@@ -2024,7 +2024,7 @@ dialog.role-intro { max-width: min(720px, calc(100vw - 24px)); }
 .role-cards span { font-size: .84rem; color: var(--muted); line-height: 1.35; }
 
 /* P5-L5 · tapas de los negocios nuevos: el plato firma sobre la pizarra del negocio */
-.cover-v2 .cover-art.cover-piece { display: grid; place-items: center; min-height: 220px; background: radial-gradient(60% 60% at 50% 45%, color-mix(in srgb, var(--chalk) 16%, transparent), transparent 70%); }
+.cover-v2 .cover-art.cover-piece { display: grid; place-items: center; min-height: 220px; background: color-mix(in srgb, var(--chalk) 94%, var(--board)); }
 .cover-v2 .cover-art.cover-piece svg { width: min(200px, 80%); height: auto; }
 .opt-gusto { align-items: center; }
 .opt-gusto .gusto-art { flex: none; }

@@ -453,9 +453,11 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
                     {g.options.map((o) => {
                       const stockOk = optionStockOk(state, o)
                       const checked = (sel[g.id] ?? []).includes(o.id)
+                      // P5-L5: con el cupo completo (p. ej. 2 gustos) el resto se desactiva; desmarcar libera lugar
+                      const full = g.max > 1 && !checked && (sel[g.id] ?? []).length >= g.max
                       return (
                         <label key={o.id} className={`opt${GUSTO_ART[o.id] ? ' opt-gusto' : ''}`}>
-                          <input type={g.max === 1 ? 'radio' : 'checkbox'} name={g.id} checked={checked} disabled={!stockOk} onChange={() => toggle(g.id, o.id, g.max)} />
+                          <input type={g.max === 1 ? 'radio' : 'checkbox'} name={g.id} checked={checked} disabled={!stockOk || full} onChange={() => toggle(g.id, o.id, g.max)} />
                           {GUSTO_ART[o.id] && <GustoArt id={o.id} />}
                           <span className="grow">
                             {o.name}
@@ -465,6 +467,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
                         </label>
                       )
                     })}
+                    {g.max > 1 && (sel[g.id] ?? []).length >= g.max && <p className="small muted" role="status">Cupo completo ({g.max}). Desmarcá uno para cambiarlo.</p>}
                     <ErrorText id={`err-${g.id}`}>{err}</ErrorText>
                   </div>
                 </fieldset>

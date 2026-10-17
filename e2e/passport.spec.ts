@@ -30,7 +30,7 @@ test('S38: estados sin empezar → 1/2/3 → insignia → guardada → reiniciad
   await page.reload()
   await expect(page.locator('.pp-status')).toContainText('Selección guardada')
   await expect(page.getByRole('button', { name: 'V60 filtrado' })).toHaveAttribute('aria-pressed', 'true')
-  expect((await state(page)).orders).toHaveLength(12) // logro sin comprar
+  expect((await state(page)).orders).toHaveLength(17) // logro sin comprar; P5-L5: más actividad sembrada (negocios nuevos)
   expect((await pass(page, 'ritual-cafe')).metrics).toMatchObject({ started: 1, completed: 1, saved: 1, usedInCart: 0 })
   // la carta la marca y "Pedir mi selección" revalida y abre el configurador con las opciones vigentes
   await page.goto('/#/ritual-cafe/carta')
