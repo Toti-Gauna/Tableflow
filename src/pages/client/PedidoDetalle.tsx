@@ -3,25 +3,40 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { Glyph } from '../../ui/glyphs'
-import { orderCovered, orderDue } from '../../domain/sessions'
+import { orderCovered, orderDue, orderPayment } from '../../domain/sessions'
+import { hasFeature } from '../../ui/features'
 import { HouseChar, type Mood } from '../../ui/art/characters'
 import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { ORDER_LABEL, sedeShort } from '../../ui/format'
+import { ORDER_LABEL, sedeShort, STATION_LABEL } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
-import type { Order, OrderStatus } from '../../domain/types'
+import type { AppState, Order, OrderStatus } from '../../domain/types'
 
 /** Estado protagonista del seguimiento: personaje, titular y una línea clara por estado. */
 const STATUS_COPY: Record<OrderStatus, { mood: Mood; title: string; text: (o: Order) => string }> = {
   enviado: { mood: 'pensando', title: 'Recibimos tu pedido', text: () => 'Solicitud recibida; el equipo todavía debe aceptarla.' },
   aceptado: { mood: 'feliz', title: 'Pedido aceptado', text: () => 'Ya está en la cola de cocina y barra.' },
   en_preparacion: { mood: 'guino', title: 'En preparación', text: (o) => (o.kind === 'retiro' ? 'Te avisamos cuando esté listo para retirar.' : 'En unos minutos llega a tu mesa.') },
-  listo: { mood: 'festejo', title: '¡Listo!', text: (o) => (o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.') },
+  listo: { mood: 'festejo', title: '¡Listo!', text: (o) => (o.kind === 'retiro' ? `Retiralo ${o.businessId === 'ritual-cafe' ? 'en barra' : 'en el mostrador'} con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.') },
   servido: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Cuando quieras, pedí la cuenta.' },
-  retirado: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Gracias por pasar por la barra.' },
+  retirado: { mood: 'feliz', title: '¡Buen provecho!', text: (o) => (o.businessId === 'ritual-cafe' ? 'Gracias por pasar por la barra.' : '¡Gracias por pasar!') },
   cerrado: { mood: 'dormido', title: 'Cuenta cerrada', text: () => 'Este pedido ya está cerrado. ¡Gracias!' },
   rechazado: { mood: 'triste', title: 'No pudimos tomarlo', text: (o) => o.reason ?? 'El equipo rechazó el pedido.' },
   cancelado: { mood: 'triste', title: 'Pedido cancelado', text: (o) => o.reason ?? 'El pedido se canceló.' },
+}
+
+/**
+ * NEG-02 · Pago en el local: el estado sale del saldo registrado en caja (orderPayment), nunca del avance del pedido.
+ * "Aceptado" o "listo" siguen con el pago pendiente hasta que la caja registra el cobro de demostración.
+ */
+function PayAtCounter({ state, o }: { state: AppState; o: Order }) {
+  const p = orderPayment(state, o)
+  if (p.state === 'no-aplica') return <p className="small muted" data-testid="payment-state" data-state="no-aplica">No hay nada para pagar: el pedido no sigue en curso.</p>
+  return p.state === 'pagado' ? (
+    <p className="pay-state paid" data-testid="payment-state" data-state="pagado"><Glyph name="check" size={16} /> <span><strong>Pagado en el local.</strong> Cobro registrado por la caja (simulado, sin dinero real).</span></p>
+  ) : (
+    <p className="pay-state due" data-testid="payment-state" data-state="pendiente"><Glyph name="receipt" size={16} /> <span><strong>Pago en el local: pendiente · {fmtARS(p.balanceCents)}.</strong> Pagás en el mostrador al retirar. La app no cobra nada.</span></p>
+  )
 }
 
 const FLOW: OrderStatus[] = ['enviado', 'aceptado', 'en_preparacion', 'listo', 'servido', 'cerrado']
@@ -110,7 +125,7 @@ export function PedidoDetalle() {
         {o.lines.map((l) => (
           <div className="line" key={l.id}>
             <div>
-              <strong>{l.qty}× {l.name}</strong> <span className="st-tag">{l.station}</span>
+              <strong>{l.qty}× {l.name}</strong> <span className="st-tag">{STATION_LABEL[l.station]}</span>
               <div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}</div>
               {l.note && <div className="opts">Nota: {l.note}</div>}
               {l.giftId && <div className="gift-line"><Glyph name="gift" size={14} /> Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)}</div>}
@@ -125,13 +140,13 @@ export function PedidoDetalle() {
             <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>
           </>
         )}
-        <p className="small muted">Pago simulado: no se cobró nada.</p>
+        {biz.paysAtCounter && o.kind === 'retiro' ? <PayAtCounter state={state} o={o} /> : <p className="small muted">Pago simulado: no se cobró nada.</p>}
         <details className="tech"><summary>Detalle técnico</summary><span className="small muted">Canal {o.channel} · operación {o.operationId} · hilo {o.correlationId}</span></details>
       </section>
       <div className="row" style={{ marginTop: 14 }}>
         {cancellable && !o.cancelRequested && <button className="btn danger" type="button" onClick={() => setCancel(true)} data-testid="cancel-order">Cancelar pedido</button>}
         <button className="btn secondary" type="button" onClick={() => { const r = act({ type: 'order/duplicate', orderId: o.id }, 'Copiado al carrito para revisar'); if (r.ok) nav(`/${biz.id}/pedido`) }}>Volver a pedir (copia al carrito)</button>
-        <Link className="btn ghost" to={`/${biz.id}/simulador`}>Seguir por WhatsApp (simulado)</Link>
+        {hasFeature(biz, 'simulador') && <Link className="btn ghost" to={`/${biz.id}/simulador`}>Seguir por WhatsApp (simulado)</Link>}
       </div>
       {msg && <Callout tone="info" role="status">{msg}</Callout>}
       <ReasonDialog

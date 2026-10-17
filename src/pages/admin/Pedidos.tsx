@@ -2,19 +2,32 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
-import { orderCovered, orderDue } from '../../domain/sessions'
+import { orderCovered, orderDue, orderPayment } from '../../domain/sessions'
 import { act, Badge, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { CHANNEL_LABEL, ORDER_LABEL } from '../../ui/format'
+import { CHANNEL_LABEL, ORDER_LABEL, STATION_LABEL } from '../../ui/format'
 import { OrderTimeline } from '../client/PedidoDetalle'
 import { fmtARS } from '../../domain/money'
 import { fmtDateTime, hhmm } from '../../domain/time'
 import type { Order, OrderStatus } from '../../domain/types'
+
+/** NEG-02 · Comercio: el pago en el local se ve pendiente hasta que caja lo registra; nunca lo cambia el avance del pedido. */
+function PayRow({ o }: { o: Order }) {
+  const state = useApp()
+  const p = orderPayment(state, o)
+  if (p.state === 'no-aplica') return null
+  return p.state === 'pagado' ? (
+    <p className="pay-state paid" data-testid="admin-payment" data-state="pagado"><span><strong>Pagado en el local</strong> (registro DEMO en caja).</span></p>
+  ) : (
+    <p className="pay-state due" data-testid="admin-payment" data-state="pendiente"><span><strong>Pago en el local pendiente · {fmtARS(p.balanceCents)}.</strong> Se cobra al retirar. <Link to={`/admin/caja?cuenta=${o.sessionId}`}>Cobrar en caja</Link></span></p>
+  )
+}
 
 export function AdminPedidos() {
   const state = useApp()
   const { id } = useParams()
   const nav = useNavigate()
   const bizId = state.session.businessId
+  const biz = state.businesses.find((b) => b.id === bizId)
   const [status, setStatus] = useState<'todos' | OrderStatus>('todos')
   const [reject, setReject] = useState<Order | null>(null)
   const [cancel, setCancel] = useState<Order | null>(null)
@@ -61,12 +74,13 @@ export function AdminPedidos() {
           <h2>Platos</h2>
           {o.lines.map((l) => (
             <div className="line" key={l.id}>
-              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div>{l.giftId && <div className="gift-line">Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)} (sin cobro)</div>}</div>
+              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{STATION_LABEL[l.station]}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div>{l.giftId && <div className="gift-line">Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)} (sin cobro)</div>}</div>
               <span className="money">{fmtARS(l.lineCents)}</span>
             </div>
           ))}
           <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
           {orderCovered(o) > 0 && <div className="total-row sub"><span>Cubierto por invitación · a cobrar {fmtARS(orderDue(o))}</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>}
+          {biz?.paysAtCounter && o.kind === 'retiro' && <PayRow o={o} />}
           <p className="small muted">{o.reviewed ? 'Editado con revisión. ' : ''}Operación {o.operationId} · correlación {o.correlationId} · versión {o.version}</p>
         </section>
         <div className="row" style={{ marginTop: 12 }}>
@@ -126,7 +140,7 @@ export function AdminPedidos() {
                   return (
                     <tr key={x.id} data-testid={`order-row-${x.id}`} data-status={x.status}>
                       <td><Link to={`/admin/pedidos/${x.id}`}>{x.id}</Link></td>
-                      <td>{x.kind === 'mesa' ? `Mesa ${ses?.tableIds.map((t) => state.tables.find((y) => y.id === t)?.label).join('+')}` : `Retiro ${x.pickup ? hhmm(x.pickup.startMin) : ''}`}</td>
+                      <td>{x.kind === 'mesa' ? `Mesa ${ses?.tableIds.map((t) => state.tables.find((y) => y.id === t)?.label).join('+')}` : `Retiro ${x.pickup ? hhmm(x.pickup.startMin) : ''} · N.º ${x.pickupCode}`}{biz?.paysAtCounter && x.kind === 'retiro' && orderPayment(state, x).state === 'pendiente-local' && <div className="small muted">Paga en el local</div>}</td>
                       <td>{x.alias}</td><td>{CHANNEL_LABEL[x.channel] ?? x.channel}</td><td className="money">{fmtARS(x.totalCents)}</td>
                       <td><StatusBadge s={ORDER_LABEL[x.status]} />{x.cancelRequested && <div style={{ marginTop: 4 }}><Badge tone="review" icon="⚑" label="Cancelación pendiente" /></div>}</td>
                       <td>{x.status === 'enviado' ? <button className="btn small" type="button" onClick={() => say(act({ type: 'order/accept', orderId: x.id }, `${x.id} aceptado`), 'Aceptado')} data-testid={`quick-accept-${x.id}`}>Aceptar</button> : <Link className="btn secondary small" to={`/admin/pedidos/${x.id}`}>Abrir</Link>}</td>

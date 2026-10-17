@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { useOperation } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
@@ -20,7 +20,9 @@ export function AdminCaja() {
   const loc = state.locations.find((l) => l.id === locationId)!
   const cash = openCashFor(state, locationId)
   const sessions = state.tableSessions.filter((s) => s.locationId === locationId && s.status === 'activa')
-  const [selId, setSelId] = useState<string | null>(null)
+  // P5-L5: «Cobrar en caja» desde un pedido abre directamente su cuenta (?cuenta=)
+  const [params] = useSearchParams()
+  const [selId, setSelId] = useState<string | null>(params.get('cuenta'))
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
   const [floatIn, setFloatIn] = useState('20000')
   const [mov, setMov] = useState({ kind: 'egreso', amount: '', reason: '' })

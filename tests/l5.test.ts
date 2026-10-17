@@ -42,6 +42,11 @@ describe('NEG-01 · cinco negocios con fixtures estables', () => {
     expect(s.counters.R).toBe(18)
     expect(s.counters.O).toBe(12)
   })
+  it('los conteos que muestra el reinicio del dock son los de la semilla (21 reservas, 17 pedidos, 14 clientes)', () => {
+    expect(s.reservations).toHaveLength(21)
+    expect(s.orders).toHaveLength(17)
+    expect(s.customers.filter((c) => !c.mergedInto)).toHaveLength(14)
+  })
   it('bebidas con alcohol solo en el bar, marcadas +18 y fuera de los regalos de temporada', () => {
     const alc = s.menuItems.filter((m) => m.tags?.includes('+18'))
     expect(alc.map((m) => m.id).sort()).toEqual(['TC-13', 'TC-14'])
@@ -104,6 +109,19 @@ describe('NEG-03 · reglas de cada negocio', () => {
     const s = makeSeed('servicio')
     const big = s.reservations.find((r) => r.businessId === 'compas' && r.party >= 10)!
     expect(big.status).toBe('revision_humana')
+  })
+})
+
+describe('NEG-06 · alcohol fuera de regalos y de la zona familiar', () => {
+  it('no se puede crear una invitación por una bebida +18', () => {
+    const t = T.seed()
+    t.fail({ type: 'gift/create', businessId: 'compas', itemId: 'TC-13', fromAlias: 'Lu', toAlias: 'Sol', message: 'Salud', operationId: 'g-alc' }, 'validacion', 'cliente-invitado')
+    t.ok({ type: 'gift/create', businessId: 'compas', itemId: 'TC-09', fromAlias: 'Lu', toAlias: 'Sol', message: 'Una limonada', operationId: 'g-ok' }, 'cliente-invitado')
+  })
+  it('las temporadas nunca sugieren regalar alcohol', async () => {
+    const { SEASON_IDS, seasonById } = await import('../src/domain/season')
+    const alc = new Set(makeSeed('servicio').menuItems.filter((m) => m.tags?.includes('+18')).map((m) => m.id))
+    for (const id of SEASON_IDS) for (const item of Object.values(seasonById(id).picks).flat()) expect(alc.has(item), `${id} ${item}`).toBe(false)
   })
 })
 

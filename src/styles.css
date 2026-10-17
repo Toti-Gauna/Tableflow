@@ -325,6 +325,211 @@
   --gold: #c9a24e;
 }
 
+/* P5-L5 · Copo · heladería. Claro = mostrador de día; oscuro = chocolate amargo.
+   Fraunces con SOFT al máximo y "wonky" en titulares (letras de crema), Nunito redondeada en la interfaz. */
+[data-biz='copo'] {
+  --admin-bg: #fbf1e6;
+  --admin-surface: #ffffff;
+  --admin-line: #efdccb;
+  --side: #2a140d;
+  --paper: #fff4e8;
+  --paper-2: #fbe8d6;
+  --paper-3: #f5dbc4;
+  --surface: #ffffff;
+  --ink: #3a1a12;
+  --ink-soft: #55291d;
+  --muted: #7a4e40;
+  --rule: #efd6c2;
+  --line: #f1dfcf;
+  --line-strong: #9a7462;
+  --brand: #b8204f;
+  --brand-hover: #9a1a42;
+  --brand-ink: #ffffff;
+  --brand-tint: #fde0e8;
+  --accent: #6b3a1f;
+  --accent-hover: #552e18;
+  --accent-ink: #fff4e8;
+  --board: #3a1a12;
+  --chalk: #fff4e8;
+  --chalk-dim: #f0d3c2;
+  --field: #fffaf4;
+  --sans: 'Nunito Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-heading: 'Fraunces Variable', Georgia, serif;
+  --font-script: 'Fraunces Variable', Georgia, serif;
+  --display-weight: 900;
+  --heading-weight: 800;
+  --display-tracking: -0.025em;
+  --display-axes: 'SOFT' 100, 'WONK' 1, 'opsz' 144;
+  --btn-radius: 999px;
+  --radius: 20px;
+}
+:root[data-theme='dark'][data-biz='copo'],
+:root[data-theme='dark'] [data-biz='copo'] {
+  --admin-bg: #170c08;
+  --admin-surface: #2c1a12;
+  --admin-line: #45291d;
+  --side: #120805;
+  --paper: #1e110c;
+  --paper-2: #26160f;
+  --paper-3: #331f15;
+  --surface: #2c1a12;
+  --ink: #ffefe2;
+  --ink-soft: #f3dccb;
+  --muted: #d9b8a6;
+  --rule: #4d3022;
+  --line: #45291d;
+  --line-strong: #b08c78;
+  --brand: #ff8fb1;
+  --brand-hover: #ffabc5;
+  --brand-ink: #1e110c;
+  --brand-tint: #4a2030;
+  --accent: #9edcc8;
+  --accent-hover: #b8e8d8;
+  --accent-ink: #1e110c;
+  --board: #120805;
+  --chalk: #ffefe2;
+  --chalk-dim: #e2c4b2;
+  --field: #24140e;
+}
+
+/* P5-L5 · Taberna Compás · tapas y jazz. Claro = funda de cartón; oscuro = club de noche (su modo principal).
+   Archivo extracondensada en titulares de tapa de disco, Instrument Serif itálica como contrapunto. */
+[data-biz='compas'] {
+  --admin-bg: #ece3d1;
+  --admin-surface: #faf5ea;
+  --admin-line: #d8cdb6;
+  --side: #121212;
+  --paper: #efe7d6;
+  --paper-2: #e6dcc6;
+  --paper-3: #dbcfb5;
+  --surface: #faf5ea;
+  --ink: #121212;
+  --ink-soft: #2b2925;
+  --muted: #47433d;
+  --rule: #cfc3aa;
+  --line: #d8cdb6;
+  --line-strong: #6f685d;
+  --brand: #1a4fa0;
+  --brand-hover: #143f80;
+  --brand-ink: #ffffff;
+  --brand-tint: #dbe5f5;
+  --accent: #7a4a00;
+  --accent-hover: #633c00;
+  --accent-ink: #ffffff;
+  --board: #121212;
+  --chalk: #efe7d6;
+  --chalk-dim: #c9c0ae;
+  --field: #fbf7ee;
+  --sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --serif: 'Archivo Variable', system-ui, sans-serif;
+  --font-display: 'Archivo Variable', 'Arial Narrow', sans-serif;
+  --font-heading: 'Archivo Variable', 'Arial Narrow', sans-serif;
+  --font-script: 'Instrument Serif', Georgia, serif;
+  --display-weight: 900;
+  --heading-weight: 800;
+  --display-tracking: -0.01em;
+  --display-axes: 'wdth' 62;
+  --btn-radius: 2px;
+  --radius: 2px;
+}
+:root[data-theme='dark'][data-biz='compas'],
+:root[data-theme='dark'] [data-biz='compas'] {
+  --admin-bg: #0a0e19;
+  --admin-surface: #161e33;
+  --admin-line: #273352;
+  --side: #05070d;
+  --paper: #0d1220;
+  --paper-2: #121a2c;
+  --paper-3: #1a2440;
+  --surface: #161e33;
+  --ink: #efe7d6;
+  --ink-soft: #ddd5c4;
+  --muted: #b8b2a5;
+  --rule: #2c3858;
+  --line: #273352;
+  --line-strong: #8d93a6;
+  --brand: #f2b84b;
+  --brand-hover: #f6c96f;
+  --brand-ink: #0d1220;
+  --brand-tint: #3a3220;
+  --accent: #9dbcf0;
+  --accent-hover: #b8cff5;
+  --accent-ink: #0d1220;
+  --board: #05070d;
+  --chalk: #efe7d6;
+  --chalk-dim: #c9c0ae;
+  --field: #111829;
+}
+
+/* P5-L5 · Brasa Rápida · comida rápida. Claro = pan tostado; oscuro = parrilla.
+   Fredoka redondeada en todo: grande, amable y legible en la cola del mostrador. */
+[data-biz='brasa'] {
+  --admin-bg: #fbf0df;
+  --admin-surface: #ffffff;
+  --admin-line: #efdcc0;
+  --side: #2a1208;
+  --paper: #fff3e2;
+  --paper-2: #fbe7cc;
+  --paper-3: #f6dab4;
+  --surface: #ffffff;
+  --ink: #3a1a0c;
+  --ink-soft: #53280f;
+  --muted: #6d4a36;
+  --rule: #efd6b4;
+  --line: #f1dfc4;
+  --line-strong: #937058;
+  --brand: #c3241a;
+  --brand-hover: #a31d15;
+  --brand-ink: #ffffff;
+  --brand-tint: #fde0d8;
+  --accent: #8a4b00;
+  --accent-hover: #703d00;
+  --accent-ink: #ffffff;
+  --board: #2a1208;
+  --chalk: #fff3e2;
+  --chalk-dim: #f0d2b0;
+  --field: #fffaf2;
+  --sans: 'Fredoka Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fredoka Variable', system-ui, sans-serif;
+  --font-heading: 'Fredoka Variable', system-ui, sans-serif;
+  --font-script: 'Fredoka Variable', system-ui, sans-serif;
+  --display-weight: 700;
+  --heading-weight: 650;
+  --display-tracking: -0.01em;
+  --display-axes: normal;
+  --btn-radius: 999px;
+  --radius: 16px;
+}
+:root[data-theme='dark'][data-biz='brasa'],
+:root[data-theme='dark'] [data-biz='brasa'] {
+  --admin-bg: #150b06;
+  --admin-surface: #2a1810;
+  --admin-line: #45281a;
+  --side: #120804;
+  --paper: #1c0f08;
+  --paper-2: #24140b;
+  --paper-3: #311c10;
+  --surface: #2a1810;
+  --ink: #fff3e2;
+  --ink-soft: #f3dfc6;
+  --muted: #dcc1a8;
+  --rule: #4b2e1d;
+  --line: #45281a;
+  --line-strong: #b08f74;
+  --brand: #ffb21a;
+  --brand-hover: #ffc24d;
+  --brand-ink: #1c0f08;
+  --brand-tint: #42301a;
+  --accent: #ff9a7f;
+  --accent-hover: #ffb29d;
+  --accent-ink: #1c0f08;
+  --board: #120804;
+  --chalk: #fff3e2;
+  --chalk-dim: #e6c9aa;
+  --field: #22130b;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--banner-h) + 72px); }
 body {
@@ -1817,3 +2022,18 @@ dialog.role-intro { max-width: min(720px, calc(100vw - 24px)); }
 .role-cards button:hover { border-color: var(--brand); background: var(--brand-tint); }
 .role-cards b { font-size: .95rem; }
 .role-cards span { font-size: .84rem; color: var(--muted); line-height: 1.35; }
+
+/* P5-L5 · tapas de los negocios nuevos: el plato firma sobre la pizarra del negocio */
+.cover-v2 .cover-art.cover-piece { display: grid; place-items: center; min-height: 220px; background: radial-gradient(60% 60% at 50% 45%, color-mix(in srgb, var(--chalk) 16%, transparent), transparent 70%); }
+.cover-v2 .cover-art.cover-piece svg { width: min(200px, 80%); height: auto; }
+.opt-gusto { align-items: center; }
+.opt-gusto .gusto-art { flex: none; }
+.opt-gusto:has(input:disabled) .gusto-art { filter: grayscale(1); opacity: .5; }
+/* P5-L5 · estado de pago en el local (cliente y comercio) */
+.pay-state { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; font-size: .95rem; }
+.pay-state.due { background: var(--warn-bg); color: var(--warn-deep); }
+.pay-state.paid { background: var(--ok-bg); color: var(--ok-deep); }
+.pay-state svg { flex: none; margin-top: 3px; }
+.pay-chip { display: inline-block; margin: 4px 0 0; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+.pay-chip.due { background: #fbeccb; color: #6b4100; }
+.pay-chip.paid { background: #e3f1e6; color: #164527; }

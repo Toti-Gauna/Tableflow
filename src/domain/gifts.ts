@@ -60,6 +60,8 @@ const giftCreate: Handler = (s, c, ctx) => {
   const item = byId(s.menuItems, c.itemId)
   const errors: Record<string, string> = {}
   if (!item || item.businessId !== biz.id) errors.item = 'Elegí un plato de la carta de este negocio.'
+  // P5-L5: no se regalan bebidas con alcohol (quien recibe puede ser menor y la demo no verifica edad)
+  else if (item.tags?.includes('+18')) errors.item = 'Las bebidas con alcohol no se pueden regalar. Elegí una tapa o algo sin alcohol.'
   const from = String(c.fromAlias ?? '').trim()
   const to = String(c.toAlias ?? '').trim()
   const message = String(c.message ?? '').trim()

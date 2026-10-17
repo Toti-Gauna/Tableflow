@@ -5,11 +5,13 @@ import { sfx } from '../../ui/sfx'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, Empty, ReasonDialog } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
-import { ORDER_LABEL } from '../../ui/format'
+import { ORDER_LABEL, STATION_LABEL } from '../../ui/format'
 import { atLocal, hhmm } from '../../domain/time'
-import type { Order } from '../../domain/types'
+import type { Order, Station as StationId } from '../../domain/types'
+import { orderPayment } from '../../domain/sessions'
 
-type Station = 'todas' | 'cocina' | 'barra'
+type Station = 'todas' | StationId
+const STATION_ORDER: StationId[] = ['cocina', 'plancha', 'freidora', 'armado', 'barra', 'mostrador']
 const COLS: { status: Order['status']; title: string }[] = [
   { status: 'enviado', title: 'Nuevos' },
   { status: 'aceptado', title: 'Aceptados' },
@@ -22,7 +24,11 @@ const LATE_MIN = 10
 export function AdminCocina() {
   const state = useApp()
   const bizId = state.session.businessId
-  const [station, setStation] = useState<Station>('todas')
+  const [picked, setStation] = useState<Station>('todas')
+  const stations = STATION_ORDER.filter((st) => state.menuItems.some((m) => m.businessId === bizId && (m.station ?? 'cocina') === st))
+  // al cambiar de negocio, una estación que no existe en este vuelve a "todas"
+  const station: Station = picked === 'todas' || stations.includes(picked) ? picked : 'todas'
+  const paysAtCounter = state.businesses.find((b) => b.id === bizId)?.paysAtCounter ?? false
   const [inc, setInc] = useState<Order | null>(null)
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
   const orders = state.orders.filter((o) => o.businessId === bizId && COLS.some((c) => c.status === o.status))
@@ -44,7 +50,7 @@ export function AdminCocina() {
   const where = (o: Order) =>
     o.kind === 'mesa'
       ? `Mesa ${state.tableSessions.find((s) => s.id === o.sessionId)?.tableIds.map((x) => state.tables.find((y) => y.id === x)?.label).join('+')}`
-      : `Retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''}`
+      : `Retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} · N.º ${o.pickupCode}`
   return (
     <>
       <PageHead title="Cocina / barra" sub="Cola por estación · tiempos según el reloj simulado" />
@@ -52,9 +58,9 @@ export function AdminCocina() {
       <div className="kds-board">
         <div className="kds-bar">
           <div className="seg" role="group" aria-label="Estación">
-            {(['todas', 'cocina', 'barra'] as Station[]).map((s) => (
+            {(['todas', ...stations] as Station[]).map((s) => (
               <button key={s} type="button" aria-pressed={station === s} onClick={() => setStation(s)} data-testid={`station-${s}`}>
-                {s === 'todas' ? 'Todas' : s === 'cocina' ? 'Cocina' : 'Barra'}
+                {s === 'todas' ? 'Todas' : STATION_LABEL[s]}
               </button>
             ))}
           </div>
@@ -111,7 +117,7 @@ export function AdminCocina() {
                         {lines.map((l) => (
                           <li key={l.id}>
                             <strong>{l.qty}× {l.name}</strong>
-                            <span className="st">{l.station}</span>
+                            <span className="st">{STATION_LABEL[l.station] ?? l.station}</span>
                             {(l.selections.length > 0 || l.note) && (
                               <span className="mods">
                                 {l.selections.map((s) => s.optionName).join(' · ')}
@@ -128,6 +134,7 @@ export function AdminCocina() {
                         <p className="incident"><Glyph name="flag" size={18} /> {t.incident}</p>
                       )}
                       <p className="who">{o.alias} · {ORDER_LABEL[o.status].label}</p>
+                      {paysAtCounter && o.kind === 'retiro' && (orderPayment(state, o).state === 'pendiente-local' ? <p className="pay-chip due" data-testid={`k-pay-${o.id}`}>Paga en el local · pendiente</p> : <p className="pay-chip paid" data-testid={`k-pay-${o.id}`}>Pagado</p>)}
                       <div className="acts">
                         {o.status === 'enviado' && <button className="btn next" type="button" data-testid={`k-accept-${o.id}`} onClick={() => say(act({ type: 'order/accept', orderId: o.id }, `${o.id} aceptado`))}>Aceptar</button>}
                         {o.status === 'aceptado' && <button className="btn next" type="button" data-testid={`k-prepare-${o.id}`} onClick={() => say(act({ type: 'order/prepare', orderId: o.id }, `${o.id} en preparación`))}>Preparar</button>}

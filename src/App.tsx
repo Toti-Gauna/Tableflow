@@ -1,8 +1,10 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType, type ReactNode } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { LiveRegion } from './ui/kit'
 import { DemoBanner, DemoDock, Footer, RoleIntro, StatusStrips } from './ui/Shell'
 import { isBiz } from './ui/hooks'
+import { BIZ_ROUTE_RE } from './domain/business'
+import { hasFeature, type Feature } from './ui/features'
 import { dispatch, setPrefs, useSnapshot } from './store'
 import { ClientLayout } from './pages/client/ClientLayout'
 import { Home } from './pages/client/Home'
@@ -26,6 +28,7 @@ const Catas = named(() => import('./pages/client/Catas'), 'Catas')
 const Ayuda = named(() => import('./pages/client/Ayuda'), 'Ayuda')
 const Simulador = named(() => import('./pages/client/Simulador'), 'Simulador')
 const Chicos = named(() => import('./pages/client/Chicos'), 'Chicos')
+const Numeros = named(() => import('./pages/client/Numeros'), 'Numeros')
 const Regalar = named(() => import('./pages/client/Regalar'), 'Regalar')
 const Regalo = named(() => import('./pages/client/Regalo'), 'Regalo')
 const Comercial = named(() => import('./pages/Comercial'), 'Comercial')
@@ -54,9 +57,19 @@ function BizGuard() {
   return <ClientLayout biz={biz} />
 }
 
+/** Una sección que este tipo de negocio no tiene responde como página inexistente del perfil (no se improvisa). */
+function Gate({ f, children }: { f: Feature; children: ReactNode }) {
+  const { biz } = useParams()
+  const { state } = useSnapshot()
+  const b = state.businesses.find((x) => x.id === biz)
+  if (!b || !hasFeature(b, f)) return <NotFound what="esa sección en este perfil" back={`/${biz}`} backLabel="Volver al inicio del perfil" />
+  return <>{children}</>
+}
+
 function SimRedirect() {
   const { state } = useSnapshot()
-  return <Navigate to={`/${state.session.businessId}/simulador`} replace />
+  const b = state.businesses.find((x) => x.id === state.session.businessId)
+  return <Navigate to={`/${b && hasFeature(b, 'simulador') ? b.id : 'mesa-clara'}/simulador`} replace />
 }
 
 /** Mueve el foco al título al navegar (lectores de pantalla y teclado). */
@@ -93,7 +106,7 @@ function FocusOnNav() {
 function useDocumentBiz() {
   const { pathname } = useLocation()
   const { state } = useSnapshot()
-  const m = /^\/(mesa-clara|ritual-cafe)(\/|$)/.exec(pathname)
+  const m = BIZ_ROUTE_RE.exec(pathname)
   const biz = m ? m[1] : pathname.startsWith('/admin') ? state.session.businessId : null
   useLayoutEffect(() => {
     const root = document.documentElement
@@ -181,11 +194,12 @@ export function App() {
             <Route path="pedido/:id" element={<PedidoDetalle />} />
             <Route path="reservar" element={<Reservar />} />
             <Route path="reservas/:id" element={<ReservaDetalle />} />
-            <Route path="explorar" element={<Explorar />} />
-            <Route path="pasaporte" element={<Pasaporte />} />
-            <Route path="catas" element={<Catas />} />
+            <Route path="explorar" element={<Gate f="explorar"><Explorar /></Gate>} />
+            <Route path="pasaporte" element={<Gate f="pasaporte"><Pasaporte /></Gate>} />
+            <Route path="catas" element={<Gate f="catas"><Catas /></Gate>} />
+            <Route path="numeros" element={<Gate f="numeros"><Numeros /></Gate>} />
             <Route path="ayuda" element={<Ayuda />} />
-            <Route path="simulador" element={<Simulador />} />
+            <Route path="simulador" element={<Gate f="simulador"><Simulador /></Gate>} />
             <Route path="regalar" element={<Regalar />} />
             <Route path="chicos" element={<Chicos />} />
             <Route path="regalo/:code" element={<Regalo />} />

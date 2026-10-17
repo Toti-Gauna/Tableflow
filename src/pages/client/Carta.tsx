@@ -7,6 +7,8 @@ import { CategoryMark, Glyph, Plate } from '../../ui/glyphs'
 import { allergenKey, AllergenCodes, fmtMenu, foodNoteText, isVeg } from '../../ui/food'
 import { categoriesOf, checkLine, groupsOf, itemUnavailable, menuFor, searchItems, UNAVAILABLE_TEXT } from '../../domain/menu'
 import { optionStockOk } from '../../domain/stock'
+import { GUSTO_ART } from '../../domain/fixtures/nuevos'
+import { Piece, pieceFor } from '../../ui/art/families'
 import { windowsFor } from '../../domain/availability'
 import { sedeShort } from '../../ui/format'
 import { SavedPick } from '../../ui/passport'
@@ -20,15 +22,24 @@ import type { AppState, BusinessProfile, GiftInvite, MenuItem } from '../../doma
 
 /** Categorías que el café sirve en la pizarra de barra; el resto va a la vitrina. */
 const BAR_CATS = ['Café de barra', 'Métodos']
+/** P5-L5 · Copo: cada gusto se elige viendo su bacha (la vitrina es el menú). */
+function GustoArt({ id }: { id: string }) {
+  const p = pieceFor(GUSTO_ART[id])
+  return p ? <Piece size={40} className="gusto-art"><p.Comp /></Piece> : null
+}
+/** P5-L5 · textos de la carta que cambian con el tipo de negocio. */
+const SEARCH_HINT: Record<string, string> = { bodegon: 'Buscar: pasta, milanesa, vegetariano…', cafe: 'Buscar: flat white, avena, medialuna…', heladeria: 'Buscar: cucurucho, pote, frutilla…', bar: 'Buscar: bravas, croquetas, sin alcohol…', rapida: 'Buscar: combo, doble, papas…' }
+const EMPTY_HINT: Record<string, string> = { bodegon: 'Elegí un plato de la carta.', cafe: 'Elegí algo de la barra o de la vitrina.', heladeria: 'Elegí un formato y tus gustos.', bar: 'Elegí una tapa del Lado A o del Lado B.', rapida: 'Armá un combo o elegí una hamburguesa.' }
+const TICKET_EYEBROW: Record<string, string> = { bodegon: 'Mesa o retiro', cafe: 'Para retirar o tomar acá', heladeria: 'Para retirar · pagás en el mostrador', bar: 'En tu mesa', rapida: 'Para retirar · pagás en el mostrador' }
 
 export function MiniCart({ biz, locationId, state }: { biz: string; locationId: string; state: AppState }) {
   const { cart, total } = useCart(state, biz as never, locationId)
-  const cafe = biz === 'ritual-cafe'
+  const kind = state.businesses.find((b) => b.id === biz)?.kind ?? 'bodegon'
   if (!cart || !cart.lines.length) {
     return (
       <p className="empty-cart">
         <HouseChar biz={biz} mood="pensando" size={64} />
-        Tu pedido está vacío. {cafe ? 'Elegí algo de la barra o de la vitrina.' : 'Elegí un plato de la carta.'}
+        Tu pedido está vacío. {EMPTY_HINT[kind]}
       </p>
     )
   }
@@ -125,7 +136,7 @@ export function Carta() {
             <div className="search">
               <label htmlFor="q" className="sr-only">Buscar un plato</label>
               <Glyph name="search" size={18} />
-              <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={cafe ? 'Buscar: flat white, avena, medialuna…' : 'Buscar: pasta, milanesa, vegetariano…'} data-testid="menu-search" />
+              <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={SEARCH_HINT[biz.kind]} data-testid="menu-search" />
             </div>
             <div className="chips" role="group" aria-label="Filtros">
               <button type="button" className="chip-toggle" aria-pressed={onlyAvail} onClick={() => setOnlyAvail((v) => !v)}>Solo disponibles</button>
@@ -183,7 +194,7 @@ export function Carta() {
         </div>
         <aside className="side-cart side-cart-desktop" aria-label="Tu pedido">
           <div className="ticket-paper">
-            <p className="eyebrow">{cafe ? 'Para retirar o tomar acá' : 'Mesa o retiro'}</p>
+            <p className="eyebrow">{TICKET_EYEBROW[biz.kind]}</p>
             <h2>Tu pedido</h2>
             <MiniCart biz={biz.id} locationId={locationId} state={state} />
           </div>
@@ -443,11 +454,12 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
                       const stockOk = optionStockOk(state, o)
                       const checked = (sel[g.id] ?? []).includes(o.id)
                       return (
-                        <label key={o.id} className="opt">
+                        <label key={o.id} className={`opt${GUSTO_ART[o.id] ? ' opt-gusto' : ''}`}>
                           <input type={g.max === 1 ? 'radio' : 'checkbox'} name={g.id} checked={checked} disabled={!stockOk} onChange={() => toggle(g.id, o.id, g.max)} />
+                          {GUSTO_ART[o.id] && <GustoArt id={o.id} />}
                           <span className="grow">
                             {o.name}
-                            {!stockOk && <small>Sin stock por ahora</small>}
+                            {!stockOk && <small>{GUSTO_ART[o.id] ? 'Bacha vacía: volvemos pronto' : 'Sin stock por ahora'}</small>}
                           </span>
                           {o.deltaCents > 0 && <span className="delta money">+ {fmtARS(o.deltaCents)}</span>}
                         </label>

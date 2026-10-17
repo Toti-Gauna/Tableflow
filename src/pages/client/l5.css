@@ -1,0 +1,56 @@
+/* P5-L5 · pantallas de los negocios nuevos: inicio, números de retiro y agenda. Todo con los tokens del negocio. */
+
+/* inicio: la ilustración firma va suelta (sin marco), con la pizarra debajo */
+.home-nuevo .hn-art { display: grid; place-items: center; }
+.home-nuevo .hn-art svg { width: min(100%, 460px); height: auto; max-height: 520px; display: block; }
+.home-nuevo .hero-figure .hero-board { position: relative; left: auto; bottom: auto; width: auto; margin: -32px 0 0; }
+@media (min-width: 960px) { .home-nuevo .hero-figure .hero-board { margin: -48px 0 0 -40px; width: min(420px, 92%); } }
+.hn-compas .hn-art svg { max-height: 440px; transform: rotate(6deg); }
+.hn-compas .hn-art { color: var(--ink); }
+
+/* Copo · vitrina */
+.vitrina ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.vitrina li { gap: 8px; padding: 6px 0; }
+.vitrina .g-name { flex: 1; min-width: 0; font-weight: 700; line-height: 1.2; }
+.vitrina .g-state { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--chalk-dim); white-space: nowrap; }
+.vitrina li[data-state='bajo'] .g-state { color: #f3c77a; }
+.vitrina li[data-state='agotado'] .g-state { color: #ffb4a6; }
+.vitrina li[data-state='agotado'] svg { filter: grayscale(1); opacity: .55; }
+@media (max-width: 420px) { .vitrina ul { grid-template-columns: 1fr; } }
+
+/* Compás · agenda de tapa de disco */
+.agenda-board h2, .agenda h1, .agenda-list h2 { font-style: normal; text-transform: uppercase; font-stretch: 62%; letter-spacing: 0; }
+.agenda-board ol { list-style: none; padding: 0; margin: 12px 0 10px; display: grid; gap: 10px; }
+.agenda-board li { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px dashed rgba(239, 231, 214, .22); }
+.agenda-board .ag-when { font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); }
+.agenda-board .ag-what { font-family: var(--font-script); font-style: italic; font-size: 1.3rem; line-height: 1.15; }
+.agenda-list { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 14px; }
+.agenda-list li { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 18px; padding: 18px; background: var(--surface); border: 2px solid var(--ink); }
+.agenda-list .ag-side { font-weight: 900; font-stretch: 62%; text-transform: uppercase; font-size: 1.5rem; line-height: 1; color: var(--brand); }
+@media (max-width: 560px) { .agenda-list li { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Brasa · tablero de números (inicio y pantalla completa) */
+.tablero .tb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+.tablero h3 { margin: 0 0 6px; font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--chalk-dim); }
+.tablero .tb-nums { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.tablero .tb-nums b { font-size: 1.5rem; font-variant-numeric: tabular-nums; padding: 2px 10px; border-radius: 10px; background: rgba(255, 243, 226, .1); }
+.tablero .ready .tb-nums b { background: var(--chalk); color: var(--board); }
+.num-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.nb-col { background: var(--board); color: var(--chalk); border-radius: var(--radius); padding: 20px; min-height: 240px; }
+.nb-col h2 { color: var(--chalk); margin: 0 0 12px; font-size: 1.4rem; }
+.nb-col .muted { color: var(--chalk-dim); }
+.nb-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.nb-num { display: inline-block; font-size: clamp(2rem, 6vw, 3.4rem); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; padding: 8px 16px; border-radius: 12px; background: rgba(255, 243, 226, .1); }
+.nb-col.ready .nb-num { background: var(--chalk); color: var(--board); }
+@media (max-width: 560px) { .num-board { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: no-preference) { .nb-col.ready li { animation: nb-in .4s ease-out both; } }
+@keyframes nb-in { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* destacados y nota familiar */
+.hn-picks { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); }
+.hn-pick { display: grid; justify-items: center; gap: 4px; padding: 14px; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); text-decoration: none; }
+.hn-pick:hover { border-color: var(--line-strong); }
+.family-note { padding: 18px 20px; background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--radius); }
+.family-note h2 { font-size: 1.2rem; margin: 0 0 4px; }
+.family-note p { margin: 0; }
+.hn-heladeria .hn-art svg { max-height: 430px; }

@@ -1,4 +1,4 @@
-import type { AppState, GiftStatus, OrderStatus, ReservationStatus, Role } from '../domain/types'
+import type { AppState, GiftStatus, OrderStatus, ReservationStatus, Role, Station } from '../domain/types'
 
 export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral' | 'review'
 export interface Label {
@@ -93,7 +93,6 @@ export const DEFAULT_ADMIN: Record<Role, string> = {
 }
 
 export const CHANNEL_LABEL: Record<string, string> = { web: 'Web', whatsapp: 'WhatsApp (simulado)', voz: 'Llamada (simulada)', recepcion: 'Recepción' }
-export const BIZ_PATH = { 'mesa-clara': 'mesa-clara', 'ritual-cafe': 'ritual-cafe' } as const
 
 /** "Ritual Café · Centro" → "Centro": dentro del perfil, la marca ya está a la vista. */
 export const sedeShort = (name: string) => name.split(' · ').slice(1).join(' · ') || name
@@ -127,3 +126,6 @@ export function entityRef(s: AppState, type: string, id: string): { text: string
   if (type === 'Conversation') return { text: `${kind} ${id}`, to: null }
   return { text: `${kind} ${id}`, to: null }
 }
+
+/** P5-L5 · nombre visible de cada estación; las de cada negocio salen de su carta. */
+export const STATION_LABEL: Record<Station, string> = { cocina: 'Cocina', barra: 'Barra', mostrador: 'Mostrador', plancha: 'Plancha', freidora: 'Freidora', armado: 'Armado' }

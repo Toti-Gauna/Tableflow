@@ -11,8 +11,8 @@ import { RouteLoader } from '../../ui/Loader'
 import { TabBar, type SheetLink } from '../../ui/TabBar'
 import { SeasonChip } from '../../ui/season'
 import { activeSeason } from '../../domain/season'
+import { eventsLabel, hasFeature, KIND_LABEL } from '../../ui/features'
 
-const KIND: Record<string, string> = { bodegon: 'Bodegón · cocina de casa', cafe: 'Café de especialidad · barra y vitrina' }
 
 /** Estado del servicio según el reloj simulado: "abierto hasta…" o "abre a las…". */
 function serviceStatus(state: AppState, locationId: string): { open: boolean; text: string } {
@@ -47,9 +47,10 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
     ['carta', 'Carta'],
     ['pedido', 'Mi pedido'],
     ...(b.reservationsEnabled ? ([['reservar', 'Reservar']] as [string, string][]) : []),
-    ['explorar', 'Explorar sabores'],
-    ['pasaporte', 'Mi pasaporte'],
-    ['catas', 'Catas'],
+    ...(hasFeature(b, 'numeros') ? ([['numeros', 'Números de retiro']] as [string, string][]) : []),
+    ...(hasFeature(b, 'explorar') ? ([['explorar', 'Explorar sabores']] as [string, string][]) : []),
+    ...(hasFeature(b, 'pasaporte') ? ([['pasaporte', 'Mi pasaporte']] as [string, string][]) : []),
+    ...(hasFeature(b, 'catas') ? ([['catas', eventsLabel(b)]] as [string, string][]) : []),
     ['regalar', 'Regalar'],
     ['chicos', 'Para chicos'],
     ['ayuda', 'Ayuda'],
@@ -58,12 +59,13 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
   const root = `/${biz}`
   const more: SheetLink[] = [
     ...(b.reservationsEnabled ? [{ to: `${root}/reservar`, label: 'Reservar', icon: 'calendar', hint: 'Mesa para hoy o los próximos días' }] : []),
-    { to: `${root}/explorar`, label: 'Explorar sabores', icon: 'compass', hint: 'Recomendaciones según tu gusto' },
-    { to: `${root}/pasaporte`, label: 'Mi pasaporte', icon: 'stamp', hint: 'Sellos, insignias y selección guardada' },
-    { to: `${root}/catas`, label: 'Catas', icon: 'wine', hint: 'Con cupo y lista de espera' },
-    { to: `${root}/chicos`, label: 'Para chicos', icon: 'smile', hint: 'Menú infantil y juegos' },
+    ...(hasFeature(b, 'numeros') ? [{ to: `${root}/numeros`, label: 'Números de retiro', icon: 'receipt', hint: 'Pantalla del mostrador: preparando y listos' }] : []),
+    ...(hasFeature(b, 'explorar') ? [{ to: `${root}/explorar`, label: 'Explorar sabores', icon: 'compass', hint: 'Recomendaciones según tu gusto' }] : []),
+    ...(hasFeature(b, 'pasaporte') ? [{ to: `${root}/pasaporte`, label: 'Mi pasaporte', icon: 'stamp', hint: 'Sellos, insignias y selección guardada' }] : []),
+    ...(hasFeature(b, 'catas') ? [{ to: `${root}/catas`, label: eventsLabel(b), icon: b.kind === 'bar' ? 'calendar' : 'wine', hint: b.kind === 'bar' ? 'Noches de música con la mesa reservada' : 'Con cupo y lista de espera' }] : []),
+    { to: `${root}/chicos`, label: 'Para chicos', icon: 'smile', hint: 'Zona familiar: juego opcional' },
     { to: `${root}/ayuda`, label: 'Ayuda', icon: 'help', hint: 'Cómo funciona la demo' },
-    { to: `${root}/simulador`, label: 'Simulador de canales', icon: 'chat', hint: 'Chat y llamada simulados' },
+    ...(hasFeature(b, 'simulador') ? [{ to: `${root}/simulador`, label: 'Simulador de canales', icon: 'chat', hint: 'Chat y llamada simulados' }] : []),
   ]
   return (
     <div className={`client biz-${b.kind}`} data-biz={biz} data-season={activeSeason(state, biz).id}>
@@ -72,7 +74,7 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
           <div className="masthead">
             <Link to={`/${biz}`} className="wordmark" aria-label={`${b.name}, inicio`}>
               <span className="name">{b.name}</span>
-              <span className="kind">{KIND[b.kind]}</span>
+              <span className="kind">{KIND_LABEL[b.kind]}</span>
             </Link>
             <div className="masthead-aside">
               <SeasonChip state={state} biz={biz} />

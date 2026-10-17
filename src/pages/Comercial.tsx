@@ -28,7 +28,7 @@ export function Comercial() {
         <section className="card" aria-labelledby="impl">
           <h2 id="impl">Implementación (tarifario del 16/10/2026)</h2>
           <ul>
-            <li><strong>Adaptación</strong> compatible desde USD 500, con marca y gamificación estándar incluida (50 % de anticipo y 50 % al aprobar la entrega). Una sede y hasta 25 ítems es un recorte comercial propuesto, distinto de los 42 productos del fixture.</li>
+            <li><strong>Adaptación</strong> compatible desde USD 500, con marca y gamificación estándar incluida (50 % de anticipo y 50 % al aprobar la entrega). Una sede y hasta 25 ítems es un recorte comercial propuesto, distinto de los 78 productos del fixture (cinco negocios).</li>
             <li><strong>Landing adicional</strong> compatible: USD 200, sin cobrarla dos veces.</li>
             <li><strong>Módulo operativo</strong> desde USD 750; <strong>fase ampliada</strong> desde USD 1.000 (dos módulos relacionados y una integración compatible; no es un ERP/POS entero).</li>
             <li><strong>WhatsApp estándar sin IA</strong>: complemento compatible USD 100 (un botón manual no es una automatización).</li>

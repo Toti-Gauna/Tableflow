@@ -9,8 +9,9 @@ import { dateKeyOf, fmtDateLong, fmtDateShort, hhmm, minutesOfDay } from '../dom
 import type { BusinessId, FixtureId, Role } from '../domain/types'
 import type { ThemePref } from '../domain/persistence'
 import { THEME_LABEL } from './theme'
+import { BIZ_IDS, BIZ_ROUTE_RE } from '../domain/business'
 
-export const BIZ_IDS: BusinessId[] = ['mesa-clara', 'ritual-cafe']
+export { BIZ_IDS }
 
 export function DemoBanner() {
   const { storageMode } = useSnapshot()
@@ -70,7 +71,11 @@ const CASES: DemoCase[] = [
   { id: 'almuerzo', title: 'Almuerzo en Mesa Clara', hint: '12:00 · carta abierta y pedido a la mesa', biz: 'mesa-clara', role: 'cliente-invitado', at: 12 * 60, to: () => '/mesa-clara/carta' },
   { id: 'retiro', title: 'Retiro en Ritual Café', hint: '08:00 · un café para llevar', biz: 'ritual-cafe', role: 'cliente-invitado', at: 8 * 60, to: () => '/ritual-cafe/carta' },
   { id: 'cocina', title: 'Cocina en hora pico', hint: '20:00 · comandas en el tablero', biz: 'mesa-clara', role: 'cocina', at: 20 * 60, to: () => '/admin/cocina' },
-  { id: 'ana', title: 'Vuelve Ana', hint: 'Pasaporte con sellos e historial', role: 'cliente-recurrente', to: (b) => `/${b}/pasaporte` },
+  { id: 'helado', title: 'Un helado en Copo', hint: '16:00 · gustos, retiro y pago en el mostrador', biz: 'copo', role: 'cliente-invitado', at: 16 * 60, to: () => '/copo/carta' },
+  { id: 'brasa', title: 'Mostrador de Brasa Rápida', hint: '10:00 · plancha, freidora y números de retiro', biz: 'brasa', role: 'cocina', at: 10 * 60, to: () => '/admin/cocina' },
+  { id: 'jazz', title: 'Noche de jazz en Compás', hint: 'Agenda y reserva de mesa por solicitud', biz: 'compas', role: 'cliente-invitado', to: () => '/compas/catas' },
+  // el pasaporte es de Mesa Clara y Ritual Café (la fidelización de los negocios nuevos llega en L6)
+  { id: 'ana', title: 'Vuelve Ana', hint: 'Pasaporte con sellos e historial', role: 'cliente-recurrente', to: (b) => `/${b === 'ritual-cafe' ? b : 'mesa-clara'}/pasaporte` },
   { id: 'cierre', title: 'Cierre de caja', hint: '21:45 · cuentas y pagos de demostración', biz: 'mesa-clara', role: 'caja', at: 21 * 60 + 45, to: () => '/admin/caja' },
 ]
 
@@ -130,7 +135,7 @@ export function DemoDock() {
 
   const switchBiz = (b: BusinessId) => {
     dispatch({ type: 'session/setBusiness', businessId: b })
-    const m = /^\/(mesa-clara|ritual-cafe)(\/.*)?$/.exec(loc.pathname)
+    const m = BIZ_ROUTE_RE.exec(loc.pathname)
     if (m) {
       const rest = m[2] ?? ''
       // los folios son de un negocio: al cambiar de perfil se vuelve a la sección, no al registro
@@ -343,7 +348,7 @@ export function DemoDock() {
             <fieldset>
               <legend>Seed</legend>
               <label className="choice">
-                <input type="radio" name="fx" checked={fx === 'servicio'} onChange={() => setFx('servicio')} /> Servicio cargado (18 reservas, 12 pedidos, 8 clientes…)
+                <input type="radio" name="fx" checked={fx === 'servicio'} onChange={() => setFx('servicio')} /> Servicio cargado (cinco negocios: 21 reservas, 17 pedidos, 14 clientes…)
               </label>
               <label className="choice">
                 <input type="radio" name="fx" checked={fx === 'vacio'} onChange={() => setFx('vacio')} /> Vacío (perfiles, carta y stock sin actividad)
@@ -401,11 +406,32 @@ function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
   const nav = useNavigate()
   const go = (to: string) => { onDone(); nav(to) }
   const rest = biz === 'mesa-clara'
+  const legacy = biz === 'mesa-clara' || biz === 'ritual-cafe'
+  const NEW_GUIDE: Partial<Record<BusinessId, { title: string; steps: ReactNode[] }>> = {
+    copo: { title: 'Copo · del gusto al mostrador', steps: [
+      <><button className="linklike" type="button" onClick={() => go('/copo/carta')}>Elegí un cucurucho de dos gustos</button>: el sambayón está agotado y no se puede marcar.</>,
+      <>Pedilo para retirar: queda confirmado con <strong>pago en el local pendiente</strong>.</>,
+      <>Como mostrador aceptá, prepará y marcá listo; en caja cobrá la cuenta del retiro.</>,
+    ] },
+    compas: { title: 'Taberna Compás · agenda y reserva', steps: [
+      <><button className="linklike" type="button" onClick={() => go('/compas/catas')}>Mirá la agenda</button>: no hay entradas, se reserva la mesa.</>,
+      <>Reservá para el jueves: la mesa de 10 del seed espera revisión humana.</>,
+      <>Como recepción confirmá la solicitud desde Reservas.</>,
+    ] },
+    brasa: { title: 'Brasa Rápida · combo y número', steps: [
+      <><button className="linklike" type="button" onClick={() => go('/brasa/carta/BR-01')}>Armá un combo</button>: tamaño, acompañamiento y bebida son obligatorios.</>,
+      <>Pedilo para retirar y abrí <button className="linklike" type="button" onClick={() => go('/brasa/numeros')}>la pantalla de números</button>.</>,
+      <>Como cocina avanzalo por plancha, freidora y armado: el número pasa a Listo en la pantalla.</>,
+    ] },
+  }
+  const g = NEW_GUIDE[biz]
   return (
     <div className="guide-body">
       <p className="muted">Recorridos de 60–90 segundos. Todo es local y simulado; el reloj solo avanza desde el botón Demo.</p>
-      <h3>{rest ? 'Mesa Clara · del pedido al cierre' : 'Ritual Café · del pedido al retiro'}</h3>
-      {rest ? (
+      <h3>{g ? g.title : rest ? 'Mesa Clara · del pedido al cierre' : 'Ritual Café · del pedido al retiro'}</h3>
+      {g ? (
+        <ol className="steps">{g.steps.map((s, i) => <li key={i}><span>{s}</span></li>)}</ol>
+      ) : rest ? (
         <ol className="steps">
           <li><span>Pasá el reloj a las 12:00 (el salón abre al mediodía). <button className="linklike" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button></span></li>
           <li><span><button className="linklike" type="button" onClick={() => go('/mesa-clara/carta')}>Elegí una milanesa</button> con guarnición y agregala.</span></li>
@@ -423,9 +449,9 @@ function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
       <h3>Más para mostrar</h3>
       <ul className="guide-links">
         <li><button className="linklike" type="button" onClick={() => go(`/${biz}/regalar`)}>Invitar a alguien a comer</button> · tarjeta, mensaje simulado y canje en el pedido</li>
-        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/chicos`)}>Para chicos</button> · memotest y “Armá tu plato”</li>
-        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/simulador`)}>Simulador de canales</button> · reserva por WhatsApp o llamada</li>
-        <li><button className="linklike" type="button" onClick={() => { act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)'); go(`/${biz}/pasaporte`) }}>Verme como Ana</button> · pasaporte con sellos e historial</li>
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/chicos`)}>Zona familiar</button> · un juego distinto en cada negocio</li>
+        {legacy && <li><button className="linklike" type="button" onClick={() => go(`/${biz}/simulador`)}>Simulador de canales</button> · reserva por WhatsApp o llamada</li>}
+        {legacy && <li><button className="linklike" type="button" onClick={() => { act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)'); go(`/${biz}/pasaporte`) }}>Verme como Ana</button> · pasaporte con sellos e historial</li>}
         <li><button className="linklike" type="button" onClick={() => go('/arte')}>Ilustraciones y personajes</button> · el sistema visual completo</li>
       </ul>
     </div>

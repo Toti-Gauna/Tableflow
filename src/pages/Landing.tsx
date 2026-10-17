@@ -22,7 +22,13 @@ const STAFF: { role: Role; label: string; icon: string; does: string }[] = [
 const COVER: Record<string, string[]> = {
   'mesa-clara': ['Pastas amasadas cada mañana', 'Minutas y parrilla', 'Reservas con confirmación'],
   'ritual-cafe': ['Métodos y orígenes', 'Pastelería del día', 'Retiro por franja, sin reservas'],
+  copo: ['Vitrina con el estado de cada bacha', 'Cupo de gustos por formato', 'Retirás y pagás en el mostrador'],
+  compas: ['Tapas en Lado A y Lado B', 'Agenda de música en vivo', 'Reserva por solicitud · +18 en la barra'],
+  brasa: ['Combos armados por pasos', 'Número de retiro en pantalla', 'Pagás en el local al retirar'],
 }
+const EYEBROW: Record<string, string> = { bodegon: 'Bodegón', cafe: 'Café de especialidad', heladeria: 'Heladería', bar: 'Bar gastronómico', rapida: 'Comida rápida' }
+/** Plato firma de la tapa de cada negocio nuevo (pieza de su familia de arte, P5-L4). */
+const COVER_PIECE: Record<string, string> = { copo: 'CO-02', compas: 'TC-01', brasa: 'BR-01' }
 
 export function Landing() {
   const state = useApp()
@@ -40,18 +46,18 @@ export function Landing() {
         title="TableFlow · demo de gestión gastronómica"
         eyebrow="TableFlow"
         heading={<>Del salón a la barra, <em>una sola mesa de trabajo.</em></>}
-        sub="Carta, reservas, salón, cocina, caja, regalos y fidelización de un bodegón y una cafetería, conectados en una sola experiencia para el comensal y para el equipo."
+        sub="Carta, reservas, pedidos para retirar, cocina, caja y regalos de cinco negocios ficticios (bodegón, café, heladería, bar y comida rápida), conectados en una sola experiencia para el comensal y para el equipo."
       />
       <div className="covers">
         {state.businesses.map((b) => (
           <section key={b.id} className="cover cover-v2 fx-scene" data-biz={b.id} aria-labelledby={`b-${b.id}`}>
-            <div className="cover-art" aria-hidden="true">{b.id === 'mesa-clara' ? <BodegonArt className="art" slice compact /> : <SalonArt className="art" slice />}</div>
+            <div className={`cover-art${COVER_PIECE[b.id] ? ' cover-piece' : ''}`} aria-hidden="true">{b.id === 'mesa-clara' ? <BodegonArt className="art" slice compact /> : b.id === 'ritual-cafe' ? <SalonArt className="art" slice /> : <DishArt item={{ id: COVER_PIECE[b.id], name: b.name }} size={200} decorative />}</div>
             <div className="cover-body">
-              <p className="eyebrow">{b.kind === 'bodegon' ? 'Bodegón' : 'Café de especialidad'}</p>
+              <p className="eyebrow">{EYEBROW[b.kind]}</p>
               <h2 id={`b-${b.id}`}>{b.name}</h2>
               <p className="tag">{b.tagline}</p>
               <ul>
-                {COVER[b.id].map((l) => <li key={l}>{l}</li>)}
+                {(COVER[b.id] ?? []).map((l) => <li key={l}>{l}</li>)}
               </ul>
               <div className="row">
                 <Link className="btn" to={`/${b.id}`} onClick={() => enter(b.id)}>Entrar como cliente</Link>

@@ -5,8 +5,40 @@ import { act, Badge, Callout, ErrorText } from '../../ui/kit'
 import { eventSeats } from '../../domain/cmd-engage'
 import { dayName, fmtDateShort, hhmm } from '../../domain/time'
 import { Glyph } from '../../ui/glyphs'
+import { Link } from 'react-router-dom'
+import type { BusinessProfile, TastingEvent } from '../../domain/types'
+
+/** P5-L5 · Taberna Compás: la agenda de música no vende entradas ni toma inscripciones; se reserva la mesa. */
+function Agenda({ biz, events }: { biz: BusinessProfile; events: TastingEvent[] }) {
+  return (
+    <main className="agenda">
+      <PageHead title="Agenda de la semana" eyebrow="Música en vivo · con la mesa reservada" sub="Sin venta de entradas: la música viene con la mesa" />
+      <Callout>Noches de muestra. Para ir, reservá una mesa para esa noche; la reserva es una solicitud que confirma el local. Las bebidas con alcohol son solo para mayores de 18.</Callout>
+      <ol className="agenda-list">
+        {events.map((e, i) => (
+          <li key={e.id} data-testid={`agenda-${e.id}`}>
+            <span className="ag-side" aria-hidden="true">Lado {i % 2 ? 'B' : 'A'} · {String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <h2>{e.title}</h2>
+              <p className="small muted" style={{ margin: '0 0 6px' }}><Glyph name="calendar" size={14} /> {dayName(e.dateKey)} {fmtDateShort(e.dateKey)} · {hhmm(e.startMin)}</p>
+              <p>{e.description}</p>
+              <Link className="btn" to={`/${biz.id}/reservar`}>Reservar mesa para esa noche</Link>
+            </div>
+          </li>
+        ))}
+      </ol>
+      {events.length === 0 && <p className="muted">No hay noches programadas.</p>}
+    </main>
+  )
+}
 
 export function Catas() {
+  const { state, biz } = useBiz()
+  if (biz.kind === 'bar') return <Agenda key={biz.id} biz={biz} events={state.tastingEvents.filter((e) => e.businessId === biz.id && e.status !== 'cancelada')} />
+  return <Inscripciones key={biz.id} />
+}
+
+function Inscripciones() {
   const { state, biz } = useBiz()
   const events = state.tastingEvents.filter((e) => e.businessId === biz.id)
   const customerId = state.session.customerByBusiness[biz.id] ?? null

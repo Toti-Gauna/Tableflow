@@ -2,6 +2,7 @@ import type { BusinessProfile, MenuItem, SeasonId } from '../domain/types'
 import { DishArt } from './art'
 import { SeasonArt } from './art/season'
 import { seasonById } from '../domain/season'
+import { BIZ_PREFIX } from '../domain/business'
 
 export interface GiftCardData {
   fromAlias: string
@@ -35,7 +36,7 @@ export function GiftCard({ data, item, biz, compact = false, className }: { data
         {data.message.trim() ? <blockquote className="gc-msg">“{data.message.trim()}”</blockquote> : <p className="gc-msg empty">Tu mensaje aparece acá.</p>}
       </div>
       <footer className="gc-foot">
-        <span>Código <b className="gc-code">{data.code ?? `${biz.id === 'ritual-cafe' ? 'RC' : 'MC'}-····`}</b></span>
+        <span>Código <b className="gc-code">{data.code ?? `${BIZ_PREFIX[biz.id]}-····`}</b></span>
         <span>{data.until ? `Válida hasta ${data.until}` : 'Válida 30 días'}</span>
       </footer>
     </article>
