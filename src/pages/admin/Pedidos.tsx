@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
-import { orderCovered, orderDue, orderPayment } from '../../domain/sessions'
+import { orderCovered, orderDiscount, orderDue, orderPayment } from '../../domain/sessions'
 import { act, Badge, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { CHANNEL_LABEL, ORDER_LABEL, STATION_LABEL } from '../../ui/format'
 import { OrderTimeline } from '../client/PedidoDetalle'
@@ -80,6 +80,7 @@ export function AdminPedidos() {
           ))}
           <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
           {orderCovered(o) > 0 && <div className="total-row sub"><span>Cubierto por invitación · a cobrar {fmtARS(orderDue(o))}</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>}
+          {orderDiscount(o) > 0 && <div className="total-row sub"><span>Beneficio {state.benefits.find((b) => b.id === o.benefitId)?.code ?? ''} · a cobrar {fmtARS(orderDue(o))}</span><span className="money">− {fmtARS(orderDiscount(o))}</span></div>}
           {biz?.paysAtCounter && o.kind === 'retiro' && <PayRow o={o} />}
           <p className="small muted">{o.reviewed ? 'Editado con revisión. ' : ''}Operación {o.operationId} · correlación {o.correlationId} · versión {o.version}</p>
         </section>

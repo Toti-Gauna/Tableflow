@@ -154,6 +154,7 @@ export function discountFor(c: Pick<Campaign, 'benefit' | 'rules'>, baseCents: n
   const raw = c.benefit.type === 'porcentaje' ? Math.round((baseCents * c.benefit.value) / 100) : Math.min(c.benefit.value, baseCents)
   return Math.max(0, Math.min(raw, c.rules.maxDiscountCents > 0 ? c.rules.maxDiscountCents : raw, baseCents))
 }
+const pesos = (c: number) => `$ ${(c / 100).toLocaleString('es-AR')}`
 export function projectCampaign(s: AppState, c: Campaign): Projection {
   const missing: string[] = []
   const assumptions: string[] = []
@@ -168,8 +169,8 @@ export function projectCampaign(s: AppState, c: Campaign): Projection {
   let withDiscount: Contribution | null = null
   if (item) {
     discount = discountFor(c, item.priceCents)
-    assumptions.push(`Pedido de referencia: 1 × ${item.name} a precio de carta (${item.priceCents / 100}), sin extras.`)
-    if (c.rules.minOrderCents > item.priceCents) assumptions.push(`El mínimo de compra (${c.rules.minOrderCents / 100}) supera al ítem de referencia: en la práctica el pedido tendrá más cosas.`)
+    assumptions.push(`Pedido de referencia: 1 × ${item.name} a precio de carta (${pesos(item.priceCents)}), sin extras.`)
+    if (c.rules.minOrderCents > item.priceCents) assumptions.push(`El mínimo de compra (${pesos(c.rules.minOrderCents)}) supera al ítem de referencia: en la práctica el pedido tendrá más cosas.`)
     if (c.benefit.itemIds.length && !c.benefit.itemIds.includes(item.id)) assumptions.push('El ítem de referencia no está entre los ítems del beneficio: el descuento real puede ser menor.')
     if (u && u.productCents !== null && u.variableCents !== null) {
       withoutDiscount = contribution({ priceCents: item.priceCents, productCents: u.productCents, variableCents: u.variableCents })

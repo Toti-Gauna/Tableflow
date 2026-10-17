@@ -11,6 +11,7 @@ import { TabBar } from '../../ui/TabBar'
 const ICON: Record<string, string> = {
   resumen: 'grid', reservas: 'calendar', salon: 'floor', pedidos: 'receipt', cocina: 'flame', caja: 'register',
   carta: 'book', stock: 'box', clientes: 'people', regalos: 'gift', automatizaciones: 'bolt', reportes: 'chart', configuracion: 'sliders',
+  campanas: 'star', costos: 'register', asistente: 'chat',
 }
 
 export function AdminLayout() {
@@ -28,6 +29,8 @@ export function AdminLayout() {
     automatizaciones: state.runs.filter((r) => r.businessId === biz.id && ['fallida', 'pendiente'].includes(r.status)).length,
     stock: state.ingredients.filter((i) => i.businessId === biz.id && i.alertState !== 'ok').length,
     regalos: state.gifts.filter((g) => g.businessId === biz.id && g.status === 'abierto' && state.clock.nowMs <= g.expiresAt).length,
+    campanas: state.campaigns.filter((c) => c.businessId === biz.id && c.status === 'borrador').length,
+    costos: state.menuItems.filter((m) => m.businessId === biz.id && (m.costCents === null || m.variableCents === null)).length,
   }
   // P5-L5: un negocio solo de mostrador (Copo, Brasa) no tiene salón ni reservas que atender
   const hasTables = state.tables.some((t) => t.businessId === biz.id)

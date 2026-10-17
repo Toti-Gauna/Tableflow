@@ -16,7 +16,10 @@ export interface AssistReply {
   text: string
   facts?: [string, string][]
   assumptions?: string[]
+  /** Costos o datos del negocio que no están cargados (ND). */
   missing?: string[]
+  /** Datos que el asistente necesita que le digas para seguir. */
+  ask?: string[]
   actions?: AssistAction[]
 }
 interface CampaignSlots { segment?: SegmentId; benefit?: { type: 'porcentaje' | 'monto'; value: number }; itemId?: string; fixedCostCents?: number; budgetCents?: number }
@@ -161,7 +164,7 @@ function readBE(raw: string, n: string, sl: BreakEvenSlots, asked: keyof BreakEv
 function equilibrio(st: BreakEvenSlots): { reply: AssistReply; next: keyof BreakEvenSlots | null } {
   const order: (keyof BreakEvenSlots)[] = ['priceCents', 'costCents', 'variableCents', 'discountCents', 'fixedCents']
   const miss = order.find((k) => (k === 'discountCents' ? st.discountCents === undefined && st.discountPct === undefined : st[k] === undefined))
-  if (miss) return { reply: { text: BE_ASK[miss], missing: order.filter((k) => (k === 'discountCents' ? st.discountCents === undefined && st.discountPct === undefined : st[k] === undefined)).map((k) => BE_ASK[k].replace(/^¿|\?.*$/g, '')) }, next: miss }
+  if (miss) return { reply: { text: BE_ASK[miss], ask: order.filter((k) => (k === 'discountCents' ? st.discountCents === undefined && st.discountPct === undefined : st[k] === undefined)).map((k) => BE_ASK[k].replace(/^¿|\?.*$/g, '')) }, next: miss }
   const price = st.priceCents!
   const discount = st.discountPct !== undefined ? Math.round((price * st.discountPct) / 100) : st.discountCents!
   const base = contribution({ priceCents: price, productCents: st.costCents!, variableCents: st.variableCents! })
@@ -209,7 +212,7 @@ function readCampaign(s: AppState, biz: BusinessId, raw: string, n: string, sl: 
 function campaign(s: AppState, biz: BusinessId, sl: CampaignSlots): { reply: AssistReply; next: keyof CampaignSlots | null } {
   const order: (keyof CampaignSlots)[] = ['segment', 'benefit', 'itemId', 'fixedCostCents', 'budgetCents']
   const miss = order.filter((k) => sl[k] === undefined)
-  if (miss.length) return { reply: { text: CP_ASK[miss[0]], missing: miss.map((k) => CP_ASK[k].split('?')[0].replace('¿', '')) }, next: miss[0] }
+  if (miss.length) return { reply: { text: CP_ASK[miss[0]], ask: miss.map((k) => CP_ASK[k].split('?')[0].replace('¿', '')) }, next: miss[0] }
   const today = dateKeyOf(s.clock.nowMs)
   const item = s.menuItems.find((m) => m.id === sl.itemId)!
   const segName = SEGMENT_LABEL[sl.segment!].split(' (')[0]

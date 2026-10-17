@@ -195,7 +195,7 @@ test('migración: un guardado v1 (P2) se abre en la versión vigente sin pantall
   await page.reload()
   await expect(page.getByRole('link', { name: 'Mi pedido (1)' }).first()).toBeAttached()
   const s = await state(page)
-  expect(s.schemaVersion).toBe(3)
+  expect(s.schemaVersion).toBe(4) // P5-L6: la cadena llega a la versión vigente
   expect(s.gifts).toEqual([])
   expect(s.carts[0].lines).toHaveLength(1)
   expect(s.businesses).toHaveLength(5)

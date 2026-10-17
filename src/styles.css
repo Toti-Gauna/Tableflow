@@ -2037,3 +2037,7 @@ dialog.role-intro { max-width: min(720px, calc(100vw - 24px)); }
 .pay-chip { display: inline-block; margin: 4px 0 0; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
 .pay-chip.due { background: #fbeccb; color: #6b4100; }
 .pay-chip.paid { background: #e3f1e6; color: #164527; }
+/* P5-L6 · beneficio en el pedido */
+.benefit-box { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
+.benefit-box input { flex: 1; min-width: 0; min-height: 40px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: var(--field); color: var(--ink); font: inherit; }
+.benefit-box .linklike { margin-right: 10px; font-weight: 700; }
