@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, jump, setRole, state } from './helpers'
+import { fresh, jump, setRole, state, ensureConsole } from './helpers'
 
 test('S07/S08 por la UI: agotado y precio cambiado desde admin bloquean el envío', async ({ page }) => {
   await fresh(page, '/#/mesa-clara/carta')
@@ -46,6 +46,7 @@ test('S22 por la UI: reponer 10 unidades habilita de nuevo el roll', async ({ pa
   await fresh(page, '/#/ritual-cafe/carta')
   await expect(page.getByTestId('dish-RC-10')).toContainText('Agotado')
   await setRole(page, /Encargado/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/stock')
   await page.getByTestId('restock-I-14').click()
@@ -65,6 +66,7 @@ test('S20/S26/S25 por la UI: incidencia de cancelación, arqueo con diferencia y
   await page.getByTestId('dialog-confirm').click()
   await expect(page.locator('#contenido').getByText(/incidencia para el encargado/)).toBeVisible()
   await setRole(page, /Encargado/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/pedidos/O-009')
   await expect(page.getByText('Incidencia pendiente')).toBeVisible()
@@ -127,6 +129,7 @@ test('S38/S40 por la UI: pasaporte sin comprar y cata con cupo 1', async ({ page
 test('S41 por la UI: filtro sin actividad → vacío explicativo y recuperación', async ({ page }) => {
   await fresh(page, '/#/admin/reportes')
   await setRole(page, /Encargado/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/reportes')
   await expect(page.getByTestId('rep-orders')).toHaveText('7')
@@ -177,6 +180,7 @@ test('M03/M15: apagar las reservas oculta la acción y deja la política', async
 test('M06: incidencia de cocina deriva al encargado sin borrar la comanda', async ({ page }) => {
   await fresh(page, '/#/admin/cocina')
   await setRole(page, /Cocina/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/cocina')
   await page.getByTestId('ticket-O-010').getByRole('button', { name: 'Incidencia' }).click()

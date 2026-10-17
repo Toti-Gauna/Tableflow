@@ -1,7 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, type ComponentType } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ComponentType } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { LiveRegion } from './ui/kit'
-import { DemoBanner, DemoBar, Footer, StatusStrips } from './ui/Shell'
+import { DemoBanner, DemoDock, Footer, RoleIntro, StatusStrips } from './ui/Shell'
 import { isBiz } from './ui/hooks'
 import { dispatch, setPrefs, useSnapshot } from './store'
 import { ClientLayout } from './pages/client/ClientLayout'
@@ -12,6 +12,7 @@ import { Landing } from './pages/Landing'
 import { Recovery } from './pages/Recovery'
 import { NotFound } from './pages/NotFound'
 import { RouteLoader } from './ui/Loader'
+import { useTheme } from './ui/theme'
 
 // Carga diferida por ruta: el recorrido principal (inicio, carta, pedido) va en el bundle inicial;
 // administración, simulador, regalos, sección infantil y páginas de referencia bajan al visitarlas.
@@ -49,7 +50,7 @@ const AdminConfig = named(() => import('./pages/admin/Configuracion'), 'AdminCon
 
 function BizGuard() {
   const { biz } = useParams()
-  if (!isBiz(biz)) return <NotFound what="perfil" />
+  if (!isBiz(biz)) return <NotFound what="ese perfil" />
   return <ClientLayout biz={biz} />
 }
 
@@ -88,8 +89,24 @@ function FocusOnNav() {
   return null
 }
 
+/** Identidad del documento: el negocio de la ruta (o el de la sesión en administración); la portada es TableFlow. */
+function useDocumentBiz() {
+  const { pathname } = useLocation()
+  const { state } = useSnapshot()
+  const m = /^\/(mesa-clara|ritual-cafe)(\/|$)/.exec(pathname)
+  const biz = m ? m[1] : pathname.startsWith('/admin') ? state.session.businessId : null
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    if (biz) root.dataset.biz = biz
+    else delete root.dataset.biz
+  }, [biz])
+  useLayoutEffect(() => () => { delete document.documentElement.dataset.biz }, [])
+}
+
 function Chrome() {
   const { phase, prefs } = useSnapshot()
+  useTheme(prefs.theme)
+  useDocumentBiz()
   useEffect(() => {
     const root = document.documentElement
     if (prefs.reducedMotion === 'on') root.setAttribute('data-motion', 'reduced')
@@ -106,7 +123,8 @@ function Chrome() {
         <Recovery />
       ) : (
         <>
-          <DemoBar />
+          <DemoDock />
+          <RoleIntro />
           <FocusOnNav />
           <div id="contenido">
             <Suspense fallback={<RouteLoader />}>
@@ -152,7 +170,7 @@ export function App() {
             <Route path="automatizaciones" element={<AdminAutomatizaciones />} />
             <Route path="reportes" element={<AdminReportes />} />
             <Route path="configuracion" element={<AdminConfig />} />
-            <Route path="*" element={<NotFound what="sección de administración" back="/admin/resumen" backLabel="Volver al resumen" />} />
+            <Route path="*" element={<NotFound what="esa sección de administración" back="/admin/resumen" backLabel="Volver al resumen" />} />
           </Route>
           <Route path="/:biz" element={<BizGuard />}>
             <Route index element={<Home />} />
@@ -170,9 +188,9 @@ export function App() {
             <Route path="regalar" element={<Regalar />} />
             <Route path="chicos" element={<Chicos />} />
             <Route path="regalo/:code" element={<Regalo />} />
-            <Route path="*" element={<NotFound what="página" />} />
+            <Route path="*" element={<NotFound what="esa página" />} />
           </Route>
-          <Route path="*" element={<NotFound what="página" />} />
+          <Route path="*" element={<NotFound what="esa página" />} />
         </Route>
       </Routes>
     </HashRouter>

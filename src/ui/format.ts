@@ -48,6 +48,16 @@ export const ROLE_LABEL: Record<Role, string> = {
   caja: 'Caja',
   encargado: 'Encargado',
 }
+/** Qué muestra cada rol (selector de bienvenida y dock). Son vistas de la demo, no permisos. */
+export const ROLE_DESC: Record<Role, string> = {
+  'cliente-invitado': 'Mirá la carta, armá un pedido o reservá como alguien que entra por primera vez.',
+  'cliente-recurrente': 'Volvé como Ana: pasaporte con sellos, historial y selección guardada.',
+  recepcion: 'Confirmá reservas, ubicá mesas en el salón y atendé la lista de espera.',
+  mozo: 'El salón mesa por mesa: pedidos, cuentas y platos listos para llevar.',
+  cocina: 'Las comandas en tablero: aceptar, preparar y marcar listo.',
+  caja: 'Abrí la caja, dividí cuentas y registrá pagos de demostración.',
+  encargado: 'El día completo: resumen, stock, reportes y automatizaciones.',
+}
 export const isClientRole = (r: Role) => r === 'cliente-invitado' || r === 'cliente-recurrente'
 
 export interface AdminSection {

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { fresh, jump, setRole, state } from './helpers'
+import { fresh, jump, setRole, state, ensureConsole } from './helpers'
 
 // P2-L2: el rediseño mantiene el contrato funcional en todos los anchos (S09, S41–S43) y diferencia los estados.
 
@@ -13,7 +13,7 @@ const focusNotObscured = async (page: Page) =>
   page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null
     if (!el || el === document.body) return 'sin foco'
-    if (el.closest('.demo-banner, .cart-bar, .cat-nav, .console, dialog')) return 'ok'
+    if (el.closest('.demo-banner, .cart-bar, .cat-nav, .dock, dialog')) return 'ok'
     const r = el.getBoundingClientRect()
     const x = Math.min(window.innerWidth - 1, Math.max(0, r.left + Math.min(r.width / 2, 12)))
     const y = Math.min(window.innerHeight - 1, Math.max(0, r.top + r.height / 2))
@@ -123,6 +123,7 @@ test('estados diferenciados con texto e ícono: revisión, cancelación pendient
   await setRole(page, /Encargado/)
   // en el seed, la revisión humana tiene su tono propio y no se confunde con "solicitada"
   await page.goto('/#/admin/reservas')
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('mesa-clara')
   await page.goto('/#/admin/reservas')
   const review = page.locator('.badge.review', { hasText: 'Revisión humana' })
@@ -130,9 +131,11 @@ test('estados diferenciados con texto e ícono: revisión, cancelación pendient
   if (await review.count()) await expect(review.first()).toBeVisible()
   await expect(requested.first()).toBeVisible()
   // KDS: preparación tarde con texto "Tarde" y listo con "Esperando retiro"
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/cocina')
   await expect(page.getByTestId('ticket-O-008')).toContainText('Esperando retiro')
+  await ensureConsole(page)
   await page.getByTestId('clock-60').click()
   await expect(page.getByTestId('ticket-O-009')).toContainText(/Tarde · \d+ min/)
   await expect(page.getByTestId('ticket-O-008')).toContainText(/Retiro demorado · \d+ min/)

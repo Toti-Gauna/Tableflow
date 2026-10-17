@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
-import { fresh, jump, setRole, state } from './helpers'
+import { fresh, jump, setRole, state, ensureConsole } from './helpers'
 
 const ORIGIN = 'http://127.0.0.1:4173'
 
@@ -20,6 +20,7 @@ test('red: cero solicitudes a APIs de negocio, IA, pagos o mensajería (solo ass
 test.describe('Persistencia (S02, S45, S46)', () => {
   test('S02: recargar conserva carrito y sede', async ({ page }) => {
     await fresh(page, '/#/ritual-cafe/carta')
+    await ensureConsole(page)
     await page.getByTestId('loc-select').selectOption('L-RC-norte')
     await page.getByTestId('open-RC-01').click()
     await page.getByLabel('Colombia · Huila').check()
@@ -69,13 +70,16 @@ test.describe('Persistencia (S02, S45, S46)', () => {
   })
   test('S46: reiniciar → cancelar conserva; confirmar restaura el seed y solo borra claves TableFlow', async ({ page }) => {
     await fresh(page, '/#/admin/pedidos')
+    await ensureConsole(page)
     await page.getByTestId('biz-select').selectOption('ritual-cafe')
     await page.evaluate(() => localStorage.setItem('otra-app', 'x'))
     await page.getByTestId('quick-accept-O-011').click()
     expect((await state(page)).orders.find((o: any) => o.id === 'O-011').status).toBe('aceptado')
+    await ensureConsole(page)
     await page.getByTestId('reset-open').click()
     await page.getByTestId('dialog-cancel').click()
     expect((await state(page)).orders.find((o: any) => o.id === 'O-011').status).toBe('aceptado')
+    await ensureConsole(page)
     await page.getByTestId('reset-open').click()
     await page.getByTestId('dialog-confirm').click()
     const s = await state(page)

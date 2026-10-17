@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { act, ConfirmDialog, DemoTag, Dialog } from './kit'
+import { act, announce, ConfirmDialog, DemoTag, Dialog } from './kit'
 import { Glyph } from './glyphs'
-import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL, sedeShort } from './format'
+import { DEFAULT_ADMIN, isClientRole, ROLE_DESC, ROLE_LABEL, sedeShort } from './format'
 import { dismissNotice, dispatch, resetDemo, setPrefs, useSnapshot } from '../store'
 import { sfx } from './sfx'
 import { dateKeyOf, fmtDateLong, fmtDateShort, hhmm, minutesOfDay } from '../domain/time'
 import type { BusinessId, FixtureId, Role } from '../domain/types'
+import type { ThemePref } from '../domain/persistence'
+import { THEME_LABEL } from './theme'
 
 export const BIZ_IDS: BusinessId[] = ['mesa-clara', 'ritual-cafe']
 
@@ -62,146 +64,265 @@ const JUMPS: { label: string; minutes: number }[] = [
   { label: 'Ir a las 21:45', minutes: 21 * 60 + 45 },
 ]
 
-export function DemoBar() {
+/** Casos para presentar: combinan negocio, rol, hora y pantalla con comandos que ya existen. */
+interface DemoCase { id: string; title: string; hint: string; biz?: BusinessId; role: Role; at?: number; to: (b: BusinessId) => string }
+const CASES: DemoCase[] = [
+  { id: 'almuerzo', title: 'Almuerzo en Mesa Clara', hint: '12:00 · carta abierta y pedido a la mesa', biz: 'mesa-clara', role: 'cliente-invitado', at: 12 * 60, to: () => '/mesa-clara/carta' },
+  { id: 'retiro', title: 'Retiro en Ritual Café', hint: '08:00 · un café para llevar', biz: 'ritual-cafe', role: 'cliente-invitado', at: 8 * 60, to: () => '/ritual-cafe/carta' },
+  { id: 'cocina', title: 'Cocina en hora pico', hint: '20:00 · comandas en el tablero', biz: 'mesa-clara', role: 'cocina', at: 20 * 60, to: () => '/admin/cocina' },
+  { id: 'ana', title: 'Vuelve Ana', hint: 'Pasaporte con sellos e historial', role: 'cliente-recurrente', to: (b) => `/${b}/pasaporte` },
+  { id: 'cierre', title: 'Cierre de caja', hint: '21:45 · cuentas y pagos de demostración', biz: 'mesa-clara', role: 'caja', at: 21 * 60 + 45, to: () => '/admin/caja' },
+]
+
+/** Navegación al cambiar de rol: el negocio y los registros se conservan. */
+function useRoleNav() {
+  const { state } = useSnapshot()
+  const nav = useNavigate()
+  const loc = useLocation()
+  return (role: Role) => {
+    act({ type: 'session/setRole', role }, `Vista de ${ROLE_LABEL[role]}`)
+    const biz = state.session.businessId
+    if (isClientRole(role)) {
+      if (loc.pathname.startsWith('/admin')) nav(`/${biz}`)
+    } else nav(`/admin/${DEFAULT_ADMIN[role]}`)
+  }
+}
+
+/**
+ * P5-L3 · Dock de la demo: reemplaza la consola superior. Abajo a la derecha en escritorio y en la franja DEMO
+ * cuando hay barra inferior; se cierra con Escape, con un clic afuera y al cambiar de rol o de negocio.
+ */
+export function DemoDock() {
   const { state, prefs } = useSnapshot()
   const nav = useNavigate()
   const loc = useLocation()
+  const onRole = useRoleNav()
   const [resetOpen, setResetOpen] = useState(false)
   const [guide, setGuide] = useState(false)
+  const [trailer, setTrailer] = useState(false)
   const [open, setOpen] = useState(false)
   const [fx, setFx] = useState<FixtureId>('servicio')
+  const rootRef = useRef<HTMLDivElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
   const biz = state.session.businessId
   const locs = state.locations.filter((l) => l.businessId === biz)
   const now = state.clock.nowMs
 
-  const onRole = (role: Role) => {
-    act({ type: 'session/setRole', role })
-    if (isClientRole(role)) {
-      if (loc.pathname.startsWith('/admin') || loc.pathname === '/') nav(`/${biz}`)
-    } else nav(`/admin/${DEFAULT_ADMIN[role]}`)
+  const close = (focusToggle = true) => {
+    setOpen(false)
+    if (focusToggle) toggleRef.current?.focus()
   }
-  const onBiz = (b: BusinessId) => {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) close()
+    }
+    const onDown = (e: PointerEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node) && !(e.target as Element).closest?.('dialog')) setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onDown)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onDown)
+    }
+  }, [open])
+
+  const switchBiz = (b: BusinessId) => {
     dispatch({ type: 'session/setBusiness', businessId: b })
     const m = /^\/(mesa-clara|ritual-cafe)(\/.*)?$/.exec(loc.pathname)
     if (m) {
       const rest = m[2] ?? ''
       // los folios son de un negocio: al cambiar de perfil se vuelve a la sección, no al registro
-      nav(`/${b}${/^\/(pedido|reservas)\/[^/]+/.test(rest) ? rest.split('/').slice(0, 2).join('/') : rest}`)
+      nav(`/${b}${/^\/(pedido|reservas|regalo)\/[^/]+/.test(rest) ? rest.split('/').slice(0, 2).join('/').replace('/regalo', '/regalar') : rest}`)
+    } else if (/^\/admin\/(pedidos|reservas|clientes)\/[^/]+/.test(loc.pathname)) {
+      nav(loc.pathname.split('/').slice(0, 3).join('/'))
     }
+  }
+  const runCase = (c: DemoCase) => {
+    const b = c.biz ?? biz
+    if (b !== biz) dispatch({ type: 'session/setBusiness', businessId: b })
+    dispatch({ type: 'session/setRole', role: c.role })
+    if (c.at !== undefined) dispatch({ type: 'clock/jump', minutes: c.at })
+    announce(`Caso: ${c.title}`)
+    close(false)
+    nav(c.to(b))
   }
   const when = `${fmtDateShort(dateKeyOf(now))} · ${hhmm(minutesOfDay(now))}`
   const dayShort = fmtDateShort(dateKeyOf(now)).replace(/^(\S{3})\S*/, '$1')
   return (
-    <div className="console" role="region" aria-label="Controles de la demo" data-open={open}>
-      <div className="console-inner">
-        <button type="button" className="cbtn console-toggle" aria-expanded={open} aria-controls="console-panel" onClick={() => setOpen((v) => !v)}>
-          <Glyph name="sliders" size={18} /> Controles<span className="sr-only"> de la demo</span> <Glyph name="chevron" size={16} />
-        </button>
-        <span className="console-mini" aria-hidden="true">
-          <Glyph name="clock" size={16} /> {dayShort} · {hhmm(minutesOfDay(now))}
-        </span>
-        <div className="console-panel" id="console-panel">
-        <label className="cfield">
-          Rol (vista, no permisos)
-          <select value={state.session.role} onChange={(e) => onRole(e.target.value as Role)} data-testid="role-select">
-            {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="cfield">
-          Perfil ficticio
-          <select value={biz} onChange={(e) => onBiz(e.target.value as BusinessId)} data-testid="biz-select">
-            {BIZ_IDS.map((b) => (
-              <option key={b} value={b}>
-                {state.businesses.find((x) => x.id === b)!.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="cfield">
-          Sede
-          <select value={state.session.locationByBusiness[biz]} onChange={(e) => dispatch({ type: 'session/setLocation', locationId: e.target.value })} data-testid="loc-select">
-            {locs.map((l) => (
-              <option key={l.id} value={l.id}>
-                {sedeShort(l.name)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span className="sep" aria-hidden="true" />
-        <div className="clock" role="group" aria-label="Reloj simulado">
-          <span className="clock-now" data-testid="sim-clock" title={fmtDateLong(dateKeyOf(now))}>
-            <Glyph name="clock" size={18} />
-            <span>
-              <span className="sr-only">Día simulado: </span>
-              <time dateTime={new Date(now).toISOString()}>{when}</time>
-            </span>
-          </span>
-          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
-            +15 min
+    <div className="dock" role="region" aria-label="Controles de la demo" data-open={open} ref={rootRef}>
+      <div className="dock-panel" id="dock-panel" hidden={!open} data-testid="dock-panel">
+        <div className="dock-head">
+          <div>
+            <h2>Controles de la demo</h2>
+            <p>Para presentar. No forman parte del producto.</p>
+          </div>
+          <button type="button" className="dock-close" onClick={() => close()} aria-label="Cerrar controles">
+            <Glyph name="x" size={18} />
           </button>
-          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
-            +1 h
-          </button>
-          <label>
-            <span className="sr-only">Saltar a una hora</span>
-            <select
-              aria-label="Saltar a una hora"
-              value=""
-              data-testid="clock-jump"
-              onChange={(e) => {
-                const j = JUMPS[Number(e.target.value)]
-                if (j) act({ type: 'clock/jump', minutes: j.minutes }, `Reloj en ${hhmm(j.minutes)}`)
-              }}
-            >
-              <option value="">Saltar a…</option>
-              {JUMPS.map((j, i) => (
-                <option key={j.label} value={i}>
-                  {j.label}
+        </div>
+
+        <section className="dock-sec" aria-labelledby="dock-rol">
+          <h3 id="dock-rol">Rol y negocio</h3>
+          <label className="cfield">
+            Rol (vista, no permisos)
+            <select value={state.session.role} onChange={(e) => { onRole(e.target.value as Role); close() }} data-testid="role-select">
+              {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABEL[r]}
                 </option>
               ))}
             </select>
           </label>
-          <span className="sep" aria-hidden="true" />
-          <button
-            className="cbtn"
-            type="button"
-            aria-pressed={prefs.uiSounds}
-            data-testid="sfx-toggle"
-            title="Sonidos cortos al agregar, enviar o abrir un regalo. Apagados por defecto; el volumen se ajusta en Configuración."
-            onClick={() => {
-              const on = !prefs.uiSounds
-              setPrefs({ uiSounds: on })
-              if (on) sfx('tap', { force: true })
-            }}
-          >
-            <Glyph name={prefs.uiSounds ? 'volume' : 'mute'} size={16} />
-            <span className="wide-only">Sonidos de interfaz</span>
-          </button>
-          <button
-            className="cbtn"
-            type="button"
-            aria-pressed={prefs.reducedMotion === 'on'}
-            title="Reduce o quita los desplazamientos animados. Por defecto sigue la preferencia del sistema."
-            onClick={() => setPrefs({ reducedMotion: prefs.reducedMotion === 'on' ? 'auto' : 'on' })}
-          >
-            <Glyph name={prefs.reducedMotion === 'on' ? 'check' : 'sliders'} size={16} />
-            <span className="wide-only">Reducir movimiento</span>
-          </button>
-          <button className="cbtn" type="button" onClick={() => setGuide(true)} data-testid="guide-open" aria-haspopup="dialog">
-            <Glyph name="book" size={16} /> <span className="wide-only">Guía de la demo</span>
-          </button>
-          <button className="cbtn" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
-            <Glyph name="restart" size={16} /> <span className="xl-only">Reiniciar</span><span className="sr-only"> demo</span>
-          </button>
-        </div>
-        </div>
+          <p className="role-desc" data-testid="role-desc">{ROLE_DESC[state.session.role]}</p>
+          <div className="row2">
+            <label className="cfield">
+              Negocio ficticio
+              <select value={biz} onChange={(e) => { switchBiz(e.target.value as BusinessId); close() }} data-testid="biz-select">
+                {BIZ_IDS.map((b) => (
+                  <option key={b} value={b}>
+                    {state.businesses.find((x) => x.id === b)!.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="cfield">
+              Sede
+              <select value={state.session.locationByBusiness[biz]} onChange={(e) => { act({ type: 'session/setLocation', locationId: e.target.value }, `Sede: ${sedeShort(state.locations.find((l) => l.id === e.target.value)?.name ?? '')}`); close() }} data-testid="loc-select">
+                {locs.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {sedeShort(l.name)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="dock-sec" aria-labelledby="dock-casos">
+          <h3 id="dock-casos">Reloj y casos</h3>
+          <div className="clock-row" role="group" aria-label="Reloj simulado">
+            <span className="clock-now" data-testid="sim-clock" title={fmtDateLong(dateKeyOf(now))}>
+              <Glyph name="clock" size={18} />
+              <span>
+                <span className="sr-only">Día simulado: </span>
+                <time dateTime={new Date(now).toISOString()}>{when}</time>
+              </span>
+            </span>
+            <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
+              +15 min
+            </button>
+            <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
+              +1 h
+            </button>
+            <label>
+              <span className="sr-only">Saltar a una hora</span>
+              <select
+                aria-label="Saltar a una hora"
+                value=""
+                data-testid="clock-jump"
+                onChange={(e) => {
+                  const j = JUMPS[Number(e.target.value)]
+                  if (j) act({ type: 'clock/jump', minutes: j.minutes }, `Reloj en ${hhmm(j.minutes)}`)
+                }}
+              >
+                <option value="">Saltar a…</option>
+                {JUMPS.map((j, i) => (
+                  <option key={j.label} value={i}>
+                    {j.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <ul className="cases" aria-label="Casos para mostrar">
+            {CASES.map((c) => (
+              <li key={c.id}>
+                <button type="button" onClick={() => runCase(c)} data-testid={`case-${c.id}`}>
+                  <b>{c.title}</b>
+                  <span>{c.hint}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="dock-sec" aria-labelledby="dock-vista">
+          <h3 id="dock-vista">Vista y presentación</h3>
+          <fieldset className="theme-seg" data-testid="theme-control">
+            <legend>Tema de color</legend>
+            {(['system', 'light', 'dark'] as ThemePref[]).map((t) => (
+              <label key={t}>
+                <input type="radio" name="tf-theme" value={t} checked={prefs.theme === t} onChange={() => setPrefs({ theme: t })} data-testid={`theme-${t}`} />
+                {THEME_LABEL[t]}
+              </label>
+            ))}
+          </fieldset>
+          <div className="tools">
+            <button
+              className="cbtn"
+              type="button"
+              aria-pressed={prefs.uiSounds}
+              data-testid="sfx-toggle"
+              title="Sonidos cortos al agregar, enviar o abrir un regalo. Apagados por defecto; el volumen se ajusta en Configuración."
+              onClick={() => {
+                const on = !prefs.uiSounds
+                setPrefs({ uiSounds: on })
+                if (on) sfx('tap', { force: true })
+              }}
+            >
+              <Glyph name={prefs.uiSounds ? 'volume' : 'mute'} size={16} /> Sonidos
+            </button>
+            <button
+              className="cbtn"
+              type="button"
+              aria-pressed={prefs.reducedMotion === 'on'}
+              data-testid="motion-toggle"
+              title="Reduce o quita los desplazamientos animados. Por defecto sigue la preferencia del sistema."
+              onClick={() => setPrefs({ reducedMotion: prefs.reducedMotion === 'on' ? 'auto' : 'on' })}
+            >
+              <Glyph name={prefs.reducedMotion === 'on' ? 'check' : 'sliders'} size={16} /> Reducir movimiento
+            </button>
+            <button className="cbtn" type="button" onClick={() => { close(false); setGuide(true) }} data-testid="guide-open" aria-haspopup="dialog">
+              <Glyph name="book" size={16} /> Guía de la demo
+            </button>
+            <button className="cbtn" type="button" onClick={() => { close(false); setTrailer(true) }} data-testid="trailer-open" aria-haspopup="dialog">
+              <Glyph name="film" size={16} /> Tráiler
+            </button>
+            <button className="cbtn danger" type="button" onClick={() => { close(false); setResetOpen(true) }} data-testid="reset-open" aria-haspopup="dialog">
+              <Glyph name="restart" size={16} /> Reiniciar demo
+            </button>
+          </div>
+        </section>
       </div>
+      <button
+        ref={toggleRef}
+        type="button"
+        className="dock-toggle"
+        aria-expanded={open}
+        aria-controls="dock-panel"
+        aria-label={`Controles de la demo (reloj ${dayShort} ${hhmm(minutesOfDay(now))})`}
+        data-testid="dock-toggle"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Glyph name="sliders" size={16} />
+        <span>Demo</span>
+        <span className="when" aria-hidden="true">{dayShort} {hhmm(minutesOfDay(now))}</span>
+        <Glyph name="chevron" size={14} className="chev" />
+      </button>
       <Dialog open={guide} onClose={() => setGuide(false)} title="Guía de la demo" className="guide" testId="guide">
         <DemoGuide biz={biz} onDone={() => setGuide(false)} />
+      </Dialog>
+      <Dialog open={trailer} onClose={() => setTrailer(false)} title="Tráiler de la demo" testId="trailer">
+        <p>
+          <strong>Todavía no hay tráiler.</strong> No se grabó ningún video: cuando exista, se va a reproducir acá mismo, sin conexión y con sonido solo si lo activás.
+        </p>
+        <p className="muted">Mientras tanto, la guía tiene recorridos de 60 a 90 segundos para mostrar en vivo.</p>
+        <div className="dialog-actions">
+          <button className="btn secondary" type="button" onClick={() => setTrailer(false)}>Cerrar</button>
+          <button className="btn" type="button" onClick={() => { setTrailer(false); setGuide(true) }}>Abrir la guía</button>
+        </div>
       </Dialog>
       <ConfirmDialog
         open={resetOpen}
@@ -217,7 +338,7 @@ export function DemoBar() {
         body={
           <>
             <p>
-              Se borran <strong>solo los datos de TableFlow</strong> de este navegador (claves <code>tableflow.demo.v1*</code>) y se restaura el seed elegido, con el reloj en lunes 19/10/2026 10:00. No se toca nada más. Si cancelás, se conserva el estado actual.
+              Se borran <strong>solo los datos de TableFlow</strong> de este navegador (claves <code>tableflow.demo.v1*</code>) y se restaura el seed elegido, con el reloj en lunes 19/10/2026 10:00. Se conserva el tema de color. No se toca nada más. Si cancelás, se conserva el estado actual.
             </p>
             <fieldset>
               <legend>Seed</legend>
@@ -235,6 +356,46 @@ export function DemoBar() {
   )
 }
 
+/**
+ * P5-L3 · Selector de rol de bienvenida: aparece una sola vez, en la portada, cuando la página ya cargó del todo.
+ * Se puede omitir y el rol se cambia después desde el dock.
+ */
+export function RoleIntro() {
+  const { prefs, phase } = useSnapshot()
+  const { pathname } = useLocation()
+  const onRole = useRoleNav()
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    if (document.readyState === 'complete') {
+      const t = window.setTimeout(() => setReady(true), 250)
+      return () => clearTimeout(t)
+    }
+    const on = () => setReady(true)
+    window.addEventListener('load', on, { once: true })
+    return () => window.removeEventListener('load', on)
+  }, [])
+  const open = ready && phase === 'ready' && pathname === '/' && !prefs.roleIntroSeen
+  const done = () => setPrefs({ roleIntroSeen: true })
+  return (
+    <Dialog open={open} onClose={done} title="¿Desde qué lugar querés recorrer la demo?" className="role-intro" testId="role-intro">
+      <p className="muted">Cada rol muestra otras pantallas del mismo negocio. Son vistas de la demo, no permisos. Lo podés cambiar cuando quieras desde el botón <strong>Demo</strong>.</p>
+      <ul className="role-cards">
+        {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+          <li key={r}>
+            <button type="button" onClick={() => { done(); onRole(r) }} data-testid={`role-intro-${r}`}>
+              <b>{ROLE_LABEL[r]}</b>
+              <span>{ROLE_DESC[r]}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="dialog-actions">
+        <button className="btn secondary" type="button" onClick={done} data-testid="role-intro-skip">Omitir por ahora</button>
+      </div>
+    </Dialog>
+  )
+}
+
 /** Recorridos sugeridos para quien muestra la demo (capa de demo, fuera del producto). */
 function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
   const nav = useNavigate()
@@ -242,7 +403,7 @@ function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
   const rest = biz === 'mesa-clara'
   return (
     <div className="guide-body">
-      <p className="muted">Recorridos de 60–90 segundos. Todo es local y simulado; el reloj solo avanza con los controles.</p>
+      <p className="muted">Recorridos de 60–90 segundos. Todo es local y simulado; el reloj solo avanza desde el botón Demo.</p>
       <h3>{rest ? 'Mesa Clara · del pedido al cierre' : 'Ritual Café · del pedido al retiro'}</h3>
       {rest ? (
         <ol className="steps">
@@ -254,7 +415,7 @@ function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
         </ol>
       ) : (
         <ol className="steps">
-          <li><span>Elegí la sede (Centro o Norte) en los controles.</span></li>
+          <li><span>Elegí la sede (Centro o Norte) desde el botón Demo.</span></li>
           <li><span><button className="linklike" type="button" onClick={() => go('/ritual-cafe/carta')}>Configurá un flat white</button> (tamaño y leche) y pedilo para retirar.</span></li>
           <li><span>Como barra aceptá, prepará y marcá listo; después marcá retirado.</span></li>
         </ol>

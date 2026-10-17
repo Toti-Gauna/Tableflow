@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, setRole, state } from './helpers'
+import { fresh, setRole, state, ensureConsole } from './helpers'
 
 // P2-L3: pasaporte y fidelización con recarga, repetición, cancelación y reversión.
 
@@ -50,6 +50,7 @@ test('S38: estados sin empezar → 1/2/3 → insignia → guardada → reiniciad
   await page.getByTestId('add-to-cart').click()
   expect((await pass(page, 'ritual-cafe')).metrics.usedInCart).toBe(1)
   // en la sede Norte el V60 no se sirve: no se agrega nada y se proponen alternativas
+  await ensureConsole(page)
   await page.getByTestId('loc-select').selectOption('L-RC-norte')
   const linesBefore = (await state(page)).carts.reduce((a: number, c: { lines: unknown[] }) => a + c.lines.length, 0)
   await page.getByTestId('use-saved').click()

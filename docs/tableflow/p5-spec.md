@@ -132,8 +132,8 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Retiro con pago en local | E (hoy: pago DEMO en caja) | n/a | E | n/a | E |
 | Propuestas visuales (L2, 1.ª ronda) | rechazada por genérica | rechazada | rechazada | rechazada | rechazada |
 | Identidad propia (L2b) | C P · confitería notable | C P · bodegón de pizarra | C P · la vitrina es el menú | C P · club de jazz | C P · brasa a la vista |
-| Aprobación de la identidad | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio |
-| Shell, header, modo oscuro (L3) | E | E | E | E | E |
+| Aprobación de la identidad | aprobada | aprobada | aprobada | aprobada | aprobada |
+| Shell, header, modo oscuro (L3) | C P | C P | E (tokens en L5) | E (tokens en L5) | E (tokens en L5) |
 | Arte propio (L4) | C (estilo actual) | C (estilo actual) | E | E | E |
 | Juego infantil propio (L5) | C compartido → E | C compartido → E | E | E | E |
 | Growth y asistentes (L6) | E | E | E | E | E |
@@ -150,9 +150,39 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 
 | Negocio | Identidad L2b | Aprobación de Ignacio |
 |---|---|---|
-| Cafetería · Ritual Café | Confitería notable porteña | pendiente |
-| Heladería · Copo | La vitrina es el menú | pendiente |
-| Restaurante · Mesa Clara | Bodegón de pizarra y pingüino | pendiente |
-| Bar gastronómico · Taberna Compás | Club de jazz y tapas | pendiente |
-| Comida rápida · Brasa Rápida | Brasa a la vista | pendiente |
+| Cafetería · Ritual Café | Confitería notable porteña | aprobada (17/10/2026) |
+| Heladería · Copo | La vitrina es el menú | aprobada (17/10/2026) |
+| Restaurante · Mesa Clara | Bodegón de pizarra y pingüino | aprobada (17/10/2026) |
+| Bar gastronómico · Taberna Compás | Club de jazz y tapas | aprobada (17/10/2026) |
+| Comida rápida · Brasa Rápida | Brasa a la vista | aprobada (17/10/2026) |
+Ignacio aprobó las cinco el 17/10/2026: "Apruebo todos los diseños, vos seguí, de última luego reemplazamos algo". Cualquier identidad se puede reemplazar más adelante sin rehacer el sistema de tokens de L3.
+
 Detalle y evidencia: `p5-l2-propuestas.md`.
+
+
+## L3 · Shell, identidad aplicada y modo oscuro (SDD)
+Construido el 17/10/2026 sobre `main` (`2ee3dda`). Cubre los dos negocios que hoy existen en la app y la portada de TableFlow. Heladería, bar y comida rápida todavía no existen como negocio: entran en L5 y reutilizan este sistema de tokens con las paletas ya medidas en L2b.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| SH-01 | Entrar a un negocio en escritorio o móvil | franja DEMO siempre visible; cabecera de marca sin controles de demo | `DemoBanner` (fina, ≤ 32 px), `ClientLayout` (marca por identidad) | la marca arranca debajo de la franja; ningún control de la demo en la página | `p5-l3.spec.ts` SH-01 |
+| SH-02 | Primera visita a la portada | sin ver → visible después del evento `load` → elegido u omitido (no vuelve) | `RoleIntro`, `prefs.roleIntroSeen`, `ROLE_DESC` | 7 roles con descripción; "Omitir por ahora"; un enlace directo no la muestra; el rol se cambia después desde el dock | SH-02 (3 casos, con almacenamiento vacío) |
+| SH-03 | Presentar: cambiar rol, negocio, sede, hora o caso; abrir guía, tráiler, sonidos, movimiento, reinicio | cerrado → abierto → se cierra con Escape, clic afuera o al cambiar rol, negocio, sede o caso | `DemoDock` (abajo a la derecha en escritorio; en la franja DEMO cuando hay barra inferior, < 1000 px), `CASES` | el botón no tapa controles ni el resumen del pedido; el foco vuelve al botón; el tráiler dice que todavía no existe (sin video) | SH-03 (2 pruebas) |
+| SH-04 | Cambiar entre claro y oscuro | sistema (en vivo) · claro · oscuro; se guarda y sobrevive al reinicio | `ui/theme.ts`, `html[data-theme]`, tokens `:root[data-theme='dark']` y por negocio | todas las superficies con tokens (campos, avisos, estados, salón, caja, regalos, juegos, gráficos); los objetos impresos (comanda, tarjeta de regalo, ticket) siguen claros a propósito | SH-04 (tema), SH-04 (axe en oscuro: 9 pantallas × 2 anchos + 6 de administración + dock), `contrast.test.ts` |
+| SH-05 | Cambiar de rol o de negocio con datos cargados | el rol cambia la vista; el negocio cambia los datos | `useRoleNav`, `switchBiz` | el negocio, los pedidos y el carrito siguen iguales al cambiar de rol; al cambiar de negocio, cada comanda en cocina pertenece al negocio elegido y el carrito del otro queda aparte | SH-05 |
+| FX-01 | `#/heladeria` | — | `NotFound` recibe la frase con su artículo | "No encontramos ese perfil" | FX-01..03 |
+| FX-02 | Resumen con 1 reserva solicitada | — | `Resumen` (`nRes`) | singular y plural según el número | FX-01..03 |
+| FX-03 | Resumen de Mesa Clara a las 10:00 del lunes | sin pedidos hoy → cerrado / abierto sin pedidos / sin más servicio | `Resumen` (`ordersNote`) | "Abre a las 12:00 · último servicio: sábado 17/10 (5 pedidos)" | FX-01..03 |
+
+### Identidad aplicada a la app
+- **Tokens:** `styles.css` define el claro de TableFlow, su oscuro y un bloque claro y otro oscuro por negocio, con el mismo juego de nombres semánticos: papel, tinta, campos, avisos con su borde y texto, estados suaves, sello DEMO, administración y lateral. Fuera de la franja DEMO y de los controles de la demo, las apariciones de color fijo en componentes bajaron de 229 a 142: se pasaron a tokens las de campos, avisos, estados, salón, caja, regalos, juegos y chat. Las que quedan son, a propósito, de cosas que no cambian con el tema: el tablero de cocina, la comanda impresa, la tarjeta de regalo, la pizarra, el lateral oscuro, las temporadas y el arte.
+- **Mesa Clara (bodegón):** el nombre es un cartel enlozado en Ultra; Bitter en títulos y carta; Caveat Brush para la bajada y el énfasis del titular; rojo de cartel y azul de sifón; el oscuro es la pizarra.
+- **Ritual Café (confitería notable):** Bodoni Moda en marca y títulos; EB Garamond en la carta; Pinyon Script en el énfasis; bordó, oro viejo y doble filete dorado bajo la cabecera; tarjetas con marco doble; el oscuro es el salón de caoba.
+- **Contraste medido:** `tests/contrast.test.ts` lee los bloques de `styles.css` y mide 40 pares por tema en 6 temas (TableFlow, Mesa Clara y Ritual Café, en claro y oscuro), más la pizarra. También verifica que el oscuro de cada negocio redefina todo lo que redefine su claro.
+
+### Límites declarados de L3
+- Las ilustraciones son las de P4: en oscuro se atenúan un poco, pero el arte propio por modo es de L4.
+- La "barra de botones" es un botón que abre un panel con todo agrupado; no son siete botones sueltos, para no tapar contenido.
+- Sin revisión con lector de pantalla ni en dispositivo físico. axe no certifica conformidad.
+- Las ramas de dominio por negocio (`b.kind === 'bodegon'`, etc.) siguen en el código: se ordenan en L5, cuando haya cinco negocios.

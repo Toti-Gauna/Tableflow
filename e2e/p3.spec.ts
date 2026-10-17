@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, jump, setRole, state } from './helpers'
+import { fresh, jump, setRole, state, ensureConsole } from './helpers'
 
 // P3: invitar a comer, temporadas, sección infantil, barras inferiores, carga diferida, sonidos y migración v1 → v2.
 
@@ -68,6 +68,7 @@ test('cancelar una invitación con motivo desde Regalos: deja de poder canjearse
   await page.getByTestId('gift-submit').click()
   const code: string = (await state(page)).gifts[0].code
   await setRole(page, /Encargado/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/regalos')
   await page.getByTestId(`gift-cancel-${code}`).click()
@@ -170,6 +171,7 @@ test('sonidos de interfaz: apagados por defecto (sin AudioContext) y opcionales 
   await page.getByTestId('open-RC-11').click()
   await page.getByTestId('add-to-cart').click()
   expect(await page.evaluate(() => (window as any).__ac)).toBe(0)
+  await ensureConsole(page)
   await page.getByTestId('sfx-toggle').click()
   await expect(page.getByTestId('sfx-toggle')).toHaveAttribute('aria-pressed', 'true')
   expect(await page.evaluate(() => (window as any).__ac)).toBe(1)

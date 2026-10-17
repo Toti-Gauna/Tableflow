@@ -141,7 +141,11 @@ export function backupRaw(storage: StorageLike | null, raw: string): boolean {
 export function loadPrefs(storage: StorageLike | null): Prefs {
   try {
     const raw = storage?.getItem(KEY_PREFS)
-    if (raw) return { ...DEFAULT_PREFS, ...JSON.parse(raw) }
+    if (raw) {
+      const p = { ...DEFAULT_PREFS, ...JSON.parse(raw) } as Prefs
+      if (!['system', 'light', 'dark'].includes(p.theme)) p.theme = 'system'
+      return p
+    }
   } catch {
     /* ignora */
   }
@@ -163,8 +167,13 @@ export interface Prefs {
   uiSounds: boolean
   /** Aviso sonoro de comandas nuevas en la pantalla de cocina/barra. Apagado por defecto. */
   kdsChime: boolean
+  /** Tema de color: sigue al sistema hasta que la persona elige claro u oscuro (P5-L3). */
+  theme: ThemePref
+  /** El selector de rol de bienvenida ya se mostró (se elige o se omite una sola vez). */
+  roleIntroSeen: boolean
 }
-export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [], uiSounds: false, kdsChime: false }
+export type ThemePref = 'system' | 'light' | 'dark'
+export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [], uiSounds: false, kdsChime: false, theme: 'system', roleIntroSeen: false }
 
 /** Diagnóstico exportable: errores y conteos, sin contenido operable. */
 export function buildDiagnostic(result: Extract<LoadResult, { kind: 'corrupt' | 'future' | 'needs-migration' }>, app: string) {

@@ -5,7 +5,8 @@ import { PageHead } from '../../ui/Shell'
 import { entityRef, TASK_KIND_LABEL } from '../../ui/format'
 import { act, Empty, ReasonDialog } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
-import { dateKeyOf, fmtDateShort } from '../../domain/time'
+import { dateKeyOf, fmtDateShort, hhmm, minutesOfDay } from '../../domain/time'
+import { windowsFor } from '../../domain/availability'
 import { fmtARS } from '../../domain/money'
 import { buildReport } from '../../domain/reports'
 import { openCashFor } from '../../domain/cmd-cash'
@@ -30,12 +31,26 @@ export function AdminResumen() {
     { icon: 'box', tone: 'err', text: `Stock: ${rep.stock.low} bajo(s), ${rep.stock.out} agotado(s)`, to: '/admin/stock', cta: 'Ver stock', n: rep.stock.low + rep.stock.out },
     { icon: 'bolt', tone: 'err', text: 'Automatizaciones fallidas o pendientes', to: '/admin/automatizaciones', cta: 'Ver ejecuciones', n: failed.length },
   ]
+  // FX-02: el plural acompaña al número
+  const nRes = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  // FX-03: sin pedidos hoy, el indicador dice por qué (todavía no abrió) y cuál fue el último servicio
+  const ordersNote = (() => {
+    if (rep.orders.count > 0) return nRes(rep.orders.delivered, 'entregado', 'entregados')
+    const nowMin = minutesOfDay(state.clock.nowMs)
+    const ws = windowsFor(state, loc, today).sort((a, b) => a.startMin - b.startMin)
+    const openNow = ws.some((w) => nowMin >= w.startMin && nowMin < w.endMin)
+    const next = ws.find((w) => w.startMin > nowMin)
+    const past = state.orders.filter((o) => o.businessId === bizId && dateKeyOf(o.createdAt) < today)
+    const lastKey = past.map((o) => dateKeyOf(o.createdAt)).sort().pop()
+    const last = lastKey ? `último servicio: ${fmtDateShort(lastKey)} (${nRes(past.filter((o) => dateKeyOf(o.createdAt) === lastKey).length, 'pedido', 'pedidos')})` : 'sin pedidos anteriores'
+    return `${openNow ? 'Abierto, todavía sin pedidos' : next ? `Abre a las ${hhmm(next.startMin)}` : 'Sin más servicio hoy'} · ${last}`
+  })()
   return (
     <>
       <PageHead title="Resumen" sub={`${biz.name} · ${fmtDateShort(today)} (día simulado)`} />
       <div className="kpis" role="group" aria-label="Indicadores del día">
-        <div><p className="k">Reservas de hoy</p><p className="kpi" data-testid="kpi-res">{resToday.length}</p><p className="s">{resToday.filter((r) => r.status === 'solicitada').length} solicitadas · {resToday.filter((r) => r.status === 'confirmada').length} confirmadas</p></div>
-        <div><p className="k">Pedidos de hoy</p><p className="kpi" data-testid="kpi-orders">{rep.orders.count}</p><p className="s">{rep.orders.delivered} entregados</p></div>
+        <div><p className="k">Reservas de hoy</p><p className="kpi" data-testid="kpi-res">{resToday.length}</p><p className="s">{nRes(resToday.filter((r) => r.status === 'solicitada').length, 'solicitada', 'solicitadas')} · {nRes(resToday.filter((r) => r.status === 'confirmada').length, 'confirmada', 'confirmadas')}</p></div>
+        <div><p className="k">Pedidos de hoy</p><p className="kpi" data-testid="kpi-orders">{rep.orders.count}</p><p className="s" data-testid="kpi-orders-note">{ordersNote}</p></div>
         <div><p className="k">Ventas (pedidos entregados)</p><p className="kpi money">{fmtARS(rep.orders.salesCents)}</p><p className="s">pedidos entregados · no incluye caja</p></div>
         <div><p className="k">Caja de la sede</p><p className="kpi">{cash ? 'Abierta' : 'Cerrada'}</p><p className="s"><Link to="/admin/caja">Ir a caja</Link></p></div>
       </div>

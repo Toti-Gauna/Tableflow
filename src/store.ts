@@ -140,7 +140,11 @@ export function setPrefs(patch: Partial<Prefs>) {
 
 /** Reinicio explícito (el diálogo de confirmación vive en la UI). Borra solo claves TableFlow. */
 export function resetDemo(fixtureId: FixtureId) {
+  // el tema y la bienvenida son de quien presenta, no datos de la demo: sobreviven al reinicio
+  const kept = { theme: snap.prefs.theme, roleIntroSeen: snap.prefs.roleIntroSeen }
   const r = resetProduct(storage, fixtureId, 0)
+  const prefs = { ...loadPrefs(storage), ...kept }
+  if (r.persisted) savePrefs(storage, prefs)
   snap = {
     ...snap,
     phase: 'ready',
@@ -148,7 +152,7 @@ export function resetDemo(fixtureId: FixtureId) {
     state: r.state,
     storageMode: storage && r.persisted ? 'local' : 'memory',
     warning: r.persisted ? null : (r.reason ?? snap.warning),
-    prefs: loadPrefs(storage),
+    prefs,
     notice: `Demo reiniciada con el seed “${fixtureId === 'servicio' ? 'servicio cargado' : 'vacío'}”.`,
     rev: snap.rev + 1,
   }
