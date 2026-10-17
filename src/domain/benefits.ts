@@ -35,6 +35,25 @@ function expiryFor(s: AppState, c: Campaign): number {
   return atLocal(last, 24 * 60) - 1
 }
 
+/** Un beneficio disponible para el cliente, con su código y su vencimiento (lo comparten el envío y el reclamo por QR). */
+export function makeBenefit(s: AppState, ctx: Ctx, c: Campaign, customerId: string): CustomerBenefit {
+  return {
+    id: `BEN-${c.id}-${nextNum(s, `BEN@${c.id}`)}`,
+    businessId: c.businessId,
+    createdAt: ctx.now,
+    version: 1,
+    campaignId: c.id,
+    customerId,
+    code: benefitCode(s, c.businessId),
+    status: 'disponible',
+    expiresAt: expiryFor(s, c),
+    orderId: null,
+    discountCents: 0,
+    redeemedAt: null,
+    reason: null,
+  }
+}
+
 /**
  * Emite beneficios a la audiencia elegible (o a los clientes indicados, para campañas por evento) y registra el envío
  * simulado. Quien no dio consentimiento promocional queda como "omitido" con el motivo: no se le envía nada.
@@ -47,21 +66,7 @@ export function issueBenefits(s: AppState, ctx: Ctx, c: Campaign, onlyCustomerId
   }
   let n = 0
   for (const cu of aud.included) {
-    const b: CustomerBenefit = {
-      id: `BEN-${c.id}-${nextNum(s, `BEN@${c.id}`)}`,
-      businessId: c.businessId,
-      createdAt: ctx.now,
-      version: 1,
-      campaignId: c.id,
-      customerId: cu.id,
-      code: benefitCode(s, c.businessId),
-      status: 'disponible',
-      expiresAt: expiryFor(s, c),
-      orderId: null,
-      discountCents: 0,
-      redeemedAt: null,
-      reason: null,
-    }
+    const b = makeBenefit(s, ctx, c, cu.id)
     s.benefits.push(b)
     s.campaignSends.push({ id: `SND-${c.id}-${nextNum(s, `SND@${c.id}`)}`, businessId: c.businessId, createdAt: ctx.now, version: 1, campaignId: c.id, customerId: cu.id, channel: cu.channels.whatsapp ? 'whatsapp-simulado' : 'en-la-app', status: 'simulado', reason: null })
     n++
