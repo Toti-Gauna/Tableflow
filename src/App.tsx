@@ -50,6 +50,11 @@ const AdminRegalos = named(() => import('./pages/admin/Regalos'), 'AdminRegalos'
 const AdminAutomatizaciones = named(() => import('./pages/admin/Automatizaciones'), 'AdminAutomatizaciones')
 const AdminReportes = named(() => import('./pages/admin/Reportes'), 'AdminReportes')
 const AdminConfig = named(() => import('./pages/admin/Configuracion'), 'AdminConfig')
+const AdminCampanas = named(() => import('./pages/admin/Campanas'), 'AdminCampanas')
+const AdminCostos = named(() => import('./pages/admin/Costos'), 'AdminCostos')
+const AdminAsistente = named(() => import('./pages/admin/Asistente'), 'AdminAsistente')
+const Beneficios = named(() => import('./pages/client/Beneficios'), 'Beneficios')
+const AsistenteCliente = named(() => import('./pages/client/AsistenteCliente'), 'AsistenteCliente')
 
 function BizGuard() {
   const { biz } = useParams()
@@ -184,6 +189,10 @@ export function App() {
             <Route path="automatizaciones" element={<AdminAutomatizaciones />} />
             <Route path="reportes" element={<AdminReportes />} />
             <Route path="configuracion" element={<AdminConfig />} />
+            <Route path="campanas" element={<AdminCampanas />} />
+            <Route path="campanas/:id" element={<AdminCampanas />} />
+            <Route path="costos" element={<AdminCostos />} />
+            <Route path="asistente" element={<AdminAsistente />} />
             <Route path="*" element={<NotFound what="esa sección de administración" back="/admin/resumen" backLabel="Volver al resumen" />} />
           </Route>
           <Route path="/:biz" element={<BizGuard />}>
@@ -199,6 +208,8 @@ export function App() {
             <Route path="catas" element={<Gate f="catas"><Catas /></Gate>} />
             <Route path="numeros" element={<Gate f="numeros"><Numeros /></Gate>} />
             <Route path="ayuda" element={<Ayuda />} />
+            <Route path="beneficios" element={<Beneficios />} />
+            <Route path="asistente" element={<AsistenteCliente />} />
             <Route path="simulador" element={<Gate f="simulador"><Simulador /></Gate>} />
             <Route path="regalar" element={<Regalar />} />
             <Route path="chicos" element={<Chicos />} />

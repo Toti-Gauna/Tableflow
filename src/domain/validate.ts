@@ -4,6 +4,7 @@ const ENTITY_COLLECTIONS = [
   'businesses', 'locations', 'serviceWindows', 'tables', 'reservations', 'waitlist', 'menuItems', 'orders', 'tickets',
   'tableSessions', 'payments', 'cashSessions', 'ingredients', 'recipes', 'stockMovements', 'customers', 'conversations',
   'messages', 'callSessions', 'tasks', 'rules', 'runs', 'tastingEvents', 'eventBookings', 'passports', 'visits', 'redemptions', 'audit', 'gifts',
+  'customerHistory', 'campaigns', 'benefits', 'campaignSends', 'referrals',
 ] as const
 const PLAIN_COLLECTIONS = ['modifierGroups', 'carts', 'campaignPreviews'] as const
 
@@ -82,6 +83,7 @@ export function validateState(input: unknown): string[] {
       const item = index.menuItems.get(l.itemId)
       if (!item) err(`orders/${o.id}: ítem ${l.itemId} inexistente.`)
       else if (item.businessId !== o.businessId) err(`orders/${o.id}: ítem de otro negocio.`)
+      if (l.discountCents !== undefined && (!isInt(l.discountCents) || l.discountCents < 0 || l.discountCents + (l.coveredCents ?? 0) > l.lineCents)) err(`orders/${o.id}: descuento de beneficio inválido.`)
       if (l.giftId !== undefined) {
         same('gifts', l.giftId, o.businessId, `orders/${o.id}`)
         if (!isInt(l.coveredCents) || (l.coveredCents as number) < 0 || (l.coveredCents as number) > l.lineCents) err(`orders/${o.id}: importe cubierto por regalo inválido.`)
@@ -152,6 +154,34 @@ export function validateState(input: unknown): string[] {
     same('customers', b.customerId, b.businessId, `eventBookings/${b.id}`)
   }
   for (const v of st.visits) same('customers', v.customerId, v.businessId, `visits/${v.id}`)
+  // P5-L6: fidelización y campañas
+  for (const m of st.menuItems) {
+    for (const k of ['costCents', 'variableCents'] as const) if (m[k] !== null && (!isInt(m[k]) || (m[k] as number) < 0)) err(`menuItems/${m.id}: ${k} inválido.`)
+  }
+  for (const h of st.customerHistory) same('customers', h.customerId, h.businessId, `customerHistory/${h.id}`)
+  for (const c of st.campaigns) {
+    for (const id of c.audience.customerIds) same('customers', id, c.businessId, `campaigns/${c.id}`)
+    for (const id of c.benefit.itemIds) same('menuItems', id, c.businessId, `campaigns/${c.id}`)
+    same('menuItems', c.refItemId, c.businessId, `campaigns/${c.id}`)
+  }
+  const benefitCodes = new Set<string>()
+  for (const b of st.benefits) {
+    same('campaigns', b.campaignId, b.businessId, `benefits/${b.id}`)
+    same('customers', b.customerId, b.businessId, `benefits/${b.id}`)
+    same('orders', b.orderId, b.businessId, `benefits/${b.id}`)
+    if (benefitCodes.has(b.code)) err(`benefits: código duplicado ${b.code}.`)
+    benefitCodes.add(b.code)
+    if ((b.status === 'canjeado') !== !!b.orderId) err(`benefits/${b.id}: estado de canje inconsistente.`)
+  }
+  for (const o of st.orders) if (o.benefitId) same('benefits', o.benefitId, o.businessId, `orders/${o.id}`)
+  for (const x of st.campaignSends) {
+    same('campaigns', x.campaignId, x.businessId, `campaignSends/${x.id}`)
+    same('customers', x.customerId, x.businessId, `campaignSends/${x.id}`)
+  }
+  for (const r of st.referrals) {
+    same('customers', r.referrerId, r.businessId, `referrals/${r.id}`)
+    same('customers', r.referredId, r.businessId, `referrals/${r.id}`)
+  }
   for (const c of st.carts) {
     if (!bizIds.has(c.businessId)) err(`carts/${c.id}: negocio inexistente.`)
     const loc = index.locations.get(c.locationId)

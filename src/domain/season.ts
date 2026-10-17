@@ -162,7 +162,7 @@ export const SEASON_IDS = Object.keys(S) as SeasonId[]
 export const SEASON_NAME: Record<SeasonId, string> = Object.fromEntries(SEASON_IDS.map((k) => [k, S[k].name])) as Record<SeasonId, string>
 
 /** Ventanas de fechas especiales del año del día dado: [desde, hasta, rótulo]. */
-function specialWindows(year: number): { id: SeasonId; from: string; to: string; when: string }[] {
+export function specialWindows(year: number): { id: SeasonId; from: string; to: string; when: string }[] {
   const madre = nthSunday(year, 10, 3)
   const padre = nthSunday(year, 6, 3)
   return [

@@ -51,8 +51,10 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
     ...(hasFeature(b, 'explorar') ? ([['explorar', 'Explorar sabores']] as [string, string][]) : []),
     ...(hasFeature(b, 'pasaporte') ? ([['pasaporte', 'Mi pasaporte']] as [string, string][]) : []),
     ...(hasFeature(b, 'catas') ? ([['catas', eventsLabel(b)]] as [string, string][]) : []),
+    ['beneficios', 'Mis beneficios'],
     ['regalar', 'Regalar'],
     ['chicos', 'Para chicos'],
+    ['asistente', 'Asistente'],
     ['ayuda', 'Ayuda'],
   ]
   const hideBar = /\/(pedido|simulador|regalar|regalo)(\/|$)/.test(loc.pathname)
@@ -63,6 +65,8 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
     ...(hasFeature(b, 'explorar') ? [{ to: `${root}/explorar`, label: 'Explorar sabores', icon: 'compass', hint: 'Recomendaciones según tu gusto' }] : []),
     ...(hasFeature(b, 'pasaporte') ? [{ to: `${root}/pasaporte`, label: 'Mi pasaporte', icon: 'stamp', hint: 'Sellos, insignias y selección guardada' }] : []),
     ...(hasFeature(b, 'catas') ? [{ to: `${root}/catas`, label: eventsLabel(b), icon: b.kind === 'bar' ? 'calendar' : 'wine', hint: b.kind === 'bar' ? 'Noches de música con la mesa reservada' : 'Con cupo y lista de espera' }] : []),
+    { to: `${root}/beneficios`, label: 'Mis beneficios', icon: 'star', hint: 'Tus descuentos de campaña y sellos' },
+    { to: `${root}/asistente`, label: 'Asistente', icon: 'chat', hint: 'Carta, horarios, tus pedidos y beneficios' },
     { to: `${root}/chicos`, label: 'Para chicos', icon: 'smile', hint: 'Zona familiar: juego opcional' },
     { to: `${root}/ayuda`, label: 'Ayuda', icon: 'help', hint: 'Cómo funciona la demo' },
     ...(hasFeature(b, 'simulador') ? [{ to: `${root}/simulador`, label: 'Simulador de canales', icon: 'chat', hint: 'Chat y llamada simulados' }] : []),

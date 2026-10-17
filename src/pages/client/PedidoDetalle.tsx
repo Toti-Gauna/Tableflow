@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { Glyph } from '../../ui/glyphs'
-import { orderCovered, orderDue, orderPayment } from '../../domain/sessions'
+import { orderCovered, orderDiscount, orderDue, orderPayment } from '../../domain/sessions'
 import { hasFeature } from '../../ui/features'
 import { HouseChar, type Mood } from '../../ui/art/characters'
 import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
@@ -134,12 +134,9 @@ export function PedidoDetalle() {
           </div>
         ))}
         <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
-        {orderCovered(o) > 0 && (
-          <>
-            <div className="total-row sub"><span>Cubierto por invitación</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>
-            <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>
-          </>
-        )}
+        {orderCovered(o) > 0 && <div className="total-row sub"><span>Cubierto por invitación</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>}
+        {orderDiscount(o) > 0 && <div className="total-row sub"><span>Beneficio {state.benefits.find((b) => b.id === o.benefitId)?.code ?? ''}</span><span className="money" data-testid="order-discount">− {fmtARS(orderDiscount(o))}</span></div>}
+        {(orderCovered(o) > 0 || orderDiscount(o) > 0) && <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>}
         {biz.paysAtCounter && o.kind === 'retiro' ? <PayAtCounter state={state} o={o} /> : <p className="small muted">Pago simulado: no se cobró nada.</p>}
         <details className="tech"><summary>Detalle técnico</summary><span className="small muted">Canal {o.channel} · operación {o.operationId} · hilo {o.correlationId}</span></details>
       </section>

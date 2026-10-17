@@ -45,11 +45,14 @@ export function openSession(
   return ok(ts)
 }
 
-const DEAD: Order['status'][] = ['rechazado', 'cancelado']
+export const DEAD_ORDER: Order['status'][] = ['rechazado', 'cancelado']
+const DEAD = DEAD_ORDER
 /** Importe a cobrar de una línea: lo cubierto por una invitación no se cobra (simulado). */
-export const lineDue = (l: Order['lines'][number]) => l.lineCents - (l.coveredCents ?? 0)
+// lo que queda por cobrar de la línea: menos lo que cubre una invitación y el descuento de un beneficio (P5-L6)
+export const lineDue = (l: Order['lines'][number]) => l.lineCents - (l.coveredCents ?? 0) - (l.discountCents ?? 0)
 export const orderDue = (o: Order) => o.lines.reduce((a, l) => a + lineDue(l), 0)
 export const orderCovered = (o: Order) => o.lines.reduce((a, l) => a + (l.coveredCents ?? 0), 0)
+export const orderDiscount = (o: Order) => o.lines.reduce((a, l) => a + (l.discountCents ?? 0), 0)
 export function billableOrders(s: AppState, sessionId: string): Order[] {
   return s.orders.filter((o) => o.sessionId === sessionId && !DEAD.includes(o.status))
 }

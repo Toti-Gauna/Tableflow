@@ -7,6 +7,7 @@ import { locationOpenNow } from './availability'
 import { consumeForOrder, applyMovement, releaseForOrder, reserveForOrder } from './stock'
 import { dateKeyOf } from './time'
 import { checkGiftForCart, giftUsable, redeemGifts, restoreGifts } from './gifts'
+import { applyBenefit, findBenefit, redeemBenefit, restoreBenefit } from './benefits'
 import type {
   AppState,
   Cart,
@@ -267,6 +268,18 @@ const orderSubmit: Handler = (s, c, ctx) => {
     s.session.customerByBusiness[cart.businessId] = customerId
   }
 
+  // P5-L6: beneficio de campaña elegido (uno por pedido; se valida acá, al enviar)
+  let benefit: ReturnType<typeof findBenefit> = undefined
+  let benefitDiscount = 0
+  if (cart.benefitCode) {
+    benefit = findBenefit(s, cart.businessId, cart.benefitCode)
+    if (!benefit) return fail('beneficio-inexistente', 'El beneficio elegido ya no existe. Quitalo para enviar.')
+    const applied = applyBenefit(s, benefit, customerId, lines)
+    if (!applied.ok) return applied
+    lines.splice(0, lines.length, ...applied.data!.lines)
+    benefitDiscount = applied.data!.discountCents
+  }
+
   // sesión / cuenta
   let session: TableSession
   if (f.kind === 'mesa') {
@@ -313,12 +326,15 @@ const orderSubmit: Handler = (s, c, ctx) => {
     noticeRunId: null,
     pickupCode: String(n).padStart(3, '0'),
     duplicatedFrom: c.duplicatedFrom ?? null,
+    benefitId: benefit?.id ?? null,
   }
   const ticket: KitchenTicket = { id: ticketId, ...base(s, cart.businessId), orderId, status: 'nuevo', startedAt: null, incident: null }
   s.orders.push(order)
   s.tickets.push(ticket)
   redeemGifts(s, ctx, order)
+  if (benefit) redeemBenefit(s, ctx, order, benefit, benefitDiscount)
   cart.lines = []
+  cart.benefitCode = null
   cart.pendingOperationId = null
   cart.version++
   audit(s, ctx, cart.businessId, 'order.submitted', 'Order', orderId, `Pedido ${orderId} enviado (${f.kind}) · ${lines.length} línea(s)`, opId)
@@ -397,6 +413,7 @@ const orderReject: Handler = (s, c, ctx) => {
   o.status = 'rechazado'
   o.reason = reason
   restoreGifts(s, ctx, o)
+  restoreBenefit(s, ctx, o)
   o.version++
   setTicket(s, o, 'rechazado')
   audit(s, ctx, o.businessId, 'order.rejected', 'Order', o.id, `Pedido ${o.id} rechazado: ${reason}`)
@@ -439,6 +456,7 @@ const orderDeliver: Handler = (s, c, ctx) => {
   o.version++
   setTicket(s, o, 'entregado')
   audit(s, ctx, o.businessId, `order.${to}`, 'Order', o.id, `Pedido ${o.id} ${to}`)
+  emit(ctx, { type: 'order.delivered', businessId: o.businessId, entityType: 'Order', entityId: o.id })
   return ok()
 }
 
@@ -454,6 +472,7 @@ const orderCancel: Handler = (s, c, ctx) => {
     o.status = 'cancelado'
     o.reason = reason
     restoreGifts(s, ctx, o)
+    restoreBenefit(s, ctx, o)
     o.reviewed = true
     o.version++
     setTicket(s, o, 'cancelado')
@@ -500,6 +519,7 @@ const orderResolveCancel: Handler = (s, c, ctx) => {
     o.status = 'cancelado'
     o.reason = o.reason ?? 'Cancelado con pedido en preparación (decisión del encargado)'
     restoreGifts(s, ctx, o)
+    restoreBenefit(s, ctx, o)
     o.cancelRequested = false
     setTicket(s, o, 'cancelado')
     task.resolution = decision === 'cancelar-con-merma' ? 'Cancelado; consumo conservado como merma' : 'Cancelado; consumo conservado, sin merma'
@@ -578,6 +598,22 @@ const orderEdit: Handler = (s, c, ctx) => {
   if (!next.length) return fail('pedido-vacio', 'El pedido quedaría sin platos: cancelalo con un motivo.')
   const removed = o.lines.filter((l) => !next.some((x) => x.id === l.id)).map((l) => l.id)
   if (removed.length) restoreGifts(s, ctx, o, removed)
+  // P5-L6: con un beneficio canjeado, el descuento se recalcula sobre las líneas nuevas; si ya no cumple, se libera
+  if (o.benefitId) {
+    const b = byId(s.benefits, o.benefitId)
+    restoreBenefit(s, ctx, o)
+    for (const l of next) delete l.discountCents
+    if (b && b.status === 'disponible') {
+      const applied = applyBenefit(s, b, o.customerId, next)
+      if (applied.ok) {
+        next.splice(0, next.length, ...applied.data!.lines)
+        redeemBenefit(s, ctx, o, b, applied.data!.discountCents)
+      } else {
+        o.benefitId = null
+        audit(s, ctx, o.businessId, 'benefit.released', 'Order', o.id, `Beneficio ${b.code} liberado al editar ${o.id}: ${applied.message}`)
+      }
+    } else o.benefitId = null
+  }
   const wasAccepted = o.status === 'aceptado'
   const prevLines = o.lines
   if (wasAccepted) releaseForOrder(s, ctx, o, `edit${o.version}`)

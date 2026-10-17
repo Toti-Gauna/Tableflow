@@ -4,6 +4,7 @@ import { atLocal } from '../time'
 import type { AppState } from '../types'
 import { baseState, customersService, DEFAULT_LOCATION, emptySeed, tastingEvents } from './base'
 import { newConfig } from './nuevos'
+import { customerHistory, SEED_CAMPAIGNS } from './growth'
 import { bizRecord } from '../business'
 import type { BusinessId } from '../types'
 
@@ -257,6 +258,10 @@ export function serviceSeed(): AppState {
   // ---------------------------------------------------------------- P5-L5: actividad de los negocios nuevos
   newBusinessActivity(b)
 
+  // ---------------------------------------------------------------- P5-L6: historial sintético y campañas de muestra
+  b.s.customerHistory = customerHistory(b.s.businesses[0].createdAt)
+  seedCampaigns(b)
+
   // ---------------------------------------------------------------- estado final de arranque
   b.at(MON, 10, 0)
   b.s.session = {
@@ -320,4 +325,14 @@ function newBusinessActivity(b: Builder) {
   cycle(b, co1, { accept: [10, 0], prepare: [10, 0], ready: [10, 0] }, MON)
   const co2 = pickupOrder(b, 'copo', 'CL-010', 'Mateo', 10 * 60 + 30, [{ itemId: 'CO-05', selections: { 'MG-CO-gustos-m': ['hg-choco', 'hg-crema', 'hg-menta'] } }])
   cycle(b, co2, { accept: [10, 0] }, MON)
+}
+
+/** Campañas de muestra creadas con los comandos reales (borrador → aprobada → activa o programada). */
+function seedCampaigns(b: Builder) {
+  b.at(MON, 9, 58)
+  for (const c of SEED_CAMPAIGNS) {
+    const r = b.do({ type: 'campaign/save', businessId: c.businessId, draft: c.draft, operationId: c.op }) as any
+    const campaignId = r.data.campaignId as string
+    for (const st of c.steps) b.do({ type: `campaign/${st}`, campaignId })
+  }
 }

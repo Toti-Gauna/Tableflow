@@ -12,12 +12,65 @@ import { Glyph, Plate } from '../../ui/glyphs'
 import { sedeShort } from '../../ui/format'
 import { activeSessionAt } from '../../domain/sessions'
 import { fmtARS } from '../../domain/money'
-import { lineGiftCover } from '../../domain/cmd-commerce'
+import { cartTotal, lineGiftCover } from '../../domain/cmd-commerce'
+import { discountFor } from '../../domain/growth'
+import { findBenefit } from '../../domain/benefits'
 import { dateKeyOf, hhmm, minutesOfDay, parseHHMM } from '../../domain/time'
 import { dispatch } from '../../store'
 import type { Outcome } from '../../domain/core'
 
 interface PriceChange { lineId: string; name: string; oldCents: number; newCents: number }
+
+/**
+ * P5-L6 · Beneficio de campaña en el pedido: se elige por código (o de la lista propia) y el descuento se estima acá;
+ * las reglas (vencimiento, mínimo, cupo, presupuesto, no acumulación) se validan de verdad al enviar.
+ */
+function BenefitBox({ cartId }: { cartId: string }) {
+  const { state, biz } = useBiz()
+  const [code, setCode] = useState('')
+  const [err, setErr] = useState('')
+  const cart = state.carts.find((c) => c.id === cartId)
+  if (!cart) return null
+  const customerId = state.session.customerByBusiness[biz.id]
+  const mine = customerId ? state.benefits.filter((b) => b.businessId === biz.id && b.customerId === customerId && b.status === 'disponible' && b.expiresAt >= state.clock.nowMs) : []
+  const apply = (c: string) => {
+    const o = act({ type: 'cart/setBenefit', cartId, code: c }, 'Beneficio elegido')
+    setErr(o.ok ? '' : o.message)
+    if (o.ok) setCode('')
+  }
+  if (cart.benefitCode) {
+    const b = findBenefit(state, biz.id, cart.benefitCode)
+    const camp = b ? state.campaigns.find((x) => x.id === b.campaignId) : undefined
+    let base = 0
+    for (const l of cart.lines) {
+      if (l.giftId || (camp && camp.benefit.itemIds.length && !camp.benefit.itemIds.includes(l.itemId))) continue
+      const item = state.menuItems.find((m) => m.id === l.itemId)
+      if (item) base += checkLine(state, item, l.selections, l.qty).unitCents * l.qty
+    }
+    const below = camp ? base < camp.rules.minOrderCents : false
+    const est = camp && !below ? discountFor(camp, base) : 0
+    return (
+      <div className="benefit-box" data-testid="benefit-box">
+        <div className="total-row sub"><span><Glyph name="star" size={14} /> Beneficio {cart.benefitCode}{camp ? ` · ${camp.name}` : ''}</span><span className="money" data-testid="benefit-estimate">− {fmtARS(est)}</span></div>
+        {below && camp && <p className="small err-text">Falta llegar a la compra mínima de {fmtARS(camp.rules.minOrderCents)} en los platos donde aplica.</p>}
+        <div className="total-row"><span>Total estimado</span><span className="money">{fmtARS(total(state, cart) - est)}</span></div>
+        <p className="small muted">El descuento se confirma al enviar. Uno por pedido; no se suma a una invitación. <button className="linklike" type="button" onClick={() => act({ type: 'cart/setBenefit', cartId, code: null })} data-testid="benefit-remove">Quitar beneficio</button></p>
+      </div>
+    )
+  }
+  return (
+    <div className="benefit-box">
+      <form className="row" onSubmit={(e) => { e.preventDefault(); if (code.trim()) apply(code) }}>
+        <label htmlFor="benefit-code" className="sr-only">Código de beneficio</label>
+        <input id="benefit-code" type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Código de beneficio (opcional)" data-testid="benefit-code" aria-describedby={err ? 'benefit-err' : undefined} />
+        <button className="btn secondary small" type="submit" disabled={!code.trim()} data-testid="benefit-apply">Aplicar</button>
+      </form>
+      {mine.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}>Tus beneficios: {mine.map((b) => <button key={b.id} type="button" className="linklike" onClick={() => apply(b.code)} data-testid={`pick-${b.code}`}>{b.code}</button>)}</p>}
+      <ErrorText id="benefit-err">{err}</ErrorText>
+    </div>
+  )
+}
+const total = (s: Parameters<typeof cartTotal>[0], c: Parameters<typeof cartTotal>[1]) => cartTotal(s, c)
 
 export function MiPedido() {
   const { state, biz, locationId } = useBiz()
@@ -123,6 +176,7 @@ export function MiPedido() {
               )
             })}
             <div className="total-row"><span>Total</span><span className="money" data-testid="cart-total">{fmtARS(total)}</span></div>
+            <BenefitBox cartId={cart.id} />
             <p className="small muted" style={{ marginTop: 10 }}>El resumen es el mismo que verá la cocina en la comanda.</p>
           </section>
 

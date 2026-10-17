@@ -1,4 +1,6 @@
 import { makeSeed } from './fixtures'
+import { withItemCosts, withOptionCosts } from './fixtures/costs'
+import { customerHistory } from './fixtures/growth'
 import { newConfig } from './fixtures/nuevos'
 import { rulesFor, DEFAULT_LOCATION } from './fixtures/base'
 import { BIZ_IDS } from './business'
@@ -82,6 +84,31 @@ export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
       rules: add(s.rules, ['copo', 'compas', 'brasa'].flatMap((b) => rulesFor(b as any))),
       session: { ...session, locationByBusiness: loc, customerByBusiness: cust },
       settings: { ...(s.settings ?? {}), seasonByBusiness: season },
+    }
+  },
+  /** P5-L6: costos de muestra donde no hay campo (lo cargado no se pisa), historial sintético y colecciones de campañas. */
+  3: (old) => {
+    const s = old as Record<string, any>
+    const t0 = typeof s.clock?.nowMs === 'number' ? s.clock.nowMs : 0
+    const items: any[] = Array.isArray(s.menuItems) ? s.menuItems : []
+    // los ítems sin campo de costo toman el de muestra (o ND si no hay); un costo ya cargado no se toca
+    const sample = new Map(withItemCosts(items.map((m) => ({ ...m, costCents: null, variableCents: null }))).map((m) => [m.id, m]))
+    const menuItems = items.map((m) => ('costCents' in m ? m : { ...m, costCents: sample.get(m.id)!.costCents, variableCents: sample.get(m.id)!.variableCents }))
+    const groups: any[] = Array.isArray(s.modifierGroups) ? s.modifierGroups : []
+    const sampleOpt = new Map(withOptionCosts(groups).flatMap((g) => g.options.map((o) => [o.id, o] as const)))
+    const modifierGroups = groups.map((g) => ({ ...g, options: g.options.map((o: any) => ('costCents' in o || !sampleOpt.has(o.id) || !('costCents' in sampleOpt.get(o.id)!) ? o : { ...o, costCents: sampleOpt.get(o.id)!.costCents })) }))
+    const customerIds = new Set((Array.isArray(s.customers) ? s.customers : []).map((c: any) => c.id))
+    const have = new Set((Array.isArray(s.customerHistory) ? s.customerHistory : []).map((h: any) => h.id))
+    return {
+      ...s,
+      schemaVersion: 4,
+      menuItems,
+      modifierGroups,
+      customerHistory: [...(s.customerHistory ?? []), ...customerHistory(t0).filter((h) => customerIds.has(h.customerId) && !have.has(h.id))],
+      campaigns: Array.isArray(s.campaigns) ? s.campaigns : [],
+      benefits: Array.isArray(s.benefits) ? s.benefits : [],
+      campaignSends: Array.isArray(s.campaignSends) ? s.campaignSends : [],
+      referrals: Array.isArray(s.referrals) ? s.referrals : [],
     }
   },
 }

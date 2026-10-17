@@ -1,3 +1,50 @@
+# Checkpoint P5-L6 · TableFlow: fidelización, campañas, costos y asistentes
+
+> L5 (PR #7) está en `main`. Especificación SDD, fórmulas, cambios en lo existente y límites: `p5-spec.md`, sección "L6".
+
+## Identificación
+- Fecha real: 17/10/2026. Rama `claude/tableflow-p5-l6`, creada desde `main` (`ee48bd1`).
+- **Esquema:** detectado 3 → **4**, con el migrador explícito `MIGRATIONS[3]`. Solo agrega; un costo ya cargado no se pisa.
+
+## Qué se hizo
+- **A · Clientes:**
+  - recencia, frecuencia y gasto en 90 días, afinidad, beneficios, sellos (Copo y Brasa), referidos y segmentos;
+  - historial sintético previo a la demo, rotulado.
+- **B · Campañas:**
+  - alcance individual, por segmento o masiva; disparo manual, programado o por evento (primer pedido, referido);
+  - ciclo completo: borrador, aprobada, activa o programada, pausada, finalizada y cancelada;
+  - envíos simulados por cliente, con los omitidos y su motivo;
+  - calendario semanal, mensual, bimestral, por estación y por festividad.
+- **C · Reglas:** consentimiento, vencimiento, mínimo, topes por pedido y por cliente, cupo, presupuesto, no acumulación, canje en el pedido y reversión al rechazar, cancelar o editar.
+- **D · Costos:**
+  - por ítem, variante, extra y combo; lo no cargado queda en ND y deja la campaña en borrador;
+  - proyección, simulación y resultado observado en paneles separados.
+- **E · Asistente del comercio:** determinista; consulta datos reales, pide lo que falta, explica supuestos y crea borradores que aprueba el encargado.
+- **F · Asistente del cliente:** carta, horarios, sus pedidos y sus beneficios; rechaza datos ajenos.
+- **G · Conversación:** escritura breve e interrumpible, rotulada como simulada.
+
+## Pruebas
+- **Nuevas:**
+  - `tests/growth.test.ts` (29): fórmulas del manual, costos con ND, historial y segmentos, ciclo de campaña, reglas, reversión, disparadores, resultados, calendario y migración v3 → v4.
+  - `tests/assistants.test.ts` (13).
+  - `e2e/p5-l6.spec.ts` (6): ciclo completo con ND → aprobación → canje → resultado → cancelación, sin red externa; calendario; asistentes (incluido "Detener"); canje y reversión de Ana; axe en claro y oscuro, a 1280 y 390 px.
+- **Actualizadas, con el motivo anotado:** la versión de esquema (3 → 4) en persistencia, L5 y la migración e2e de P3.
+- No se quitó ningún test.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 19 archivos, 910 pruebas |
+| `npm run build` | 0 | OK. JS inicial ~804 kB (L5: 763 kB): el dominio de campañas va con el store. Campañas (28 kB), asistente (16 kB), costos, beneficios y asistente del cliente van en chunks diferidos |
+| `npx playwright test` | 0 | 99 pasadas (93 + 6 de L6), 9 omitidas (capturas, solo con CAPTURE=1). Una corrida anterior tuvo 1 fallo en `motion.spec.ts:52` ("locator.hover: Test ended") mientras se recompilaba `dist` en paralelo; ese archivo pasó 2 veces seguidas (7/7) y la corrida completa limpia pasó entera |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L6"` | 0 | 16 capturas en `screens/p5-l6/`, cuantizadas: 1,4 MB |
+
+## Siguiente tarea exacta
+PR de L6 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L7**: QR y códigos.
+
+---
+
 # Checkpoint P5-L5 · TableFlow: cinco negocios completos, pago en el local y cinco juegos
 
 > L3 (PR #5) y L4 (PR #6) están en `main`, con CI verde (run 39064515482). Especificación SDD, cambios en lo existente y límites: `p5-spec.md`, sección "L5".

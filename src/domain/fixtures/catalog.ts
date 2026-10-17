@@ -149,7 +149,7 @@ const complete = (allergens: string[], note = 'Anotación de muestra aportada po
 })
 const pending: FoodNote = { status: 'pendiente', allergens: [], note: '' }
 
-type Seed = Omit<MenuItem, 'businessId' | 'createdAt' | 'version' | 'imageUrl' | 'soldOut' | 'history' | 'locationIds' | 'hours' | 'maxQty' | 'tags'> & {
+type Seed = Omit<MenuItem, 'businessId' | 'createdAt' | 'version' | 'imageUrl' | 'soldOut' | 'history' | 'locationIds' | 'hours' | 'maxQty' | 'tags' | 'costCents' | 'variableCents'> & {
   tags?: string[]
   hours?: MenuItem['hours']
   locationIds?: string[] | null
@@ -168,6 +168,9 @@ function items(businessId: BusinessId, list: Seed[]): MenuItem[] {
     hours: i.hours ?? null,
     maxQty: i.maxQty ?? 6,
     tags: i.tags ?? [],
+    // P5-L6: los costos de muestra se aplican en la semilla (fixtures/costs.ts); sin dato, ND
+    costCents: null,
+    variableCents: null,
     ...i,
   }))
 }

@@ -2,6 +2,7 @@ import { RULE_DEFS } from '../automations'
 import { SCHEMA_VERSION, type AppState, type AutomationRule, type BusinessId, type BusinessProfile, type CustomerDemo, type FixtureId, type Location, type ServiceWindow, type Table, type TastingEvent } from '../types'
 import { SEED_CLOCK_MS } from '../time'
 import { buildIngredients, buildMenu, buildModifierGroups, buildRecipes } from './catalog'
+import { withItemCosts, withOptionCosts } from './costs'
 import { newConfig } from './nuevos'
 import { BIZ_IDS, bizRecord } from '../business'
 
@@ -185,8 +186,8 @@ export function baseState(fixtureId: FixtureId): AppState {
     tables: [...tables(), ...nc.tables],
     reservations: [],
     waitlist: [],
-    menuItems: [...buildMenu().map((m) => ({ ...m, createdAt: T0 })), ...nc.menuItems],
-    modifierGroups: [...buildModifierGroups(), ...nc.modifierGroups],
+    menuItems: withItemCosts([...buildMenu().map((m) => ({ ...m, createdAt: T0 })), ...nc.menuItems]),
+    modifierGroups: withOptionCosts([...buildModifierGroups(), ...nc.modifierGroups]),
     carts: [],
     orders: [],
     tickets: [],
@@ -212,6 +213,11 @@ export function baseState(fixtureId: FixtureId): AppState {
     campaignPreviews: [],
     gifts: [],
     settings: { seasonByBusiness: bizRecord(() => 'auto' as const) },
+    customerHistory: [],
+    campaigns: [],
+    benefits: [],
+    campaignSends: [],
+    referrals: [],
   }
 }
 

@@ -1,7 +1,8 @@
 import type { BaseUnit, Unit } from './units'
 
 // P5-L5: la versión detectada era 2 (P3, regalos y temporadas); la 3 suma los tres negocios nuevos y el pago en el local.
-export const SCHEMA_VERSION = 3 as const
+// P5-L6: la 4 suma costos, historial, campañas, beneficios por cliente, envíos simulados y referidos.
+export const SCHEMA_VERSION = 4 as const
 export const STORAGE_NS = 'tableflow.demo.v1'
 
 export type BusinessId = 'mesa-clara' | 'ritual-cafe' | 'copo' | 'compas' | 'brasa'
@@ -130,6 +131,8 @@ export interface ModifierOption {
   incompatibleWith?: string[]
   /** Consumo de stock de la opción (ej: leche vegetal). */
   consumes?: { ingredientId: string; qty: number; unit: Unit }
+  /** P5-L6: costo del extra o variante en centavos; null = no disponible (ND). Sin campo = sin costo propio. */
+  costCents?: number | null
 }
 export interface ModifierGroup {
   id: string
@@ -169,6 +172,9 @@ export interface MenuItem extends Entity {
   foodNote: FoodNote
   tags: string[]
   history: MenuItemHistory[]
+  /** P5-L6: costo del producto (insumos) y otros costos variables por unidad (envase, comisión), en centavos. null = ND. */
+  costCents: number | null
+  variableCents: number | null
 }
 
 export interface CartLine {
@@ -195,6 +201,8 @@ export interface Cart {
   /** operationId del intento de envío; se reutiliza mientras el carrito no cambie. */
   pendingOperationId: string | null
   updatedAt: number
+  /** P5-L6: código de beneficio elegido para este pedido (se valida al enviar). */
+  benefitCode?: string | null
 }
 
 export type OrderStatus =
@@ -221,6 +229,8 @@ export interface OrderLine {
   /** Invitación canjeada en esta línea y el importe que cubre (simulado, sin cobro real). */
   giftId?: string
   coveredCents?: number
+  /** P5-L6: parte del descuento de un beneficio de campaña aplicada a esta línea. */
+  discountCents?: number
 }
 export interface Order extends Entity {
   locationId: string
@@ -243,6 +253,8 @@ export interface Order extends Entity {
   noticeRunId: string | null
   pickupCode: string
   duplicatedFrom: string | null
+  /** P5-L6: beneficio de campaña canjeado en este pedido (uno por pedido: no se acumulan). */
+  benefitId?: string | null
 }
 
 export interface KitchenTicket extends Entity {
@@ -529,6 +541,81 @@ export interface GiftInvite extends Entity {
   conversationId: string | null
 }
 
+// ---------------------------------------------------------------- P5-L6 · fidelización y campañas
+/** Historial sintético previo a la demo (no hay pedidos viejos en la semilla): se suma a los pedidos reales. */
+export interface CustomerHistory extends Entity {
+  customerId: string
+  lastOrderDaysAgo: number | null
+  orders90: number
+  spend90Cents: number
+  topItemIds: string[]
+}
+export type SegmentId = 'todos' | 'nuevos' | 'frecuentes' | 'inactivos' | 'con-beneficio-sin-usar'
+export type CampaignStatus = 'borrador' | 'aprobada' | 'programada' | 'activa' | 'pausada' | 'finalizada' | 'cancelada'
+export type Cadence = 'unica' | 'semanal' | 'mensual' | 'bimestral' | 'estacional' | 'festividad'
+export interface Campaign extends Entity {
+  name: string
+  /** individual (clientes elegidos), segmento o masiva (todos los que dieron consentimiento promocional). */
+  scope: 'individual' | 'segmento' | 'masiva'
+  trigger: 'manual' | 'programada' | 'evento'
+  event: 'primer-pedido' | 'referido' | null
+  cadence: Cadence
+  /** Festividad o estación para las cadencias que lo usan. */
+  seasonId: SeasonId | null
+  startKey: string
+  endKey: string
+  audience: { customerIds: string[]; segment: SegmentId | null }
+  benefit: { type: 'porcentaje' | 'monto'; value: number; itemIds: string[] }
+  rules: {
+    minOrderCents: number
+    validDays: number
+    /** Tope de descuento por pedido. */
+    maxDiscountCents: number
+    maxPerCustomer: number
+    /** Cupo total de canjes. */
+    totalCap: number
+    budgetCents: number
+  }
+  /** Ítem de referencia para la proyección (precio y costos conocidos). */
+  refItemId: string | null
+  fixedCostCents: number | null
+  /** Supuesto explícito de canje (0–100); null = no se proyectan pedidos. */
+  assumedRedemptionPct: number | null
+  status: CampaignStatus
+  createdBy: Role | 'asistente'
+  approvedBy: Role | null
+  activatedAt: number | null
+  /** Último día (YYYY-MM-DD) en que se emitieron beneficios: evita emitir dos veces en la misma ocurrencia. */
+  lastIssuedKey: string | null
+  reason: string | null
+  operationId: string
+}
+export type BenefitStatus = 'disponible' | 'canjeado' | 'vencido' | 'anulado'
+export interface CustomerBenefit extends Entity {
+  campaignId: string
+  customerId: string
+  code: string
+  status: BenefitStatus
+  expiresAt: number
+  orderId: string | null
+  discountCents: number
+  redeemedAt: number | null
+  reason: string | null
+}
+export interface CampaignSend extends Entity {
+  campaignId: string
+  customerId: string
+  channel: 'whatsapp-simulado' | 'en-la-app'
+  status: 'simulado' | 'omitido'
+  reason: string | null
+}
+export interface Referral extends Entity {
+  referrerId: string
+  referredId: string
+  status: 'pendiente' | 'cumplido'
+  operationId: string
+}
+
 /** Ajustes de la demo que no son de un negocio puntual del dominio. */
 export interface DemoSettings {
   /** Temática por época: automática según el reloj simulado o forzada desde Configuración. */
@@ -581,6 +668,11 @@ export interface AppState {
   campaignPreviews: { id: string; businessId: BusinessId; at: number; included: number; excluded: number }[]
   gifts: GiftInvite[]
   settings: DemoSettings
+  customerHistory: CustomerHistory[]
+  campaigns: Campaign[]
+  benefits: CustomerBenefit[]
+  campaignSends: CampaignSend[]
+  referrals: Referral[]
 }
 
 export type CollectionKey = {

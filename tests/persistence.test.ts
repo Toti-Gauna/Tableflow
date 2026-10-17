@@ -76,14 +76,14 @@ describe('Persistencia local tableflow.demo.v1', () => {
   })
   it('versión futura o sin migrador: no se pisa; se pide migrar o reiniciar', () => {
     const st = new FakeStorage()
-    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 4, savedAt: 0, state: {} }))
+    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 5, savedAt: 0, state: {} }))
     expect(loadState(st).kind).toBe('future')
     st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 0, savedAt: 0, state: {} }))
     expect(loadState(st).kind).toBe('needs-migration')
     expect(st.data.has(KEY_STATE)).toBe(true)
   })
-  // P5-L5: la cadena llega a la versión vigente (3); el paso v2 → v3 tiene su propio test más abajo.
-  it('migración v1 → v3: un guardado de P2 se abre sin perder nada y suma regalos y temporada', () => {
+  // P5-L5/L6: la cadena llega a la versión vigente (4); los pasos v2 → v3 y v3 → v4 tienen sus propios tests.
+  it('migración v1 → v4: un guardado de P2 se abre sin perder nada y suma regalos y temporada', () => {
     const st = new FakeStorage()
     const v2 = withCart()
     const { gifts: _g, settings: _s, ...rest } = v2
@@ -92,7 +92,7 @@ describe('Persistencia local tableflow.demo.v1', () => {
     const r = loadState(st)
     expect(r.kind).toBe('ok')
     if (r.kind !== 'ok') return
-    expect(r.state.schemaVersion).toBe(3)
+    expect(r.state.schemaVersion).toBe(4)
     expect(r.state.gifts).toEqual([])
     expect(r.state.settings.seasonByBusiness).toEqual({ 'mesa-clara': 'auto', 'ritual-cafe': 'auto', copo: 'auto', compas: 'auto', brasa: 'auto' })
     expect(r.state.carts[0].lines[0]).toMatchObject({ itemId: 'RC-01', qty: 2 })

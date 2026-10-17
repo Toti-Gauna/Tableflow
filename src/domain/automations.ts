@@ -1,3 +1,4 @@
+import { growthOnEvent } from './cmd-growth'
 import { audit, base, byId, dup, emit, fail, nextId, ok, type Ctx, type DomainEvent, type Outcome } from './core'
 import { findFreeTable, reservationStartMs } from './availability'
 import { addMessage, conversationOfCustomer } from './messaging'
@@ -438,7 +439,11 @@ export function processEvents(s: AppState, ctx: Ctx) {
       case 'event.cancelled':
         offerNextEvent(s, ctx, ev.businessId, String(ev.payload?.eventId), ev.entityId)
         break
+      case 'order.delivered':
+        growthOnEvent(s, ctx, ev)
+        break
       case 'clock.advanced':
+        growthOnEvent(s, ctx, ev)
         expireOffers(s, ctx)
         evaluateReminders(s, ctx)
         for (const m of s.messages) {

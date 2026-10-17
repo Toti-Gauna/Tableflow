@@ -136,7 +136,7 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Shell, header, modo oscuro (L3) | C P | C P | C P (tokens en L5) | C P (tokens en L5) | C P (tokens en L5) |
 | Arte propio (L4) | C P · 23 piezas | C P · 38 piezas | C P · 26 piezas (negocio en L5) | C P · 19 piezas (negocio en L5) | C P · 21 piezas (negocio en L5) |
 | Juego infantil propio (L5) | C P · memoria | C P · poner la mesa | C P · copiá el helado | C P · ¿dónde está? | C P · armá la hamburguesa |
-| Growth y asistentes (L6) | E | E | E | E | E |
+| Growth y asistentes (L6) | C P | C P | C P | C P | C P |
 | QR y códigos (L7) | parcial (códigos) | parcial | E | E | E |
 | Animación transaccional (L8) | E | E | E | E | E |
 | Escenas y guía (L9) | E | E | E | E | E |
@@ -268,3 +268,37 @@ Construido el 17/10/2026 sobre `main` (con L3 y L4 ya integrados). La versión d
 - **Arrastre:** los juegos se juegan tocando o con teclado (elegir y después el lugar); no hay arrastrar y soltar.
 - **Ilustraciones firma:** el inicio de los negocios nuevos importa las de L2b desde el estudio de propuestas (`pages/propuestas/*`, estilos con prefijo propio) en un chunk diferido; no se duplicaron.
 - **Revisión:** sin lector de pantalla ni dispositivo físico; teclado y axe probados con Playwright.
+
+## L6 · Fidelización, campañas y asistentes (SDD)
+Construido el 17/10/2026 sobre `main` (con L5 integrado). Esquema detectado al entrar: **3**; L6 lo sube a **4** con un migrador explícito v3 → v4 que solo agrega (costos de muestra donde no hay campo, historial sintético y colecciones vacías). Todo es simulado: ningún envío, cobro ni IA real.
+
+### Fórmulas (GR-CALC)
+- Contribución = ingreso neto de descuentos y devoluciones − costo del producto − otros costos variables.
+- Porcentaje = contribución / ingreso neto. Se rotula "no es utilidad neta" en Costos, la proyección y el asistente.
+- Equilibrio = ceil(costo fijo de la campaña / contribución positiva por pedido); el fijo no se reparte en la unitaria. Contribución ≤ 0 → "sin equilibrio por volumen".
+- Casos del manual probados: 100 / 60 / 5 → 35; descuento 10 → ingreso 90, contribución 25, 27,8 %; fijo 100 → 4 pedidos (`tests/growth.test.ts` GR-CALC y `tests/assistants.test.ts`).
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| GR-A | Cliente e historial | recencia, frecuencia y gasto en 90 días, afinidad, beneficios, sellos (Copo y Brasa), referidos, segmentos | `customerStats`, `customerHistory` (sintético, rotulado), `AdminClientes` → "Historial y fidelización", `Mis beneficios` | los segmentos (frecuentes, a reactivar, nuevos, con beneficio sin usar) salen de datos; el premio de los sellos no se entrega sin aprobación del negocio | `growth.test.ts` GR-A; e2e GR-A/C |
+| GR-B | Campañas individuales, por segmento y masivas; manuales, programadas y por evento; calendario | borrador → aprobada → activa / programada ⇄ pausada → finalizada · cancelada | `cmd-growth.ts`, `benefits.ts`, `AdminCampanas` (listado, editor, calendario semana/mes/bimestre/estación/festividades) | activar emite beneficios solo con consentimiento promocional y registra el envío simulado o el omitido con su motivo; "Martes de tapas" emite el martes cuando el reloj llega; "Bienvenida" emite con el primer pedido entregado; "Traé a alguien" con el referido cumplido | `growth.test.ts` GR-B; e2e GR-B/C/D y calendario |
+| GR-C | Reglas | elegibilidad, vencimiento, mínimo, tope por pedido, tope por cliente, cupo, presupuesto, no acumulación, canje, reversión | `applyBenefit`, `redeemBenefit`, `restoreBenefit`, `benefit/void`, `cart/setBenefit`, `BenefitBox` en Mi pedido | el descuento se valida al enviar; rechazar o cancelar el pedido devuelve el beneficio; editarlo lo recalcula o lo libera; nadie usa un beneficio ajeno ni lo suma a una invitación | `growth.test.ts` GR-C; e2e GR-A/C |
+| GR-D | Costos por ítem, variante, extra y combo; proyección antes de activar | costo cargado · ND | `fixtures/costs.ts`, `unitCost`, `projectCampaign`, `AdminCostos`, panel "Proyección" | antes de activar se ven audiencia, descuento, costo máximo, contribución y equilibrio; con un ND (pote de 1 kg, rabas, tabla, pan sin TACC) la campaña queda en borrador y no se puede aprobar | `growth.test.ts` GR-D/B; e2e GR-B/C/D |
+| GR-SIM | Proyección, simulación y resultado observado separados | — | tres paneles en el editor | la simulación ("si canjeara el X %") no se guarda ni es pronóstico; el resultado observado rotula "ventas atribuidas: no prueban incremento causal" | e2e GR-B/C/D |
+| GR-E | Asistente del comercio determinista | consulta → respuesta; datos faltantes → pregunta; borrador → aprobación humana | `assistant-biz.ts`, `AdminAsistente`, `ChatPane` | consulta ventas, contribución, costos ND, segmentos, stock y campañas; pide los datos que faltan uno por vez; explica supuestos; si no sabe, no inventa; el borrador queda marcado "preparado por el asistente" y lo aprueba el encargado | `assistants.test.ts` GR-E; e2e GR-E |
+| GR-F | Asistente del cliente | — | `assistant-client.ts`, `AsistenteCliente` | carta, precios, alérgenos con aviso, gustos de Copo, horarios, el último pedido propio y los beneficios propios; rechaza preguntas por datos de otras personas | `assistants.test.ts` GR-F; e2e GR-F |
+| GR-G | UI conversacional cuidada | escribiendo (< 0,5 s) → respuesta; Detener | `ChatPane` | rotulado "simulado, sin IA"; la respuesta ya está calculada y la espera es breve e interrumpible; con movimiento reducido es casi inmediata | e2e GR-E |
+| MG-02 | Migración v3 → v4 | — | `MIGRATIONS[3]` | un costo ya cargado no se pisa; validación de referencias de campañas, beneficios, envíos y referidos | `growth.test.ts` MG-02 |
+
+### Qué cambió en lo existente (con motivo)
+- `lineDue` descuenta también el beneficio: la caja y el pago en el local cobran el saldo real.
+- La versión de esquema vigente pasa a 4: los tests que la fijaban en 3 (persistencia, L5 y la migración e2e de P3) se actualizaron con ese motivo.
+- Clientes muestra recencia, pedidos en 90 días, segmento y beneficios en lugar de sellos, reservas y pedidos totales (los sellos del pasaporte siguen en la ficha).
+- Nuevo comando de demo `session/setCustomer` para ver la app como un cliente ficticio puntual (vista, no autenticación).
+
+### Límites declarados de L6
+- No hay envíos reales: el "envío" de una campaña es un registro simulado por cliente.
+- El historial previo a la demo es sintético (la semilla solo tiene pedidos del lunes 19) y se rotula como tal.
+- La proyección usa un pedido de referencia de un ítem; un pedido real puede tener más cosas.
+- El premio de los sellos no se entrega: requiere aprobación y cotización del negocio, como en P2.
