@@ -54,7 +54,7 @@
 | `npx tsc --noEmit` | 0 | sin errores |
 | `npx vitest run` | 0 | 17 archivos, 868 pruebas |
 | `npm run build` | 0 | OK. JS inicial 763 kB (main: 728 kB): suman los datos de los tres negocios. El inicio de los negocios nuevos (7 kB) y los juegos (30 kB) van en chunks diferidos |
-| `npx playwright test` | RESULT_E2E_EXIT | RESULT_E2E |
+| `npx playwright test` | 0 | 93 pasadas (86 + 7 de L5), 8 omitidas (capturas, solo con CAPTURE=1) |
 | `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L5"` | 0 | 35 capturas en `screens/p5-l5/`, cuantizadas a 256 colores: 2,9 MB |
 
 ## Siguiente tarea exacta
