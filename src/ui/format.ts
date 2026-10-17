@@ -73,3 +73,6 @@ export const DEFAULT_ADMIN: Record<Role, string> = {
 
 export const CHANNEL_LABEL: Record<string, string> = { web: 'Web', whatsapp: 'WhatsApp (simulado)', voz: 'Llamada (simulada)', recepcion: 'Recepción' }
 export const BIZ_PATH = { 'mesa-clara': 'mesa-clara', 'ritual-cafe': 'ritual-cafe' } as const
+
+/** "Ritual Café · Centro" → "Centro": dentro del perfil, la marca ya está a la vista. */
+export const sedeShort = (name: string) => name.split(' · ').slice(1).join(' · ') || name

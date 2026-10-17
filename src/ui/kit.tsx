@@ -29,8 +29,9 @@ export function LiveRegion() {
       setMsg('')
       setTimeout(() => setMsg(m), 20)
       const n = ++id.current
-      setToasts((t) => [...t.slice(-2), { id: n, msg: m, tone }])
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n)), 4500)
+      // un solo aviso visible a la vez: discreto, no tapa el contenido ni se apila
+      setToasts([{ id: n, msg: m, tone }])
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n)), 3200)
     }
     listeners.add(l)
     return () => {
@@ -44,7 +45,7 @@ export function LiveRegion() {
       </div>
       <div className="toast-region" aria-hidden="true">
         {toasts.map((t) => (
-          <div key={t.id} className="toast fx">
+          <div key={t.id} className={`toast ${t.tone === 'err' ? 'err' : ''}`}>
             {t.msg}
           </div>
         ))}
@@ -128,15 +129,21 @@ export function Dialog({
   title,
   children,
   testId,
+  titleId: ownTitleId,
+  className,
 }: {
   open: boolean
   onClose: () => void
   title: string
   children: ReactNode
   testId?: string
+  /** Si el contenido ya trae su propio título visible (con este id), el diálogo no agrega otro. */
+  titleId?: string
+  className?: string
 }) {
   const ref = useRef<HTMLDialogElement>(null)
-  const titleId = { current: useId() }
+  const autoId = useId()
+  const titleId = ownTitleId ?? autoId
   useEffect(() => {
     const d = ref.current
     if (!d) return
@@ -146,7 +153,8 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      aria-labelledby={titleId.current}
+      className={className}
+      aria-labelledby={titleId}
       data-testid={testId}
       onCancel={(e) => {
         e.preventDefault()
@@ -158,7 +166,7 @@ export function Dialog({
     >
       {open && (
         <div className="dialog-body">
-          <h2 id={titleId.current}>{title}</h2>
+          {!ownTitleId && <h2 id={titleId}>{title}</h2>}
           {children}
         </div>
       )}

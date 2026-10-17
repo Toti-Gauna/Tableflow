@@ -1,23 +1,34 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { act, ConfirmDialog, DemoTag } from './kit'
-import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL } from './format'
+import { Glyph } from './glyphs'
+import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL, sedeShort } from './format'
 import { dismissNotice, dispatch, resetDemo, setPrefs, useSnapshot } from '../store'
-import { fmtClock, dateKeyOf, fmtDateLong, hhmm, minutesOfDay } from '../domain/time'
+import { dateKeyOf, fmtDateLong, fmtDateShort, hhmm, minutesOfDay } from '../domain/time'
 import type { BusinessId, FixtureId, Role } from '../domain/types'
 
 export const BIZ_IDS: BusinessId[] = ['mesa-clara', 'ritual-cafe']
 
 export function DemoBanner() {
-  const { state, storageMode } = useSnapshot()
+  const { storageMode } = useSnapshot()
+  const ref = useRef<HTMLDivElement>(null)
+  // la altura real del banner fija los "sticky" de debajo (categorías, ticket, menú admin)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--banner-h', `${Math.ceil(el.getBoundingClientRect().height)}px`))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   return (
-    <div className="demo-banner" role="region" aria-label="Aviso de demostración">
+    <div className="demo-banner" role="region" aria-label="Aviso de demostración" ref={ref}>
       <span>
-        <strong>DEMO</strong> Datos ficticios · no se envía, cobra, publica ni conecta nada · sin validez fiscal
+        <strong className="seal">DEMO</strong>
+        <span>Datos ficticios</span>
+        <span className="long"> · no se envía, cobra, publica ni conecta nada · sin validez fiscal</span>
+        <span className="short"> · nada se envía ni se cobra</span>
       </span>
-      <span className="small">
-        Reloj simulado: <time>{fmtClock(state.clock.nowMs)}</time> · {storageMode === 'local' ? 'guardado en este navegador' : 'solo memoria'}
-      </span>
+      <span className="mode">{storageMode === 'local' ? 'Guardado solo en este navegador' : 'Solo en memoria: se pierde al recargar'}</span>
     </div>
   )
 }
@@ -55,6 +66,7 @@ export function DemoBar() {
   const nav = useNavigate()
   const loc = useLocation()
   const [resetOpen, setResetOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const [fx, setFx] = useState<FixtureId>('servicio')
   const biz = state.session.businessId
   const locs = state.locations.filter((l) => l.businessId === biz)
@@ -75,10 +87,19 @@ export function DemoBar() {
       nav(`/${b}${/^\/(pedido|reservas)\/[^/]+/.test(rest) ? rest.split('/').slice(0, 2).join('/') : rest}`)
     }
   }
+  const when = `${fmtDateShort(dateKeyOf(now))} · ${hhmm(minutesOfDay(now))}`
+  const dayShort = fmtDateShort(dateKeyOf(now)).replace(/^(\S{3})\S*/, '$1')
   return (
-    <div className="demo-bar" role="region" aria-label="Controles de la demo">
-      <div className="demo-bar-inner">
-        <label>
+    <div className="console" role="region" aria-label="Controles de la demo" data-open={open}>
+      <div className="console-inner">
+        <button type="button" className="cbtn console-toggle" aria-expanded={open} aria-controls="console-panel" onClick={() => setOpen((v) => !v)}>
+          <Glyph name="sliders" size={18} /> Controles<span className="sr-only"> de la demo</span> <Glyph name="chevron" size={16} />
+        </button>
+        <span className="console-mini" aria-hidden="true">
+          <Glyph name="clock" size={16} /> {dayShort} · {hhmm(minutesOfDay(now))}
+        </span>
+        <div className="console-panel" id="console-panel">
+        <label className="cfield">
           Rol (vista, no permisos)
           <select value={state.session.role} onChange={(e) => onRole(e.target.value as Role)} data-testid="role-select">
             {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
@@ -88,7 +109,7 @@ export function DemoBar() {
             ))}
           </select>
         </label>
-        <label>
+        <label className="cfield">
           Perfil ficticio
           <select value={biz} onChange={(e) => onBiz(e.target.value as BusinessId)} data-testid="biz-select">
             {BIZ_IDS.map((b) => (
@@ -98,33 +119,32 @@ export function DemoBar() {
             ))}
           </select>
         </label>
-        <label>
+        <label className="cfield">
           Sede
           <select value={state.session.locationByBusiness[biz]} onChange={(e) => dispatch({ type: 'session/setLocation', locationId: e.target.value })} data-testid="loc-select">
             {locs.map((l) => (
               <option key={l.id} value={l.id}>
-                {l.name}
+                {sedeShort(l.name)}
               </option>
             ))}
           </select>
         </label>
+        <span className="sep" aria-hidden="true" />
         <div className="clock" role="group" aria-label="Reloj simulado">
-          <span className="clock-now" data-testid="sim-clock">
-            <span aria-hidden="true">🕙</span>
+          <span className="clock-now" data-testid="sim-clock" title={fmtDateLong(dateKeyOf(now))}>
+            <Glyph name="clock" size={18} />
             <span>
               <span className="sr-only">Día simulado: </span>
-              <time dateTime={new Date(now).toISOString()}>
-                {fmtDateLong(dateKeyOf(now))} · {hhmm(minutesOfDay(now))}
-              </time>
+              <time dateTime={new Date(now).toISOString()}>{when}</time>
             </span>
           </span>
-          <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
+          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
             +15 min
           </button>
-          <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
+          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
             +1 h
           </button>
-          <label style={{ textTransform: 'none' }}>
+          <label>
             <span className="sr-only">Saltar a una hora</span>
             <select
               aria-label="Saltar a una hora"
@@ -143,17 +163,21 @@ export function DemoBar() {
               ))}
             </select>
           </label>
-          <button className="btn secondary small" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
-            Reiniciar demo
-          </button>
+          <span className="sep" aria-hidden="true" />
           <button
-            className="btn ghost small"
+            className="cbtn"
             type="button"
             aria-pressed={prefs.reducedMotion === 'on'}
+            title="Reduce o quita los desplazamientos animados. Por defecto sigue la preferencia del sistema."
             onClick={() => setPrefs({ reducedMotion: prefs.reducedMotion === 'on' ? 'auto' : 'on' })}
           >
-            Movimiento reducido: {prefs.reducedMotion === 'on' ? 'sí' : 'según el sistema'}
+            <Glyph name={prefs.reducedMotion === 'on' ? 'check' : 'sliders'} size={16} />
+            <span className="wide-only">Reducir movimiento</span>
           </button>
+          <button className="cbtn" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
+            <Glyph name="restart" size={16} /> Reiniciar<span className="sr-only"> demo</span>
+          </button>
+        </div>
         </div>
       </div>
       <ConfirmDialog
