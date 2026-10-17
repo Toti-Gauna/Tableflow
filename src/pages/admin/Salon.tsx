@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
 import { act, Badge, Callout, Empty, ErrorText } from '../../ui/kit'
+import { Glyph } from '../../ui/glyphs'
+import { sedeShort } from '../../ui/format'
+
+const SECTOR = { salon: 'salón', terraza: 'terraza' } as const
+const STATE_TEXT = { ocupada: '● Ocupada', reservada: '◔ Reservada', libre: '○ Libre' } as const
 import { activeSessionAt, billableOrders, sessionBalance, sessionTotal } from '../../domain/sessions'
 import { dateKeyOf, hhmm, minutesOfDay } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
@@ -37,33 +42,53 @@ export function AdminSalon() {
 
   const report = (o: ReturnType<typeof act>, okText: string) => setMsg(o.ok ? { tone: 'ok', text: o.message ?? okText } : { tone: 'err', text: o.message })
 
+  const pick = (id: string) => {
+    setSel(id)
+    setMoveTo('')
+    setPairWith('')
+    setMsg(null)
+    // en pantallas angostas el panel queda debajo: se lleva el foco (y la vista) a la mesa elegida
+    if (window.matchMedia('(max-width: 1099px)').matches) setTimeout(() => document.getElementById('mesa-h')?.focus(), 0)
+  }
   const chip = (t: Table) => {
     const st = tableState(state, t)
     const s = activeSessionAt(state, t.id)
     return (
-      <button key={t.id} type="button" className="table-chip" data-state={st} aria-pressed={sel === t.id} onClick={() => { setSel(t.id); setMoveTo(''); setPairWith(''); setMsg(null) }} data-testid={`table-${t.id}`} aria-label={`Mesa ${t.label}, ${t.seats} lugares, ${st}`}>
+      <button key={t.id} type="button" className="table-chip" data-state={st} data-seats={t.seats} aria-pressed={sel === t.id} onClick={() => pick(t.id)} data-testid={`table-${t.id}`} aria-label={`Mesa ${t.label}, ${t.seats} lugares, ${st}${s ? `, ${s.label}` : ''}`}>
         <strong>{t.label}</strong>
-        <span className="small">{t.seats} lugares · {t.sector}</span>
-        <span className="badge neutral" style={{ alignSelf: 'flex-start' }}>{st === 'ocupada' ? '● Ocupada' : st === 'reservada' ? '◔ Reservada' : '○ Libre'}</span>
-        {s && <span className="small">{s.label}</span>}
+        <span className="seats">{t.seats} lug.</span>
+        <span className="st">{STATE_TEXT[st]}</span>
       </button>
     )
   }
+  const sectors = (['salon', 'terraza'] as const).map((sec) => ({ sec, list: tables.filter((t) => t.sector === sec) })).filter((g) => g.list.length)
   return (
     <>
-      <PageHead title="Salón" sub={`${biz.name} · ${state.locations.find((l) => l.id === locationId)?.name}`}>
-        <div className="row" role="group" aria-label="Vista del salón">
-          <button className={`btn small ${view === 'plano' ? '' : 'secondary'}`} type="button" aria-pressed={view === 'plano'} onClick={() => setView('plano')}>Plano</button>
-          <button className={`btn small ${view === 'lista' ? '' : 'secondary'}`} type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')}>Lista</button>
+      <PageHead title="Salón" sub={`${biz.name} · ${sedeShort(state.locations.find((l) => l.id === locationId)?.name ?? '')}`}>
+        <div className="tabs" role="group" aria-label="Vista del salón">
+          <button className="tab" type="button" aria-pressed={view === 'plano'} onClick={() => setView('plano')}><Glyph name="floor" size={16} /> Plano</button>
+          <button className="tab" type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')}><Glyph name="book" size={16} /> Lista</button>
         </div>
       </PageHead>
       {tables.length === 0 ? (
         <Empty title="Esta sede no tiene salón con mesas">Elegí otra sede en la barra de la demo (por ejemplo Ritual Café · Centro).</Empty>
       ) : (
-        <div className="grid cols-2" style={{ gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)' }}>
-          <section aria-label="Mesas">
+        <div className="salon-layout">
+          <section className="salon-plan" aria-label="Mesas">
+            <p className="legend-row" aria-hidden="true">
+              <span><i className="sw libre" /> Libre</span>
+              <span><i className="sw reservada" /> Reservada (próx. 2 h)</span>
+              <span><i className="sw ocupada" /> Ocupada</span>
+            </p>
             {view === 'plano' ? (
-              <div className="floor" role="group" aria-label="Plano del salón">{tables.map(chip)}</div>
+              <div className="floorplan" role="group" aria-label="Plano del salón">
+                {sectors.map(({ sec, list }) => (
+                  <div className="zone" key={sec} role="group" aria-label={sec === 'salon' ? 'Salón' : 'Terraza'}>
+                    <span className="zlabel">{sec === 'salon' ? 'Salón' : 'Terraza'}</span>
+                    <div className="tables">{list.map(chip)}</div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="table-wrap">
                 <table>
@@ -74,10 +99,10 @@ export function AdminSalon() {
                       const s = activeSessionAt(state, t.id)
                       return (
                         <tr key={t.id}>
-                          <td>{t.label}</td><td className="num">{t.seats}</td><td>{t.sector}</td>
-                          <td>{tableState(state, t)}</td>
+                          <td>{t.label}</td><td className="num">{t.seats}</td><td>{SECTOR[t.sector]}</td>
+                          <td><span className={`st-text ${tableState(state, t)}`}>{STATE_TEXT[tableState(state, t)]}</span></td>
                           <td>{s ? `${s.label} · ${fmtARS(sessionTotal(state, s.id))}` : '—'}</td>
-                          <td><button className="btn secondary small" type="button" onClick={() => { setSel(t.id); setMsg(null) }}>Elegir</button></td>
+                          <td><button className="btn secondary small" type="button" aria-pressed={sel === t.id} onClick={() => pick(t.id)}>Elegir<span className="sr-only"> mesa {t.label}</span></button></td>
                         </tr>
                       )
                     })}
@@ -85,12 +110,15 @@ export function AdminSalon() {
                 </table>
               </div>
             )}
-            <h2 style={{ marginTop: 16 }}>Llegadas y reservas de hoy</h2>
+          </section>
+          <section className="salon-arrivals" aria-labelledby="arr-h">
+            <h2 id="arr-h">Llegadas y reservas de hoy</h2>
             {arrivals.length === 0 ? <p className="muted">No hay reservas confirmadas para hoy.</p> : (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
+              <ul className="arrivals">
                 {arrivals.map((r) => (
-                  <li key={r.id} className="line" data-testid={`arrival-${r.id}`}>
-                    <span><strong>{hhmm(r.startMin)}</strong> {r.alias} · {r.party} pers. · mesa {state.tables.find((t) => t.id === r.tableId)?.label ?? '—'} <Badge tone={r.status === 'llegada' ? 'info' : 'ok'} label={r.status === 'llegada' ? 'Llegó' : 'Confirmada'} /></span>
+                  <li key={r.id} data-testid={`arrival-${r.id}`}>
+                    <span className="time">{hhmm(r.startMin)}</span>
+                    <span>{r.alias} · {r.party} pers. · mesa {state.tables.find((t) => t.id === r.tableId)?.label ?? '—'} <Badge tone={r.status === 'llegada' ? 'info' : 'ok'} label={r.status === 'llegada' ? 'Llegó' : 'Confirmada'} /></span>
                     <span className="row">
                       {r.status === 'confirmada' && <button className="btn secondary small" type="button" onClick={() => report(act({ type: 'res/arrive', id: r.id }), 'Llegada registrada')}>Llegó</button>}
                       <button className="btn small" type="button" data-testid={`seat-${r.id}`} onClick={() => report(act({ type: 'salon/seat', reservationId: r.id, tableId: table && !ses && table.seats >= r.party ? table.id : undefined }, `${r.id} sentada`), `${r.id} sentada`)}>
@@ -102,8 +130,8 @@ export function AdminSalon() {
               </ul>
             )}
           </section>
-          <section className="card" aria-labelledby="mesa-h" aria-live="polite">
-            <h2 id="mesa-h">{table ? `Mesa ${table.label}` : 'Elegí una mesa'}</h2>
+          <section className="card table-panel" aria-labelledby="mesa-h">
+            <h2 id="mesa-h" tabIndex={-1}>{table ? `Mesa ${table.label}` : 'Elegí una mesa'}</h2>
             {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert">{msg.text}</Callout>}
             {!table ? <p className="muted">Tocá una mesa del plano o de la lista para operar.</p> : ses ? (
               <div className="stack">
@@ -125,7 +153,7 @@ export function AdminSalon() {
               </div>
             ) : (
               <div className="stack">
-                <p><Badge tone="ok" icon="○" label="Libre" /> {table.seats} lugares · {table.sector}</p>
+                <p><Badge tone="ok" icon="○" label="Libre" /> {table.seats} lugares · {SECTOR[table.sector]}</p>
                 <div className="field">
                   <label htmlFor="party">Personas (por orden de llegada)</label>
                   <input id="party" type="number" min={1} max={20} value={party} onChange={(e) => setParty(Number(e.target.value))} data-testid="open-party" />

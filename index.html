@@ -7,9 +7,45 @@
     <title>TableFlow · Demo local (datos ficticios)</title>
     <meta name="description" content="Demo frontend de TableFlow: carta, reservas, salón, cocina, caja y más, con datos ficticios y sin backend." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23355443'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23F7F3EA' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23A44431'/%3E%3C/svg%3E" />
+    <style>
+      /* Pantalla de carga sin JavaScript: se ve mientras baja el bundle y React la reemplaza al montar. */
+      html, body { margin: 0; background: #f4efe6; }
+      .tf-splash { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #24332b; }
+      .tf-splash .in { display: grid; justify-items: center; gap: 14px; text-align: center; padding: 24px; }
+      .tf-splash .mark { width: 88px; height: 88px; }
+      .tf-splash .mark .spin { transform-origin: 44px 44px; animation: tf-splash-spin 2.4s cubic-bezier(.6, .1, .3, 1) infinite; }
+      .tf-splash .name { font: 600 1.6rem/1.1 Georgia, 'Times New Roman', serif; letter-spacing: -.01em; margin: 0; }
+      .tf-splash .tag { font-size: .78rem; letter-spacing: .22em; text-transform: uppercase; color: #5d6b62; margin: 0; }
+      .tf-splash .demo { display: inline-block; background: #a44431; color: #fff; font-weight: 800; font-size: .7rem; letter-spacing: .14em; padding: 3px 8px; border-radius: 6px; margin-right: 6px; }
+      .tf-splash .bar { width: 140px; height: 3px; border-radius: 3px; background: #e2d9c8; overflow: hidden; }
+      .tf-splash .bar span { display: block; width: 40%; height: 100%; background: #355443; border-radius: 3px; animation: tf-splash-bar 1.4s ease-in-out infinite; }
+      @keyframes tf-splash-spin { to { transform: rotate(360deg); } }
+      @keyframes tf-splash-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+      @media (prefers-reduced-motion: reduce) { .tf-splash .mark .spin, .tf-splash .bar span { animation: none; } .tf-splash .bar span { width: 100%; opacity: .5; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="tf-splash" role="status" aria-live="polite">
+        <div class="in">
+          <svg class="mark" viewBox="0 0 88 88" aria-hidden="true">
+            <circle cx="44" cy="46" r="38" fill="#3b2a1a" opacity=".12" />
+            <circle cx="44" cy="44" r="38" fill="#fbf8f2" stroke="#d9cdb8" />
+            <circle cx="44" cy="44" r="27" fill="none" stroke="#355443" stroke-width="2" />
+            <g class="spin">
+              <circle cx="44" cy="17" r="4" fill="#a44431" />
+            </g>
+            <circle cx="44" cy="44" r="12" fill="#a44431" />
+            <path d="M38 40 C 40 37, 44 36, 47 37" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7" />
+          </svg>
+          <p class="name">TableFlow</p>
+          <p class="tag"><span class="demo">DEMO</span>Mesa Clara · Ritual Café</p>
+          <div class="bar" aria-hidden="true"><span></span></div>
+          <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Cargando la demo con datos ficticios…</span>
+        </div>
+      </div>
+    </div>
+    <noscript><p style="font-family:system-ui;padding:24px;text-align:center">TableFlow es una demo local: necesita JavaScript activado para funcionar.</p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -2,11 +2,27 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
-import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { ORDER_LABEL } from '../../ui/format'
+import { Glyph } from '../../ui/glyphs'
+import { orderCovered, orderDue } from '../../domain/sessions'
+import { HouseChar, type Mood } from '../../ui/art/characters'
+import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
+import { ORDER_LABEL, sedeShort } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
 import type { Order, OrderStatus } from '../../domain/types'
+
+/** Estado protagonista del seguimiento: personaje, titular y una línea clara por estado. */
+const STATUS_COPY: Record<OrderStatus, { mood: Mood; title: string; text: (o: Order) => string }> = {
+  enviado: { mood: 'pensando', title: 'Recibimos tu pedido', text: () => 'Solicitud recibida; el equipo todavía debe aceptarla.' },
+  aceptado: { mood: 'feliz', title: 'Pedido aceptado', text: () => 'Ya está en la cola de cocina y barra.' },
+  en_preparacion: { mood: 'guino', title: 'En preparación', text: (o) => (o.kind === 'retiro' ? 'Te avisamos cuando esté listo para retirar.' : 'En unos minutos llega a tu mesa.') },
+  listo: { mood: 'festejo', title: '¡Listo!', text: (o) => (o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.') },
+  servido: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Cuando quieras, pedí la cuenta.' },
+  retirado: { mood: 'feliz', title: '¡Buen provecho!', text: () => 'Gracias por pasar por la barra.' },
+  cerrado: { mood: 'dormido', title: 'Cuenta cerrada', text: () => 'Este pedido ya está cerrado. ¡Gracias!' },
+  rechazado: { mood: 'triste', title: 'No pudimos tomarlo', text: (o) => o.reason ?? 'El equipo rechazó el pedido.' },
+  cancelado: { mood: 'triste', title: 'Pedido cancelado', text: (o) => o.reason ?? 'El pedido se canceló.' },
+}
 
 const FLOW: OrderStatus[] = ['enviado', 'aceptado', 'en_preparacion', 'listo', 'servido', 'cerrado']
 
@@ -14,18 +30,18 @@ export function OrderTimeline({ o }: { o: Order }) {
   const flow = o.kind === 'retiro' ? (['enviado', 'aceptado', 'en_preparacion', 'listo', 'retirado', 'cerrado'] as OrderStatus[]) : FLOW
   if (o.status === 'rechazado' || o.status === 'cancelado') {
     return (
-      <ol className="timeline" aria-label="Estado del pedido">
-        <li data-state="done">Enviado</li>
-        <li data-state="off">{ORDER_LABEL[o.status].label}{o.reason ? `: ${o.reason}` : ''}</li>
+      <ol className="track short" aria-label="Estado del pedido">
+        <li data-state="done"><span className="sr-only">Hecho: </span>Enviado</li>
+        <li data-state="off" aria-current="step"><span className="sr-only">Estado actual: </span>{ORDER_LABEL[o.status].label}</li>
       </ol>
     )
   }
   const idx = flow.indexOf(o.status)
   return (
-    <ol className="timeline" aria-label="Estado del pedido">
+    <ol className="track" aria-label="Estado del pedido">
       {flow.map((st, i) => (
         <li key={st} data-state={i < idx ? 'done' : i === idx ? 'now' : 'todo'} aria-current={i === idx ? 'step' : undefined}>
-          {i < idx ? '✓ ' : i === idx ? '● ' : '○ '}
+          <span className="sr-only">{i < idx ? 'Hecho: ' : i === idx ? 'Estado actual: ' : 'Pendiente: '}</span>
           {ORDER_LABEL[st].label}
         </li>
       ))}
@@ -44,7 +60,7 @@ export function PedidoDetalle() {
     return (
       <main>
         <PageHead title="No encontramos ese pedido" />
-        <Empty title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/pedido`}>Volver a mis pedidos</Link>}>
+        <Empty art={<HouseChar biz={biz.id} mood="sorpresa" />} title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/pedido`}>Volver a mis pedidos</Link>}>
           Puede ser de otro perfil o de un seed anterior. No se creó ni modificó nada.
         </Empty>
       </main>
@@ -60,36 +76,57 @@ export function PedidoDetalle() {
   void minutesOfDay
   return (
     <main>
-      <PageHead title={`Pedido ${o.id}`} sub={`${loc?.name} · ${o.kind === 'mesa' ? `mesa ${table ?? ''}` : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} a nombre de ${o.alias}`}`}>
+      <PageHead
+        title={`Pedido ${o.id}`}
+        eyebrow="Seguimiento del pedido"
+        heading={<><span className="folio-pre">Pedido</span> <span className="folio">{o.id}</span></>}
+        sub={`${loc ? sedeShort(loc.name) : ''} · ${o.kind === 'mesa' ? `mesa ${table ?? ''}` : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} a nombre de ${o.alias}`}`}
+      >
         <StatusBadge s={ORDER_LABEL[o.status]} />
       </PageHead>
+      <section className="status-hero" data-status={o.status} role="status" aria-live="polite">
+        <HouseChar biz={biz.id} mood={STATUS_COPY[o.status].mood} size={112} animate={o.status === 'listo'} />
+        <div className="sh-copy">
+          <h2>{STATUS_COPY[o.status].title}</h2>
+          <p>
+            {STATUS_COPY[o.status].text(o)}
+            {o.status === 'listo' && notice && notice.status !== 'fallida' && <span className="sh-note"> {notice.detail}</span>}
+          </p>
+        </div>
+        {o.kind === 'retiro' && !['rechazado', 'cancelado'].includes(o.status) && (
+          <div className="pickup-code" aria-label={`Código de retiro ${o.pickupCode}`}>
+            <small>Código de retiro</small>
+            <span className="num">{o.pickupCode}</span>
+          </div>
+        )}
+      </section>
       <OrderTimeline o={o} />
-      {o.status === 'enviado' && <Callout>Solicitud recibida; el equipo todavía debe aceptarla.</Callout>}
-      {o.status === 'listo' && (
-        <Callout tone="ok" role="status">
-          <strong>¡Listo!</strong> {o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.'}{' '}
-          {notice ? (
-            notice.status === 'fallida' ? <span>El aviso local falló y puede reintentarse desde administración; el pedido sigue listo.</span> : <span>{notice.detail}</span>
-          ) : null}
-        </Callout>
-      )}
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}
       {o.cancelRequested && <Callout tone="warn">Pediste cancelar con el pedido ya en marcha. El encargado debe decidir; la comanda no se borra.</Callout>}
-      {noticeMsg && <p className="small muted">Aviso local ({noticeMsg.status}): “{noticeMsg.text}”</p>}
-      <section className="card" style={{ marginTop: 14 }} aria-labelledby="det">
+      {notice?.status === 'fallida' && <DemoHint>El aviso por WhatsApp de este pedido falló (simulado): el equipo lo reintenta desde Automatizaciones. El pedido sigue listo.</DemoHint>}
+      <section className="ticket-paper receipt" style={{ marginTop: 20, maxWidth: 640 }} aria-labelledby="det">
+        <p className="eyebrow">Comanda {o.ticketId}</p>
         <h2 id="det">Detalle</h2>
         {o.lines.map((l) => (
           <div className="line" key={l.id}>
             <div>
-              <strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span>
+              <strong>{l.qty}× {l.name}</strong> <span className="st-tag">{l.station}</span>
               <div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}</div>
               {l.note && <div className="opts">Nota: {l.note}</div>}
+              {l.giftId && <div className="gift-line"><Glyph name="gift" size={14} /> Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)}</div>}
             </div>
             <span className="money">{fmtARS(l.lineCents)}</span>
           </div>
         ))}
         <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
-        <p className="small muted">Canal: {o.channel} · operación {o.operationId} · hilo {o.correlationId}. Importe informativo: no se cobró nada.</p>
+        {orderCovered(o) > 0 && (
+          <>
+            <div className="total-row sub"><span>Cubierto por invitación</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>
+            <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>
+          </>
+        )}
+        <p className="small muted">Pago simulado: no se cobró nada.</p>
+        <details className="tech"><summary>Detalle técnico</summary><span className="small muted">Canal {o.channel} · operación {o.operationId} · hilo {o.correlationId}</span></details>
       </section>
       <div className="row" style={{ marginTop: 14 }}>
         {cancellable && !o.cancelRequested && <button className="btn danger" type="button" onClick={() => setCancel(true)} data-testid="cancel-order">Cancelar pedido</button>}

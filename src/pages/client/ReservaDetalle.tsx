@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
+import { HouseChar } from '../../ui/art/characters'
 import { act, Callout, ConfirmDialog, Empty, ErrorText, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { RES_LABEL } from '../../ui/format'
+import { CHANNEL_LABEL, RES_LABEL, sedeShort } from '../../ui/format'
+import { Glyph } from '../../ui/glyphs'
 import { alternatives, slotStarts, slotAvailable } from '../../domain/availability'
 import { addDays, dateKeyOf, fmtDateShort, fmtDateTime, hhmm } from '../../domain/time'
 import { dispatch } from '../../store'
@@ -22,7 +24,7 @@ export function ReservaDetalle() {
     return (
       <main>
         <PageHead title="No encontramos esa reserva" />
-        <Empty title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/reservar`}>Volver a reservas</Link>}>No se creó ni modificó nada.</Empty>
+        <Empty art={<HouseChar biz={biz.id} mood="sorpresa" />} title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/reservar`}>Volver a reservas</Link>}>No se creó ni modificó nada.</Empty>
       </main>
     )
   }
@@ -41,12 +43,17 @@ export function ReservaDetalle() {
   }
   return (
     <main>
-      <PageHead title={`Reserva ${r.id}`} sub={`${loc?.name} · ${r.party} ${r.party === 1 ? 'persona' : 'personas'} · ${fmtDateShort(r.dateKey)} a las ${hhmm(r.startMin)}`}>
+      <PageHead
+        title={`Reserva ${r.id}`}
+        eyebrow="Tu reserva"
+        heading={<><span className="folio-pre">Reserva</span> <span className="folio">{r.id}</span></>}
+        sub={`${loc ? sedeShort(loc.name) : ''} · ${r.party} ${r.party === 1 ? 'persona' : 'personas'} · ${fmtDateShort(r.dateKey)} a las ${hhmm(r.startMin)}`}
+      >
         <StatusBadge s={RES_LABEL[r.status]} />
       </PageHead>
       {r.status === 'solicitada' && <Callout>Solicitud recibida; el equipo todavía debe confirmarla.</Callout>}
       {r.status === 'confirmada' && <Callout tone="ok">Confirmada{table ? ` en mesa ${table.label} (${table.sector === 'terraza' ? 'terraza' : 'salón'})` : ''}. La preferencia de sector no está garantizada.</Callout>}
-      {r.status === 'revision_humana' && <Callout tone="warn">Consulta alimentaria enviada al equipo de muestra. {r.reviewReason === 'grupo-grande' ? 'Los grupos grandes se revisan caso por caso.' : 'Esta demo no puede garantizar ausencia de alérgenos.'} No se acepta automáticamente.</Callout>}
+      {r.status === 'revision_humana' && <Callout tone="review">Consulta alimentaria enviada al equipo de muestra. {r.reviewReason === 'grupo-grande' ? 'Los grupos grandes se revisan caso por caso.' : 'Esta demo no puede garantizar ausencia de alérgenos.'} No se acepta automáticamente.</Callout>}
       {r.status === 'alternativa_ofrecida' && r.alternativeStartMin !== null && (
         <Callout tone="warn">
           <p>El equipo ofrece <strong>{hhmm(r.alternativeStartMin)}</strong> en lugar de {hhmm(r.startMin)}.</p>
@@ -58,28 +65,29 @@ export function ReservaDetalle() {
       )}
       {r.status === 'cancelada' && <Callout tone="err">Cancelada: {r.cancelReason}.</Callout>}
       {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="status">{msg.text}</Callout>}
-      <section className="card" style={{ marginTop: 12 }} aria-labelledby="d">
+      <section className="card" style={{ marginTop: 16 }} aria-labelledby="d">
         <h2 id="d">Detalle</h2>
-        <dl>
-          <dt>A nombre de</dt><dd>{r.alias}</dd>
-          <dt>Canal de origen</dt><dd>{r.channel} · hilo {r.conversationId ?? '—'} · operación {r.operationId}</dd>
-          <dt>Sector pedido</dt><dd>{r.sectorPref === 'cualquiera' ? 'sin preferencia' : `${r.sectorPref} (preferencia sujeta a confirmación)`}</dd>
-          {r.dietaryNote && (<><dt>Consulta alimentaria</dt><dd>{r.dietaryNote}</dd></>)}
-          <dt>Versión</dt><dd>{r.version}</dd>
+        <dl className="facts">
+          <div><dt>A nombre de</dt><dd>{r.alias}</dd></div>
+          <div><dt>Mesa</dt><dd>{table ? `${table.label} · ${table.sector === 'terraza' ? 'terraza' : 'salón'}` : 'Se asigna al confirmar'}</dd></div>
+          <div><dt>Sector pedido</dt><dd>{r.sectorPref === 'cualquiera' ? 'Sin preferencia' : `${r.sectorPref} (preferencia sujeta a confirmación)`}</dd></div>
+          <div><dt>Canal de origen</dt><dd>{CHANNEL_LABEL[r.channel] ?? r.channel}</dd></div>
+          {r.dietaryNote && <div><dt>Consulta alimentaria</dt><dd>{r.dietaryNote}</dd></div>}
+          <div><dt>Trazabilidad</dt><dd className="small muted">hilo {r.conversationId ?? '—'} · operación {r.operationId} · versión {r.version}</dd></div>
         </dl>
       </section>
       {active && (
-        <div className="row" style={{ marginTop: 12 }}>
+        <div className="row" style={{ marginTop: 16 }}>
           {editable && <button className="btn secondary" type="button" onClick={() => { setResched(true); setRDate(r.dateKey); setRMin(null) }} data-testid="open-resched">Reprogramar</button>}
           <button className="btn danger" type="button" onClick={() => setCancel(true)} data-testid="open-cancel">Cancelar reserva</button>
-          <button className="btn secondary" type="button" onClick={() => continueIn('whatsapp')} data-testid="continue-wa">Continuar por WhatsApp (simulado)</button>
-          <button className="btn secondary" type="button" onClick={() => continueIn('voz')} data-testid="continue-voice">Continuar por llamada (simulada)</button>
+          <button className="btn secondary" type="button" onClick={() => continueIn('whatsapp')} data-testid="continue-wa"><Glyph name="chat" size={16} /> Continuar por WhatsApp (simulado)</button>
+          <button className="btn secondary" type="button" onClick={() => continueIn('voz')} data-testid="continue-voice"><Glyph name="phone" size={16} /> Continuar por llamada (simulada)</button>
         </div>
       )}
-      <section className="card" style={{ marginTop: 14 }} aria-labelledby="h">
+      <section className="home-sec" style={{ marginTop: 32 }} aria-labelledby="h">
         <h2 id="h">Historial</h2>
         {history.length === 0 ? <p className="muted">Sin eventos.</p> : (
-          <ul>{history.map((a) => <li key={a.id}><time>{fmtDateTime(a.at)}</time> · {a.summary} <span className="muted small">({a.correlationId})</span></li>)}</ul>
+          <ol className="history">{history.map((a) => <li key={a.id}><time>{fmtDateTime(a.at)}</time><span>{a.summary} <span className="muted small">({a.correlationId})</span></span></li>)}</ol>
         )}
       </section>
 

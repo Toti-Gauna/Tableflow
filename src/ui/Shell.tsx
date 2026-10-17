@@ -1,23 +1,35 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { act, ConfirmDialog, DemoTag } from './kit'
-import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL } from './format'
+import { act, ConfirmDialog, DemoTag, Dialog } from './kit'
+import { Glyph } from './glyphs'
+import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL, sedeShort } from './format'
 import { dismissNotice, dispatch, resetDemo, setPrefs, useSnapshot } from '../store'
-import { fmtClock, dateKeyOf, fmtDateLong, hhmm, minutesOfDay } from '../domain/time'
+import { sfx } from './sfx'
+import { dateKeyOf, fmtDateLong, fmtDateShort, hhmm, minutesOfDay } from '../domain/time'
 import type { BusinessId, FixtureId, Role } from '../domain/types'
 
 export const BIZ_IDS: BusinessId[] = ['mesa-clara', 'ritual-cafe']
 
 export function DemoBanner() {
-  const { state, storageMode } = useSnapshot()
+  const { storageMode } = useSnapshot()
+  const ref = useRef<HTMLDivElement>(null)
+  // la altura real del banner fija los "sticky" de debajo (categorías, ticket, menú admin)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => document.documentElement.style.setProperty('--banner-h', `${Math.ceil(el.getBoundingClientRect().height)}px`))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   return (
-    <div className="demo-banner" role="region" aria-label="Aviso de demostración">
+    <div className="demo-banner" role="region" aria-label="Aviso de demostración" ref={ref}>
       <span>
-        <strong>DEMO</strong> Datos ficticios · no se envía, cobra, publica ni conecta nada · sin validez fiscal
+        <strong className="seal">DEMO</strong>
+        <span>Datos ficticios</span>
+        <span className="long"> · no se envía, cobra, publica ni conecta nada · sin validez fiscal</span>
+        <span className="short"> · nada se envía ni se cobra</span>
       </span>
-      <span className="small">
-        Reloj simulado: <time>{fmtClock(state.clock.nowMs)}</time> · {storageMode === 'local' ? 'guardado en este navegador' : 'solo memoria'}
-      </span>
+      <span className="mode">{storageMode === 'local' ? 'Guardado solo en este navegador' : 'Solo en memoria: se pierde al recargar'}</span>
     </div>
   )
 }
@@ -55,6 +67,8 @@ export function DemoBar() {
   const nav = useNavigate()
   const loc = useLocation()
   const [resetOpen, setResetOpen] = useState(false)
+  const [guide, setGuide] = useState(false)
+  const [open, setOpen] = useState(false)
   const [fx, setFx] = useState<FixtureId>('servicio')
   const biz = state.session.businessId
   const locs = state.locations.filter((l) => l.businessId === biz)
@@ -75,10 +89,19 @@ export function DemoBar() {
       nav(`/${b}${/^\/(pedido|reservas)\/[^/]+/.test(rest) ? rest.split('/').slice(0, 2).join('/') : rest}`)
     }
   }
+  const when = `${fmtDateShort(dateKeyOf(now))} · ${hhmm(minutesOfDay(now))}`
+  const dayShort = fmtDateShort(dateKeyOf(now)).replace(/^(\S{3})\S*/, '$1')
   return (
-    <div className="demo-bar" role="region" aria-label="Controles de la demo">
-      <div className="demo-bar-inner">
-        <label>
+    <div className="console" role="region" aria-label="Controles de la demo" data-open={open}>
+      <div className="console-inner">
+        <button type="button" className="cbtn console-toggle" aria-expanded={open} aria-controls="console-panel" onClick={() => setOpen((v) => !v)}>
+          <Glyph name="sliders" size={18} /> Controles<span className="sr-only"> de la demo</span> <Glyph name="chevron" size={16} />
+        </button>
+        <span className="console-mini" aria-hidden="true">
+          <Glyph name="clock" size={16} /> {dayShort} · {hhmm(minutesOfDay(now))}
+        </span>
+        <div className="console-panel" id="console-panel">
+        <label className="cfield">
           Rol (vista, no permisos)
           <select value={state.session.role} onChange={(e) => onRole(e.target.value as Role)} data-testid="role-select">
             {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
@@ -88,7 +111,7 @@ export function DemoBar() {
             ))}
           </select>
         </label>
-        <label>
+        <label className="cfield">
           Perfil ficticio
           <select value={biz} onChange={(e) => onBiz(e.target.value as BusinessId)} data-testid="biz-select">
             {BIZ_IDS.map((b) => (
@@ -98,33 +121,32 @@ export function DemoBar() {
             ))}
           </select>
         </label>
-        <label>
+        <label className="cfield">
           Sede
           <select value={state.session.locationByBusiness[biz]} onChange={(e) => dispatch({ type: 'session/setLocation', locationId: e.target.value })} data-testid="loc-select">
             {locs.map((l) => (
               <option key={l.id} value={l.id}>
-                {l.name}
+                {sedeShort(l.name)}
               </option>
             ))}
           </select>
         </label>
+        <span className="sep" aria-hidden="true" />
         <div className="clock" role="group" aria-label="Reloj simulado">
-          <span className="clock-now" data-testid="sim-clock">
-            <span aria-hidden="true">🕙</span>
+          <span className="clock-now" data-testid="sim-clock" title={fmtDateLong(dateKeyOf(now))}>
+            <Glyph name="clock" size={18} />
             <span>
               <span className="sr-only">Día simulado: </span>
-              <time dateTime={new Date(now).toISOString()}>
-                {fmtDateLong(dateKeyOf(now))} · {hhmm(minutesOfDay(now))}
-              </time>
+              <time dateTime={new Date(now).toISOString()}>{when}</time>
             </span>
           </span>
-          <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
+          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 15 }, 'Reloj +15 min')} data-testid="clock-15">
             +15 min
           </button>
-          <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
+          <button className="cbtn" type="button" onClick={() => act({ type: 'clock/advance', minutes: 60 }, 'Reloj +1 h')} data-testid="clock-60">
             +1 h
           </button>
-          <label style={{ textTransform: 'none' }}>
+          <label>
             <span className="sr-only">Saltar a una hora</span>
             <select
               aria-label="Saltar a una hora"
@@ -143,19 +165,44 @@ export function DemoBar() {
               ))}
             </select>
           </label>
-          <button className="btn secondary small" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
-            Reiniciar demo
+          <span className="sep" aria-hidden="true" />
+          <button
+            className="cbtn"
+            type="button"
+            aria-pressed={prefs.uiSounds}
+            data-testid="sfx-toggle"
+            title="Sonidos cortos al agregar, enviar o abrir un regalo. Apagados por defecto; el volumen se ajusta en Configuración."
+            onClick={() => {
+              const on = !prefs.uiSounds
+              setPrefs({ uiSounds: on })
+              if (on) sfx('tap', { force: true })
+            }}
+          >
+            <Glyph name={prefs.uiSounds ? 'volume' : 'mute'} size={16} />
+            <span className="wide-only">Sonidos de interfaz</span>
           </button>
           <button
-            className="btn ghost small"
+            className="cbtn"
             type="button"
             aria-pressed={prefs.reducedMotion === 'on'}
+            title="Reduce o quita los desplazamientos animados. Por defecto sigue la preferencia del sistema."
             onClick={() => setPrefs({ reducedMotion: prefs.reducedMotion === 'on' ? 'auto' : 'on' })}
           >
-            Movimiento reducido: {prefs.reducedMotion === 'on' ? 'sí' : 'según el sistema'}
+            <Glyph name={prefs.reducedMotion === 'on' ? 'check' : 'sliders'} size={16} />
+            <span className="wide-only">Reducir movimiento</span>
+          </button>
+          <button className="cbtn" type="button" onClick={() => setGuide(true)} data-testid="guide-open" aria-haspopup="dialog">
+            <Glyph name="book" size={16} /> <span className="wide-only">Guía de la demo</span>
+          </button>
+          <button className="cbtn" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
+            <Glyph name="restart" size={16} /> <span className="xl-only">Reiniciar</span><span className="sr-only"> demo</span>
           </button>
         </div>
+        </div>
       </div>
+      <Dialog open={guide} onClose={() => setGuide(false)} title="Guía de la demo" className="guide" testId="guide">
+        <DemoGuide biz={biz} onDone={() => setGuide(false)} />
+      </Dialog>
       <ConfirmDialog
         open={resetOpen}
         title="Reiniciar la demo"
@@ -188,27 +235,64 @@ export function DemoBar() {
   )
 }
 
+/** Recorridos sugeridos para quien muestra la demo (capa de demo, fuera del producto). */
+function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
+  const nav = useNavigate()
+  const go = (to: string) => { onDone(); nav(to) }
+  const rest = biz === 'mesa-clara'
+  return (
+    <div className="guide-body">
+      <p className="muted">Recorridos de 60–90 segundos. Todo es local y simulado; el reloj solo avanza con los controles.</p>
+      <h3>{rest ? 'Mesa Clara · del pedido al cierre' : 'Ritual Café · del pedido al retiro'}</h3>
+      {rest ? (
+        <ol className="steps">
+          <li><span>Pasá el reloj a las 12:00 (el salón abre al mediodía). <button className="linklike" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button></span></li>
+          <li><span><button className="linklike" type="button" onClick={() => go('/mesa-clara/carta')}>Elegí una milanesa</button> con guarnición y agregala.</span></li>
+          <li><span>En Mi pedido indicá tu mesa y enviá: vas a ver el folio.</span></li>
+          <li><span>Como recepción aceptá; en cocina prepará y marcá listo; el mozo lo sirve.</span></li>
+          <li><span>En caja abrí la caja, dividí la cuenta, registrá los pagos DEMO y cerrá la mesa.</span></li>
+        </ol>
+      ) : (
+        <ol className="steps">
+          <li><span>Elegí la sede (Centro o Norte) en los controles.</span></li>
+          <li><span><button className="linklike" type="button" onClick={() => go('/ritual-cafe/carta')}>Configurá un flat white</button> (tamaño y leche) y pedilo para retirar.</span></li>
+          <li><span>Como barra aceptá, prepará y marcá listo; después marcá retirado.</span></li>
+        </ol>
+      )}
+      <h3>Más para mostrar</h3>
+      <ul className="guide-links">
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/regalar`)}>Invitar a alguien a comer</button> · tarjeta, mensaje simulado y canje en el pedido</li>
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/chicos`)}>Para chicos</button> · memotest y “Armá tu plato”</li>
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/simulador`)}>Simulador de canales</button> · reserva por WhatsApp o llamada</li>
+        <li><button className="linklike" type="button" onClick={() => { act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)'); go(`/${biz}/pasaporte`) }}>Verme como Ana</button> · pasaporte con sellos e historial</li>
+        <li><button className="linklike" type="button" onClick={() => go('/arte')}>Ilustraciones y personajes</button> · el sistema visual completo</li>
+      </ul>
+    </div>
+  )
+}
+
 export function Footer() {
   return (
     <footer className="site">
       <div className="wrap">
         <p>
-          <DemoTag /> TableFlow es una demo frontend local con datos ficticios (Mesa Clara y Ritual Café). Los canales de WhatsApp y llamada son simulaciones: no se envían mensajes, no se usa el micrófono ni se realizan cobros. <Link to="/comercial">Alcance y cobertura de la demo</Link>
+          <DemoTag /> TableFlow · demo local con datos ficticios. WhatsApp, llamada, pagos y regalos son simulaciones. <Link to="/comercial">Alcance de la demo</Link>
         </p>
       </div>
     </footer>
   )
 }
 
-export function PageHead({ title, children, sub }: { title: string; children?: ReactNode; sub?: ReactNode }) {
+export function PageHead({ title, children, sub, eyebrow, heading, className }: { title: string; children?: ReactNode; sub?: ReactNode; eyebrow?: ReactNode; heading?: ReactNode; className?: string }) {
   useEffect(() => {
     document.title = `${title} · TableFlow demo`
   }, [title])
   return (
-    <div className="page-title">
+    <div className={`page-title ${className ?? ''}`}>
       <div>
-        <h1 tabIndex={-1} id="page-h1">{title}</h1>
-        {sub && <p className="muted" style={{ margin: 0 }}>{sub}</p>}
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h1 tabIndex={-1} id="page-h1">{heading ?? title}</h1>
+        {sub && <p className="sub">{sub}</p>}
       </div>
       {children && <div className="row">{children}</div>}
     </div>

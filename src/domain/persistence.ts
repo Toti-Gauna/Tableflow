@@ -28,8 +28,21 @@ export type LoadResult =
   | { kind: 'future'; version: number; raw: string; byteLength: number }
   | { kind: 'needs-migration'; version: number; raw: string; byteLength: number }
 
-/** Migraciones explícitas entre versiones de esquema. Vacío: la v1 es la primera. */
-export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {}
+/**
+ * Migraciones explícitas entre versiones de esquema (clave = versión de origen).
+ * v1 → v2: agrega las invitaciones (regalos) y los ajustes de temporada; no toca ningún registro existente.
+ */
+export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
+  1: (old) => {
+    const s = old as Record<string, unknown>
+    return {
+      ...s,
+      schemaVersion: 2,
+      gifts: Array.isArray(s.gifts) ? s.gifts : [],
+      settings: { seasonByBusiness: { 'mesa-clara': 'auto', 'ritual-cafe': 'auto' } },
+    }
+  },
+}
 
 export function getBrowserStorage(): StorageLike | null {
   try {
@@ -146,8 +159,12 @@ export interface Prefs {
   audio: boolean
   volume: number
   favorites: string[]
+  /** Sonidos de interfaz (agregar, enviar, regalo, listo). Apagados por defecto. */
+  uiSounds: boolean
+  /** Aviso sonoro de comandas nuevas en la pantalla de cocina/barra. Apagado por defecto. */
+  kdsChime: boolean
 }
-export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [] }
+export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [], uiSounds: false, kdsChime: false }
 
 /** Diagnóstico exportable: errores y conteos, sin contenido operable. */
 export function buildDiagnostic(result: Extract<LoadResult, { kind: 'corrupt' | 'future' | 'needs-migration' }>, app: string) {

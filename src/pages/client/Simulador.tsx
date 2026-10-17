@@ -8,6 +8,7 @@ import { dispatch, setPrefs, useSnapshot } from '../../store'
 import { audioSupported, playMotif, stopAudio } from '../../ui/audio'
 import type { AppState, BusinessId, CallSession, Conversation, Message } from '../../domain/types'
 import { CHANNEL_LABEL } from '../../ui/format'
+import { Glyph } from '../../ui/glyphs'
 import { fmtDateTime } from '../../domain/time'
 
 const GUION: { label: string; text: string; note: string }[] = [
@@ -60,13 +61,13 @@ export function SimPanel({ biz, guided }: { biz: BusinessId; guided: boolean }) 
         <label className="field" style={{ margin: 0 }}>
           <span className="label small">Hilo</span>
           <select value={conv?.id ?? ''} onChange={(e) => setConvId(e.target.value)} data-testid="thread-select">
-            {convs.map((c) => <option key={c.id} value={c.id}>{c.id} · {state.customers.find((x) => x.id === c.customerId)?.alias ?? 'sin identificar'}</option>)}
+            {convs.map((c) => <option key={c.id} value={c.id}>{c.id} · {state.customers.find((x) => x.id === c.customerId)?.alias ?? (c.title.startsWith('Regalo') ? c.title : 'sin identificar')}</option>)}
           </select>
         </label>
         <button className="btn secondary small" type="button" onClick={newThread} data-testid="new-thread">Nuevo hilo</button>
-        <div role="tablist" aria-label="Canal simulado" className="row">
-          <button role="tab" aria-selected={tab === 'chat'} className={`btn small ${tab === 'chat' ? '' : 'secondary'}`} onClick={() => setTab('chat')} id="tab-chat" aria-controls="panel-chat">WhatsApp</button>
-          <button role="tab" aria-selected={tab === 'voz'} className={`btn small ${tab === 'voz' ? '' : 'secondary'}`} onClick={() => setTab('voz')} id="tab-voz" aria-controls="panel-voz" data-testid="tab-voz">Llamada</button>
+        <div role="tablist" aria-label="Canal simulado" className="tabs">
+          <button role="tab" type="button" aria-selected={tab === 'chat'} className="tab" onClick={() => setTab('chat')} id="tab-chat" aria-controls="panel-chat"><Glyph name="chat" size={16} /> WhatsApp</button>
+          <button role="tab" type="button" aria-selected={tab === 'voz'} className="tab" onClick={() => setTab('voz')} id="tab-voz" aria-controls="panel-voz" data-testid="tab-voz"><Glyph name="phone" size={16} /> Llamada</button>
         </div>
       </div>
       {!conv ? (
@@ -104,8 +105,11 @@ function ChatPanel({ state, conv, guided, kind }: { state: AppState; conv: Conve
     <div className="sim-layout">
       <div className="phone" aria-label="Chat simulado">
         <div className="phone-head">
-          <strong>{biz.name} · asistente de demostración</strong>
-          <small>Conversación de demostración. No se envían mensajes. <DemoTag /></small>
+          <span className="avatar" aria-hidden="true"><Glyph name={kind === 'cafe' ? 'cup' : 'empanada'} size={20} /></span>
+          <span>
+            <strong>{biz.name} · asistente de demostración</strong>
+            <small>Conversación de demostración. No se envían mensajes. <DemoTag /></small>
+          </span>
         </div>
         <div className="chat-log" ref={logRef} role="log" aria-live="polite" aria-label="Mensajes" data-testid="chat-log">
           {msgs.length === 0 && <p className="muted" style={{ textAlign: 'center' }}>Todavía no hay mensajes. Probá escribir “Hola”.</p>}
@@ -136,11 +140,11 @@ function ChatPanel({ state, conv, guided, kind }: { state: AppState; conv: Conve
           <section className="card" aria-labelledby="guion">
             <h2 id="guion">Guion sugerido</h2>
             <p className="muted small">Cada frase se interpreta con reglas locales (minúsculas, acentos y sinónimos). Probá las tuyas también.</p>
-            <ol style={{ paddingLeft: 18 }}>
+            <ol className="script">
               {guion.map((g) => (
-                <li key={g.label} style={{ marginBottom: 6 }}>
-                  <button type="button" className="btn secondary small" onClick={() => setText(g.text)}>{g.label}</button>{' '}
-                  <span className="small">“{g.text}” — {g.note}</span>
+                <li key={g.label}>
+                  <button type="button" className="btn secondary small" onClick={() => setText(g.text)}>{g.label}</button>
+                  <span className="small">“{g.text}” <span className="muted">— {g.note}</span></span>
                 </li>
               ))}
             </ol>
@@ -222,8 +226,11 @@ function CallPanel({ state, conv }: { state: AppState; conv: Conversation }) {
   const res = call?.reservationId ? state.reservations.find((r) => r.id === call.reservationId) : undefined
   return (
     <div className="sim-layout">
-      <section className="card" aria-labelledby="call-h">
-        <h2 id="call-h">Llamada simulada <DemoTag /></h2>
+      <section className="card call-card" aria-labelledby="call-h">
+        <div className="row between">
+          <h2 id="call-h" style={{ margin: 0 }}>Llamada simulada <DemoTag /></h2>
+          <span className="wave" data-live={!!live && !busy} aria-hidden="true"><span /><span /><span /><span /><span /></span>
+        </div>
         <p className="muted small">No se realiza ninguna llamada ni se usa el micrófono: elegís lo que “dice” la persona con botones. Todo queda en la transcripción; el audio es opcional.</p>
         {!call || !live ? (
           <div className="stack">
@@ -257,14 +264,17 @@ function CallPanel({ state, conv }: { state: AppState; conv: Conversation }) {
             </div>
           </div>
         )}
-        <fieldset style={{ marginTop: 12 }}>
-          <legend>Audio opcional</legend>
-          <label className="choice"><input type="checkbox" checked={prefs.audio} disabled={!audioSupported()} onChange={(e) => { setAudioBlocked(false); setPrefs({ audio: e.target.checked }); if (e.target.checked) void playMotif('inicio', prefs.volume).then((ok) => { if (!ok) { setAudioBlocked(true); setPrefs({ audio: false }) } }) }} data-testid="audio-toggle" /> Motivos sonoros sintéticos de 150–350 ms (no es voz)</label>
-          <label className="field" style={{ margin: 0 }}>
-            <span className="label small">Volumen</span>
-            <input type="range" min={0} max={1} step={0.05} value={prefs.volume} onChange={(e) => setPrefs({ volume: Number(e.target.value) })} aria-valuetext={`${Math.round(prefs.volume * 100)}%`} />
-          </label>
-          <button className="btn ghost small" type="button" onClick={() => { setPrefs({ audio: false }); stopAudio() }}>Continuar sin audio</button>
+        <fieldset className="audio-box">
+          <legend><Glyph name={prefs.audio ? 'volume' : 'mute'} size={16} /> Sonido opcional · {prefs.audio ? 'activado' : 'silenciado'}</legend>
+          <label className="choice"><input type="checkbox" checked={prefs.audio} disabled={!audioSupported()} onChange={(e) => { setAudioBlocked(false); setPrefs({ audio: e.target.checked }); if (e.target.checked) void playMotif('inicio', prefs.volume).then((ok) => { if (!ok) { setAudioBlocked(true); setPrefs({ audio: false }) } }); else stopAudio() }} data-testid="audio-toggle" /> Motivos sonoros sintéticos de 150–350 ms (no es voz). Desmarcado = silencio.</label>
+          <div className="field" style={{ margin: '4px 0 8px' }}>
+            <label htmlFor="vol">Volumen · {Math.round(prefs.volume * 100)}%</label>
+            <input id="vol" type="range" min={0} max={1} step={0.05} value={prefs.volume} onChange={(e) => setPrefs({ volume: Number(e.target.value) })} aria-valuetext={`${Math.round(prefs.volume * 100)}%`} />
+          </div>
+          <div className="row">
+            <button className="btn secondary small" type="button" onClick={() => stopAudio()} data-testid="audio-stop"><Glyph name="x" size={14} /> Detener sonido</button>
+            <button className="btn secondary small" type="button" onClick={() => { setPrefs({ audio: false }); stopAudio() }} data-testid="audio-off">Continuar sin audio</button>
+          </div>
           {audioBlocked && <p className="error-text" role="status">El navegador bloqueó el audio. Seguimos sin audio: la transcripción tiene todo.</p>}
           {!audioSupported() && <p className="muted small">Este navegador no ofrece Web Audio: la llamada funciona solo con transcripción.</p>}
         </fieldset>

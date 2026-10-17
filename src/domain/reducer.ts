@@ -4,6 +4,7 @@ import { cashHandlers } from './cmd-cash'
 import { commerceHandlers, type Handler } from './cmd-commerce'
 import { engageHandlers } from './cmd-engage'
 import { systemHandlers } from './cmd-system'
+import { giftHandlers } from './gifts'
 import { callHandlers } from './call'
 import { chatHandlers } from './chat'
 import { fail, nextId, type Ctx, type Outcome } from './core'
@@ -25,6 +26,7 @@ export const HANDLERS: Record<string, Handler> = {
   ...chatHandlers,
   ...callHandlers,
   ...systemHandlers,
+  ...giftHandlers,
 }
 
 /**

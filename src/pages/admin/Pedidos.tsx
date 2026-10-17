@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
-import { act, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { ORDER_LABEL } from '../../ui/format'
+import { orderCovered, orderDue } from '../../domain/sessions'
+import { act, Badge, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
+import { CHANNEL_LABEL, ORDER_LABEL } from '../../ui/format'
 import { OrderTimeline } from '../client/PedidoDetalle'
 import { fmtARS } from '../../domain/money'
 import { fmtDateTime, hhmm } from '../../domain/time'
@@ -60,11 +61,12 @@ export function AdminPedidos() {
           <h2>Platos</h2>
           {o.lines.map((l) => (
             <div className="line" key={l.id}>
-              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div></div>
+              <div><strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span><div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}{l.note ? ` · Nota: ${l.note}` : ''}</div>{l.giftId && <div className="gift-line">Invitación {state.gifts.find((g) => g.id === l.giftId)?.code} · cubre {fmtARS(l.coveredCents ?? 0)} (sin cobro)</div>}</div>
               <span className="money">{fmtARS(l.lineCents)}</span>
             </div>
           ))}
           <div className="total-row"><span>Total</span><span className="money">{fmtARS(o.totalCents)}</span></div>
+          {orderCovered(o) > 0 && <div className="total-row sub"><span>Cubierto por invitación · a cobrar {fmtARS(orderDue(o))}</span><span className="money">− {fmtARS(orderCovered(o))}</span></div>}
           <p className="small muted">{o.reviewed ? 'Editado con revisión. ' : ''}Operación {o.operationId} · correlación {o.correlationId} · versión {o.version}</p>
         </section>
         <div className="row" style={{ marginTop: 12 }}>
@@ -101,12 +103,15 @@ export function AdminPedidos() {
   return (
     <>
       <PageHead title="Pedidos" sub="Recepción acepta o rechaza; cocina y barra producen; el mozo sirve" />
-      <div className="field" style={{ maxWidth: 260 }}>
-        <label htmlFor="fst">Estado</label>
-        <select id="fst" value={status} onChange={(e) => setStatus(e.target.value as 'todos')}>
-          <option value="todos">Todos</option>
-          {(Object.keys(ORDER_LABEL) as OrderStatus[]).map((s) => <option key={s} value={s}>{ORDER_LABEL[s].label}</option>)}
-        </select>
+      <div className="filters" role="group" aria-label="Filtros de pedidos">
+        <div className="field" style={{ margin: 0, minWidth: 220 }}>
+          <label htmlFor="fst">Estado</label>
+          <select id="fst" value={status} onChange={(e) => setStatus(e.target.value as 'todos')}>
+            <option value="todos">Todos</option>
+            {(Object.keys(ORDER_LABEL) as OrderStatus[]).map((s) => <option key={s} value={s}>{ORDER_LABEL[s].label}</option>)}
+          </select>
+        </div>
+        <p className="small muted" style={{ margin: '0 0 0 auto', alignSelf: 'center' }}>{list.length} pedido(s)</p>
       </div>
       {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert">{msg.text}</Callout>}
       {list.length === 0 ? <Empty title="No hay pedidos con ese filtro">Cuando un cliente envíe un pedido, aparece acá con su folio.</Empty> : (
@@ -119,11 +124,11 @@ export function AdminPedidos() {
                 {list.map((x) => {
                   const ses = state.tableSessions.find((s) => s.id === x.sessionId)
                   return (
-                    <tr key={x.id} data-testid={`order-row-${x.id}`}>
+                    <tr key={x.id} data-testid={`order-row-${x.id}`} data-status={x.status}>
                       <td><Link to={`/admin/pedidos/${x.id}`}>{x.id}</Link></td>
                       <td>{x.kind === 'mesa' ? `Mesa ${ses?.tableIds.map((t) => state.tables.find((y) => y.id === t)?.label).join('+')}` : `Retiro ${x.pickup ? hhmm(x.pickup.startMin) : ''}`}</td>
-                      <td>{x.alias}</td><td>{x.channel}</td><td className="money">{fmtARS(x.totalCents)}</td>
-                      <td><StatusBadge s={ORDER_LABEL[x.status]} /></td>
+                      <td>{x.alias}</td><td>{CHANNEL_LABEL[x.channel] ?? x.channel}</td><td className="money">{fmtARS(x.totalCents)}</td>
+                      <td><StatusBadge s={ORDER_LABEL[x.status]} />{x.cancelRequested && <div style={{ marginTop: 4 }}><Badge tone="review" icon="⚑" label="Cancelación pendiente" /></div>}</td>
                       <td>{x.status === 'enviado' ? <button className="btn small" type="button" onClick={() => say(act({ type: 'order/accept', orderId: x.id }, `${x.id} aceptado`), 'Aceptado')} data-testid={`quick-accept-${x.id}`}>Aceptar</button> : <Link className="btn secondary small" to={`/admin/pedidos/${x.id}`}>Abrir</Link>}</td>
                     </tr>
                   )
@@ -133,9 +138,11 @@ export function AdminPedidos() {
           </div>
           <div className="cards-m">
             {list.map((x) => (
-              <div className="card" key={x.id}>
+              <div className="card mcard" key={x.id} data-status={x.status}>
                 <div className="row between"><Link to={`/admin/pedidos/${x.id}`}><strong>{x.id}</strong></Link><StatusBadge s={ORDER_LABEL[x.status]} /></div>
-                <p>{x.alias} · <span className="money">{fmtARS(x.totalCents)}</span></p>
+                <p style={{ margin: '6px 0 10px' }}>{x.alias} · {x.kind === 'mesa' ? 'mesa' : `retiro ${x.pickup ? hhmm(x.pickup.startMin) : ''}`} · <span className="money">{fmtARS(x.totalCents)}</span></p>
+                {x.cancelRequested && <p style={{ margin: '0 0 10px' }}><Badge tone="review" icon="⚑" label="Cancelación pendiente" /></p>}
+                {x.status === 'enviado' ? <button className="btn small" type="button" onClick={() => say(act({ type: 'order/accept', orderId: x.id }, `${x.id} aceptado`), 'Aceptado')} data-testid={`m-quick-accept-${x.id}`}>Aceptar {x.id}</button> : <Link className="btn secondary small" to={`/admin/pedidos/${x.id}`}>Abrir {x.id}</Link>}
               </div>
             ))}
           </div>

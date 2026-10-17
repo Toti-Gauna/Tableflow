@@ -4,6 +4,7 @@ import { useApp } from '../../store'
 import { useOperation } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Badge, Callout, ConfirmDialog, DemoTag, Empty, ErrorText, ReasonDialog } from '../../ui/kit'
+import { sedeShort } from '../../ui/format'
 import { billableLines, sessionBalance, sessionPaid, sessionTotal } from '../../domain/sessions'
 import { expectedCash, openCashFor } from '../../domain/cmd-cash'
 import { fmtARS, parseARSInput } from '../../domain/money'
@@ -51,9 +52,9 @@ export function AdminCaja() {
 
   return (
     <>
-      <PageHead title="Caja" sub={`${loc.name} · pagos DEMO: no se realiza ningún cargo ni hay validez fiscal`} />
+      <PageHead title="Caja" sub={`${sedeShort(loc.name)} · pagos DEMO: no se realiza ningún cargo ni hay validez fiscal`} />
       {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert" >{msg.text}</Callout>}
-      <div className="grid cols-2">
+      <div className="admin-grid">
         <section className="card" aria-labelledby="turno">
           <h2 id="turno">Turno de caja</h2>
           {!cash ? (
@@ -65,10 +66,10 @@ export function AdminCaja() {
           ) : (
             <div className="stack">
               <p><Badge tone="ok" icon="●" label="Caja abierta" /> {cash.id} desde {fmtDateTime(cash.openedAt)} · fondo <span className="money">{fmtARS(cash.openingFloatCents)}</span></p>
-              <dl className="small">
-                <dt>Ventas (pedidos entregados en el turno)</dt><dd className="money" data-testid="sales">{fmtARS(delivered)}</dd>
-                <dt>Cobros DEMO registrados</dt><dd className="money">{fmtARS(cashPay.reduce((a, p) => a + p.amountCents, 0))}</dd>
-                <dt>Efectivo esperado en caja</dt><dd className="money" data-testid="expected">{fmtARS(exp)}</dd>
+              <dl className="ledger">
+                <div><dt>Ventas (pedidos entregados en el turno)</dt><dd className="money" data-testid="sales">{fmtARS(delivered)}</dd></div>
+                <div><dt>Cobros DEMO registrados</dt><dd className="money">{fmtARS(cashPay.reduce((a, p) => a + p.amountCents, 0))}</dd></div>
+                <div className="em"><dt>Efectivo esperado en caja</dt><dd className="money" data-testid="expected">{fmtARS(exp)}</dd></div>
               </dl>
               <p className="small muted">Ventas, efectivo y diferencia no se confunden: las ventas vienen de los pedidos, el efectivo esperado de fondo + cobros en efectivo + movimientos.</p>
               <ul className="small">{cash.movements.map((m) => <li key={m.id}>{m.kind} · {fmtARS(m.amountCents)} · {m.reason}</li>)}</ul>
@@ -89,13 +90,22 @@ export function AdminCaja() {
         <section className="card" aria-labelledby="cuentas">
           <h2 id="cuentas">Cuentas abiertas ({sessions.length})</h2>
           {sessions.length === 0 ? <Empty title="Sin cuentas abiertas">Se abren al sentar una reserva, abrir una mesa o enviar un pedido de retiro.</Empty> : (
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {sessions.map((s) => (
-                <li key={s.id} className="line">
-                  <span><strong>{s.label}</strong><br /><span className="small">Total <span className="money">{fmtARS(sessionTotal(state, s.id))}</span> · pagado <span className="money">{fmtARS(sessionPaid(state, s.id))}</span> · saldo <strong className="money">{fmtARS(sessionBalance(state, s.id))}</strong></span></span>
-                  <button className="btn secondary small" type="button" aria-pressed={selId === s.id} onClick={() => { setSelId(s.id); setMsg(null); setLines([]); setAmount('') }} data-testid={`acct-${s.id}`}>Abrir</button>
-                </li>
-              ))}
+            <ul className="accounts">
+              {sessions.map((s) => {
+                const total = sessionTotal(state, s.id)
+                const paidC = sessionPaid(state, s.id)
+                return (
+                  <li key={s.id} data-sel={selId === s.id}>
+                    <span>
+                      <strong>{s.label}</strong>
+                      <span className="small muted"> · total <span className="money">{fmtARS(total)}</span> · pagado <span className="money">{fmtARS(paidC)}</span></span>
+                      <span className="bar" aria-hidden="true" style={{ marginTop: 6 }}><span style={{ width: `${total ? Math.min(100, (paidC / total) * 100) : 0}%`, background: 'var(--ok)' }} /></span>
+                    </span>
+                    <span className="bal"><span className="small muted">Saldo</span><strong className="money">{fmtARS(sessionBalance(state, s.id))}</strong></span>
+                    <button className="btn secondary small" type="button" aria-pressed={selId === s.id} onClick={() => { setSelId(s.id); setMsg(null); setLines([]); setAmount(''); setTimeout(() => document.getElementById('cuenta-h')?.focus(), 0) }} data-testid={`acct-${s.id}`}>Abrir<span className="sr-only"> cuenta {s.label}</span></button>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </section>
@@ -103,19 +113,23 @@ export function AdminCaja() {
 
       {sel && (
         <section className="card" style={{ marginTop: 14 }} aria-labelledby="cuenta-h" data-testid="account">
-          <h2 id="cuenta-h">Cuenta · {sel.label}</h2>
-          <div className="grid cols-2">
+          <h2 id="cuenta-h" tabIndex={-1}>Cuenta · {sel.label}</h2>
+          <div className="admin-grid">
             <div>
               <h3>Ítems</h3>
-              {billableLines(state, sel.id).map(({ order, line, paid }) => (
+              {billableLines(state, sel.id).map(({ order, line, paid, due }) => (
                 <label key={line.id} className="choice">
                   <input type="checkbox" disabled={paid} checked={lines.includes(line.id)} onChange={(e) => setLines((l) => (e.target.checked ? [...l, line.id] : l.filter((x) => x !== line.id)))} />
-                  <span className="grow">{line.qty}× {line.name} <span className="muted small">({order.id}{paid ? ' · pagado' : ''})</span></span>
-                  <span className="money">{fmtARS(line.lineCents)}</span>
+                  <span className="grow">
+                    {line.qty}× {line.name} <span className="muted small">({order.id}{paid ? (due === 0 && line.giftId ? ' · cubierto por invitación' : ' · pagado') : ''})</span>
+                    {line.giftId && due > 0 && <span className="gift-line"> Invitación cubre {fmtARS(line.coveredCents ?? 0)}</span>}
+                  </span>
+                  <span className="money">{fmtARS(due)}</span>
                 </label>
               ))}
               <div className="total-row"><span>Total</span><span className="money">{fmtARS(sessionTotal(state, sel.id))}</span></div>
-              <div className="total-row"><span>Saldo</span><span className="money" data-testid="balance">{fmtARS(sessionBalance(state, sel.id))}</span></div>
+              <div className="sub-row"><span>Pagado (DEMO)</span><span className="money">{fmtARS(sessionPaid(state, sel.id))}</span></div>
+              <div className="total-row balance-row" data-zero={sessionBalance(state, sel.id) === 0}><span>Saldo pendiente</span><span className="money" data-testid="balance">{fmtARS(sessionBalance(state, sel.id))}</span></div>
               <Link to="/admin/pedidos" className="small">Ver pedidos</Link>
             </div>
             <div className="stack">
@@ -126,17 +140,26 @@ export function AdminCaja() {
               <div className="stack tight">
                 <h3>Dividir en partes iguales</h3>
                 {sel.splitPlan ? (
-                  <ol data-testid="shares">
-                    {sel.splitPlan.shares.map((sh, i) => {
-                      const paid = payments.some((p) => p.shareIndex === i && p.status === 'registrado')
-                      return (
-                        <li key={i}>
-                          <span className="money">{fmtARS(sh)}</span> {i === sel.splitPlan!.n - 1 && sh !== sel.splitPlan!.shares[0] ? <Badge tone="info" label="incluye ajuste de centavo" /> : null}
-                          {paid ? <Badge tone="ok" icon="✓" label="pagada" /> : <button className="btn small" type="button" data-testid={`pay-share-${i}`} onClick={() => pay({ type: 'pay/register', sessionId: sel.id, operationId: `${getOp()}-s${i}`, amountCents: sh, method, shareIndex: i })}>Cobrar parte {i + 1}</button>}
-                        </li>
-                      )
-                    })}
-                  </ol>
+                  <>
+                    <p className="small muted" style={{ margin: 0 }}>
+                      {sel.splitPlan.n} partes de {fmtARS(sel.splitPlan.shares[0])}
+                      {sel.splitPlan.shares[sel.splitPlan.n - 1] !== sel.splitPlan.shares[0] && <> · el centavo de redondeo ({fmtARS(sel.splitPlan.shares[sel.splitPlan.n - 1] - sel.splitPlan.shares[0])}) va a la parte {sel.splitPlan.n}</>}
+                    </p>
+                    <ol className="split" data-testid="shares">
+                      {sel.splitPlan.shares.map((sh, i) => {
+                        const paid = payments.some((p) => p.shareIndex === i && p.status === 'registrado')
+                        const adj = i === sel.splitPlan!.n - 1 && sh !== sel.splitPlan!.shares[0]
+                        return (
+                          <li key={i} data-paid={paid}>
+                            <span className="part">Parte {i + 1}</span>
+                            <span className="money amt">{fmtARS(sh)}</span>
+                            {adj && <Badge tone="info" label="incluye ajuste de centavo" />}
+                            {paid ? <Badge tone="ok" icon="✓" label="pagada" /> : <button className="btn small" type="button" data-testid={`pay-share-${i}`} onClick={() => pay({ type: 'pay/register', sessionId: sel.id, operationId: `${getOp()}-s${i}`, amountCents: sh, method, shareIndex: i })}>Cobrar parte {i + 1}</button>}
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  </>
                 ) : (
                   <div className="row">
                     <input aria-label="Cantidad de partes" type="number" min={2} max={20} value={n} onChange={(e) => setN(Number(e.target.value))} data-testid="split-n" style={{ width: 90 }} />
@@ -147,7 +170,7 @@ export function AdminCaja() {
               <div className="stack tight">
                 <h3>Cobrar ítems elegidos o un monto parcial</h3>
                 <button className="btn secondary small" type="button" disabled={!lines.length} onClick={() => {
-                  const total = billableLines(state, sel.id).filter((x) => lines.includes(x.line.id)).reduce((a, x) => a + x.line.lineCents, 0)
+                  const total = billableLines(state, sel.id).filter((x) => lines.includes(x.line.id)).reduce((a, x) => a + x.due, 0)
                   pay({ type: 'pay/register', sessionId: sel.id, operationId: getOp(), amountCents: total, method, lineIds: lines })
                   setLines([])
                 }} data-testid="pay-items">Cobrar ítems seleccionados</button>
@@ -161,9 +184,9 @@ export function AdminCaja() {
           </div>
           <h3 style={{ marginTop: 12 }}>Comprobantes DEMO</h3>
           {payments.length === 0 ? <p className="muted">Sin pagos registrados.</p> : (
-            <ul className="small">
+            <ul className="receipts">
               {payments.map((p) => (
-                <li key={p.id} data-testid="receipt"><DemoTag>RECIBO DEMO</DemoTag> {p.receiptNo} · {p.method} · <strong className="money">{fmtARS(p.amountCents)}</strong>{p.adjustmentCents ? ` · ajuste de centavo +${fmtARS(p.adjustmentCents)}` : ''} · sin validez fiscal</li>
+                <li key={p.id} data-testid="receipt"><DemoTag>RECIBO DEMO</DemoTag> <span className="num">{p.receiptNo}</span> <span className="muted">{p.method}</span> <strong className="money">{fmtARS(p.amountCents)}</strong>{p.adjustmentCents ? <span className="small"> · ajuste de centavo +{fmtARS(p.adjustmentCents)}</span> : ''} <span className="small muted">· sin validez fiscal</span></li>
               ))}
             </ul>
           )}

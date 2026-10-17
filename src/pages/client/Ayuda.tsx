@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { ErrorText } from '../../ui/kit'
+import { Glyph } from '../../ui/glyphs'
 import { SimPanel } from './Simulador'
 import { normalize } from '../../domain/core'
 
@@ -22,7 +23,7 @@ export function Ayuda() {
   }
   return (
     <main>
-      <PageHead title="Ayuda" sub="Seguimiento por folio, preguntas frecuentes y simuladores" />
+      <PageHead title="Ayuda" eyebrow="Atención" sub="Seguimiento por folio, preguntas frecuentes y simuladores" />
       <div className="grid cols-2">
         <section className="card" aria-labelledby="seg">
           <h2 id="seg">Seguir un pedido o reserva</h2>
@@ -32,10 +33,10 @@ export function Ayuda() {
               <input id="folio" type="text" value={folio} onChange={(e) => setFolio(e.target.value)} aria-invalid={!!err} aria-describedby={err ? 'folio-err' : undefined} placeholder="O-013 o R-019" />
               <ErrorText id="folio-err">{err}</ErrorText>
             </div>
-            <button className="btn" type="submit">Buscar</button>
+            <button className="btn" type="submit"><Glyph name="search" size={16} /> Buscar</button>
           </form>
         </section>
-        <section className="card" aria-labelledby="faq">
+        <section className="card faq" aria-labelledby="faq">
           <h2 id="faq">Preguntas frecuentes</h2>
           <details><summary>¿Se envían mensajes o se cobra algo de verdad?</summary><p>No. Es una demo local: WhatsApp y llamada son simulaciones, los pagos son “DEMO” y los comprobantes no tienen validez fiscal.</p></details>
           <details><summary>¿Pueden garantizar que un plato no tiene alérgenos?</summary><p>No. Cada plato trae una anotación de muestra del negocio ficticio. Cualquier consulta alimentaria se deriva al equipo para revisión humana.</p></details>
@@ -43,7 +44,7 @@ export function Ayuda() {
           <details><summary>¿Dónde veo mi pedido?</summary><p>En <Link to={`/${biz.id}/pedido`}>Mi pedido</Link> o con el folio en este formulario.</p></details>
         </section>
       </div>
-      <h2 style={{ marginTop: 20 }}>Simuladores</h2>
+      <h2 style={{ marginTop: 40 }}>Simuladores</h2>
       <SimPanel biz={biz.id} guided={false} />
       <p><Link to={`/${biz.id}/simulador`}>Abrir la vista guiada con guion</Link></p>
     </main>

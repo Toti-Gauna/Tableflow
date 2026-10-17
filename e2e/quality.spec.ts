@@ -271,12 +271,14 @@ test.describe('Chat guionado por la UI (S27–S29)', () => {
 })
 
 test.describe('Accesibilidad automática (axe: no certifica conformidad)', () => {
-  const pages = ['/#/', '/#/mesa-clara', '/#/mesa-clara/carta', '/#/mesa-clara/pedido', '/#/mesa-clara/reservar', '/#/ritual-cafe/explorar', '/#/ritual-cafe/catas', '/#/mesa-clara/simulador', '/#/admin/resumen', '/#/admin/reservas', '/#/admin/salon', '/#/admin/pedidos', '/#/admin/cocina', '/#/admin/caja', '/#/admin/carta', '/#/admin/stock', '/#/admin/clientes', '/#/admin/automatizaciones', '/#/admin/reportes', '/#/admin/configuracion', '/#/comercial']
+  const pages = ['/#/', '/#/mesa-clara', '/#/mesa-clara/carta', '/#/mesa-clara/pedido', '/#/mesa-clara/reservar', '/#/ritual-cafe/explorar', '/#/ritual-cafe/catas', '/#/mesa-clara/simulador', '/#/admin/resumen', '/#/admin/reservas', '/#/admin/salon', '/#/admin/pedidos', '/#/admin/cocina', '/#/admin/caja', '/#/admin/carta', '/#/admin/stock', '/#/admin/clientes', '/#/admin/automatizaciones', '/#/admin/reportes', '/#/admin/configuracion', '/#/comercial', '/#/mesa-clara/regalar', '/#/ritual-cafe/chicos', '/#/admin/regalos', '/#/arte']
   test('sin violaciones serias o críticas en las pantallas principales', async ({ page }) => {
     await fresh(page, '/#/')
     const bad: string[] = []
     for (const p of pages) {
       await page.goto(p)
+      // con carga diferida, se analiza la pantalla ya montada (no el cargador)
+      await page.locator('#page-h1').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => undefined)
       await page.waitForTimeout(120)
       const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze()
       for (const v of r.violations.filter((x) => ['serious', 'critical'].includes(x.impact ?? ''))) bad.push(`${p}: ${v.id} (${v.nodes.length}) ${v.nodes[0]?.html.slice(0, 120)}`)

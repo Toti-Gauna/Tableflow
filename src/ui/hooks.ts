@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { dispatch, useApp } from '../store'
 import { cartTotal } from '../domain/cmd-commerce'
@@ -37,4 +37,14 @@ export function useOperation(fingerprint: string) {
     ref.current = { fp: fingerprint, op }
     return op
   }
+}
+
+/** En menús con scroll horizontal (móvil), centra el ítem activo sin mover la página. */
+export function useActiveInView(ref: { current: HTMLElement | null }, dep: unknown) {
+  useLayoutEffect(() => {
+    const nav = ref.current
+    const a = nav?.querySelector<HTMLElement>('[aria-current="page"], [aria-current="true"]')
+    if (!nav || !a || nav.scrollWidth <= nav.clientWidth) return
+    nav.scrollLeft = a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2
+  }, [ref, dep])
 }

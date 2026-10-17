@@ -113,3 +113,37 @@ export const PASSPORT_PICKS: Record<BusinessId, { id: string; label: string }[]>
 }
 
 export const STAMPS_FOR_BADGE = 5
+
+/** Orígenes de la semana en Ritual Café: notas de cata de MUESTRA (ficticias). */
+export const ORIGINS: { optionId: string; name: string; notes: string; process: string }[] = [
+  { optionId: 'or-huila', name: 'Colombia · Huila', notes: 'Panela, cacao y naranja', process: 'Lavado' },
+  { optionId: 'or-guji', name: 'Etiopía · Guji', notes: 'Jazmín, durazno y té negro', process: 'Natural' },
+  { optionId: 'or-cerrado', name: 'Brasil · Cerrado', notes: 'Nuez, caramelo y chocolate con leche', process: 'Semilavado' },
+]
+
+/** Pizarra del día de Mesa Clara (selección editorial de la carta de muestra). */
+export const BOARD_PICKS: Record<BusinessId, string[]> = {
+  'mesa-clara': ['MC-06', 'MC-12', 'MC-15', 'MC-22'],
+  'ritual-cafe': ['RC-07', 'RC-04', 'RC-09', 'RC-11'],
+}
+
+/** Sección para chicos: platos de la carta que suelen pedir (sin ítems nuevos ni precios inventados). */
+export const KIDS_MENU: Record<BusinessId, { itemId: string; note: string }[]> = {
+  'mesa-clara': [
+    { itemId: 'MC-12', note: 'Con papas fritas. La media porción se coordina con el equipo.' },
+    { itemId: 'MC-09', note: 'Con manteca o con salsa suave de tomate.' },
+    { itemId: 'MC-07', note: 'Ñoquis de papa, blanditos y fáciles de comer.' },
+    { itemId: 'MC-22', note: 'Flan con dulce de leche para compartir.' },
+  ],
+  'ritual-cafe': [
+    { itemId: 'RC-12', note: 'Muffin con arándanos, sin café.' },
+    { itemId: 'RC-11', note: 'Medialuna de manteca recién horneada.' },
+    { itemId: 'RC-14', note: 'Porción de budín de limón.' },
+    { itemId: 'RC-13', note: 'Tostado cortado en triángulos.' },
+  ],
+}
+/** Parejas del memotest: platos de cada carta. */
+export const MEMO_ITEMS: Record<BusinessId, string[]> = {
+  'mesa-clara': ['MC-12', 'MC-07', 'MC-22', 'MC-01', 'MC-04', 'MC-02'],
+  'ritual-cafe': ['RC-05', 'RC-11', 'RC-12', 'RC-14', 'RC-09', 'RC-13'],
+}

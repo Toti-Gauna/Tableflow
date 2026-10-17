@@ -16,7 +16,7 @@ function businesses(): BusinessProfile[] {
       name: 'Mesa Clara',
       kind: 'bodegon',
       tagline: 'Bodegón contemporáneo · comida de casa, mesa larga',
-      story: 'Negocio FICTICIO de la demo. Cocina casera de bodegón con técnica de hoy: pastas amasadas cada mañana, minutas y parrilla.',
+      story: 'Cocina casera de bodegón con técnica de hoy: pastas amasadas cada mañana, minutas y parrilla.',
       reservationsEnabled: true,
       autoConfirmReservations: false,
       serviceMinutes: 90,
@@ -37,7 +37,7 @@ function businesses(): BusinessProfile[] {
       name: 'Ritual Café',
       kind: 'cafe',
       tagline: 'Cafetería de especialidad · barra, métodos y mañanas lentas',
-      story: 'Negocio FICTICIO de la demo. Café de especialidad con notas de origen, métodos de filtrado y pastelería del día.',
+      story: 'Café de especialidad con notas de origen, métodos de filtrado y pastelería del día.',
       reservationsEnabled: false,
       autoConfirmReservations: false,
       serviceMinutes: 90,
@@ -197,6 +197,8 @@ export function baseState(fixtureId: FixtureId): AppState {
     redemptions: [],
     audit: [],
     campaignPreviews: [],
+    gifts: [],
+    settings: { seasonByBusiness: { 'mesa-clara': 'auto', 'ritual-cafe': 'auto' } },
   }
 }
 

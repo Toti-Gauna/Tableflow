@@ -1,10 +1,18 @@
-import type { OrderStatus, ReservationStatus, Role } from '../domain/types'
+import type { AppState, GiftStatus, OrderStatus, ReservationStatus, Role } from '../domain/types'
 
-export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral'
+export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral' | 'review'
 export interface Label {
   label: string
   tone: Tone
   icon: string
+}
+
+export const GIFT_LABEL: Record<GiftStatus, Label> = {
+  enviado: { label: 'Sin abrir', tone: 'info', icon: '✉' },
+  abierto: { label: 'Abierta · sin canjear', tone: 'warn', icon: '◔' },
+  canjeado: { label: 'Canjeada', tone: 'ok', icon: '✓' },
+  cancelado: { label: 'Cancelada', tone: 'err', icon: '✕' },
+  vencido: { label: 'Vencida', tone: 'neutral', icon: '⌛' },
 }
 
 export const RES_LABEL: Record<ReservationStatus, Label> = {
@@ -12,7 +20,7 @@ export const RES_LABEL: Record<ReservationStatus, Label> = {
   solicitada: { label: 'Solicitada', tone: 'warn', icon: '◔' },
   confirmada: { label: 'Confirmada', tone: 'ok', icon: '✓' },
   alternativa_ofrecida: { label: 'Alternativa ofrecida', tone: 'info', icon: '⇄' },
-  revision_humana: { label: 'Revisión humana', tone: 'warn', icon: '⚑' },
+  revision_humana: { label: 'Revisión humana', tone: 'review', icon: '⚑' },
   llegada: { label: 'Llegó', tone: 'info', icon: '➜' },
   sentada: { label: 'Sentada', tone: 'ok', icon: '◉' },
   completada: { label: 'Completada', tone: 'neutral', icon: '✔' },
@@ -43,6 +51,8 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const isClientRole = (r: Role) => r === 'cliente-invitado' || r === 'cliente-recurrente'
 
 export interface AdminSection {
+  /** Rótulo corto para la barra inferior móvil. */
+  short?: string
   key: string
   label: string
   roles: Role[]
@@ -52,14 +62,15 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { key: 'reservas', label: 'Reservas', roles: ['recepcion', 'encargado'] },
   { key: 'salon', label: 'Salón', roles: ['recepcion', 'mozo', 'encargado'] },
   { key: 'pedidos', label: 'Pedidos', roles: ['recepcion', 'mozo', 'caja', 'encargado'] },
-  { key: 'cocina', label: 'Cocina / barra', roles: ['cocina', 'encargado'] },
+  { key: 'cocina', label: 'Cocina / barra', short: 'Cocina', roles: ['cocina', 'encargado'] },
   { key: 'caja', label: 'Caja', roles: ['caja', 'encargado'] },
   { key: 'carta', label: 'Carta', roles: ['encargado'] },
   { key: 'stock', label: 'Stock', roles: ['cocina', 'encargado'] },
   { key: 'clientes', label: 'Clientes', roles: ['recepcion', 'encargado'] },
-  { key: 'automatizaciones', label: 'Automatizaciones', roles: ['encargado'] },
+  { key: 'regalos', label: 'Regalos', roles: ['recepcion', 'caja', 'encargado'] },
+  { key: 'automatizaciones', label: 'Automatizaciones', short: 'Reglas', roles: ['encargado'] },
   { key: 'reportes', label: 'Reportes', roles: ['encargado'] },
-  { key: 'configuracion', label: 'Configuración', roles: ['encargado'] },
+  { key: 'configuracion', label: 'Configuración', short: 'Ajustes', roles: ['encargado'] },
 ]
 export const DEFAULT_ADMIN: Record<Role, string> = {
   'cliente-invitado': 'resumen',
@@ -73,3 +84,36 @@ export const DEFAULT_ADMIN: Record<Role, string> = {
 
 export const CHANNEL_LABEL: Record<string, string> = { web: 'Web', whatsapp: 'WhatsApp (simulado)', voz: 'Llamada (simulada)', recepcion: 'Recepción' }
 export const BIZ_PATH = { 'mesa-clara': 'mesa-clara', 'ritual-cafe': 'ritual-cafe' } as const
+
+/** "Ritual Café · Centro" → "Centro": dentro del perfil, la marca ya está a la vista. */
+export const sedeShort = (name: string) => name.split(' · ').slice(1).join(' · ') || name
+
+/** Nombres humanos de las entidades para el lado profesional (nunca el tipo técnico en inglés). */
+export const ENTITY_LABEL: Record<string, string> = {
+  Reservation: 'Reserva', Order: 'Pedido', Ingredient: 'Insumo', Conversation: 'Conversación', CallSession: 'Llamada',
+  MenuItem: 'Plato', TableSession: 'Cuenta', EventBooking: 'Inscripción a cata', Visit: 'Visita', GiftInvite: 'Invitación', Clock: 'Reloj',
+}
+export const TASK_KIND_LABEL: Record<string, string> = {
+  alimentaria: 'Consulta alimentaria', 'grupo-grande': 'Grupo grande', 'fuera-de-alcance': 'Fuera de alcance', 'canal-desconocido': 'Canal desconocido',
+  'sin-consentimiento': 'Sin consentimiento', 'receta-unidad': 'Unidad de receta', stock: 'Stock', 'cancelacion-preparacion': 'Cancelación en preparación',
+  'incidencia-cocina': 'Incidencia de cocina', otro: 'Otro',
+}
+/** "Reserva R-012 · Ana, 4 personas", "Insumo I-07 · Leche de avena"… con enlace a su pantalla cuando existe. */
+export function entityRef(s: AppState, type: string, id: string): { text: string; to: string | null } {
+  const kind = ENTITY_LABEL[type] ?? type
+  if (type === 'Reservation') {
+    const r = s.reservations.find((x) => x.id === id)
+    return { text: `${kind} ${id}${r ? ` · ${r.alias}, ${r.party} persona${r.party === 1 ? '' : 's'}` : ''}`, to: `/admin/reservas/${id}` }
+  }
+  if (type === 'Order') return { text: `${kind} ${id}`, to: `/admin/pedidos/${id}` }
+  if (type === 'Ingredient') {
+    const i = s.ingredients.find((x) => x.id === id)
+    return { text: `${kind} ${id}${i ? ` · ${i.name}` : ''}`, to: '/admin/stock' }
+  }
+  if (type === 'MenuItem') {
+    const m = s.menuItems.find((x) => x.id === id)
+    return { text: `${kind} ${id}${m ? ` · ${m.name}` : ''}`, to: '/admin/carta' }
+  }
+  if (type === 'Conversation') return { text: `${kind} ${id}`, to: null }
+  return { text: `${kind} ${id}`, to: null }
+}

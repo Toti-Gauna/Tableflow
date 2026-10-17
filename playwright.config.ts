@@ -17,6 +17,11 @@ export default defineConfig({
     trace: 'off',
     launchOptions: { executablePath, args: ['--no-sandbox'] },
   },
+  projects: [
+    { name: 'chromium' },
+    // S44: los dos recorridos protagonistas se repiten con movimiento reducido y sin audio (preferencia por defecto)
+    { name: 'movimiento-reducido', testMatch: /journeys\.spec\.ts/, use: { reducedMotion: 'reduce' } },
+  ],
   webServer: {
     command: 'npx vite preview --port 4173 --strictPort --host 127.0.0.1',
     url: 'http://127.0.0.1:4173/',

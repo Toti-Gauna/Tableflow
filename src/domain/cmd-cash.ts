@@ -91,7 +91,7 @@ const payRegister: Handler = (s, c, ctx) => {
       const bl = lines.find((x) => x.line.id === id)
       if (!bl) return fail('linea-invalida', 'Una línea no pertenece a esta cuenta.')
       if (bl.paid) return fail('linea-ya-asignada', `“${bl.line.name}” ya fue asignado a otro pago.`)
-      sum += bl.line.lineCents
+      sum += bl.due
     }
     if (new Set(c.lineIds).size !== c.lineIds.length) return fail('linea-duplicada', 'Una línea está repetida en el pago.')
     if (sum !== c.amountCents) return fail('importe-no-coincide', `Los ítems elegidos suman ${(sum / 100).toFixed(2)}; el importe ingresado es distinto.`)

@@ -29,7 +29,7 @@ export function AdminAutomatizaciones() {
       <Callout>Todos los canales son simulados. Una ejecución por regla, versión, entidad y disparador: los reintentos reutilizan la misma ejecución y la misma clave de mensaje.</Callout>
       {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert">{msg.text}</Callout>}
       <p aria-live="polite"><strong data-testid="runs-pending">{pending}</strong> ejecución(es) fallida(s) o pendiente(s).</p>
-      <div className="grid cols-2">
+      <div className="admin-grid">
         {rules.map((r) => (
           <section className="card" key={r.id} aria-labelledby={`r-${r.id}`} data-testid={`rule-${r.code}`}>
             <div className="row between">

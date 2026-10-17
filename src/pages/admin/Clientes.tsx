@@ -31,7 +31,7 @@ export function AdminClientes() {
     const pass = state.passports.find((p) => p.customerId === c.id)
     return (
       <>
-        <PageHead title={`${c.displayName}`} sub={`${c.id} · ficha de cliente ficticio`} />
+        <PageHead title={`${c.displayName}`} sub={`${c.id} · ficha de cliente`} />
         <p><Link to="/admin/clientes">← Todos los clientes</Link></p>
         {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert">{msg.text}</Callout>}
         {dupOf && (
@@ -40,7 +40,7 @@ export function AdminClientes() {
             <div className="row" style={{ marginTop: 6 }}><button className="btn small" type="button" onClick={() => setMerge(true)} data-testid="merge-open">Unir con {dupOf.alias}…</button></div>
           </Callout>
         )}
-        <div className="grid cols-2">
+        <div className="admin-grid">
           <section className="card" aria-labelledby="cons">
             <h2 id="cons">Consentimientos (por separado)</h2>
             <label className="choice"><input type="checkbox" checked={c.consent.service} onChange={(e) => act({ type: 'cust/consent', customerId: c.id, service: e.target.checked }, 'Consentimiento de servicio actualizado')} data-testid="consent-service" /> Mensajes de servicio (confirmaciones, recordatorios, avisos de pedido)</label>

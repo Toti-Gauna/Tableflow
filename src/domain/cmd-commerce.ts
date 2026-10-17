@@ -6,6 +6,7 @@ import { activeSessionAt, openSession } from './sessions'
 import { locationOpenNow } from './availability'
 import { consumeForOrder, applyMovement, releaseForOrder, reserveForOrder } from './stock'
 import { dateKeyOf } from './time'
+import { checkGiftForCart, giftUsable, redeemGifts, restoreGifts } from './gifts'
 import type {
   AppState,
   Cart,
@@ -54,9 +55,17 @@ const cartAdd: Handler = (s, c, ctx) => {
   const selections: Record<string, string[]> = c.selections ?? {}
   const chk = checkLine(s, item, selections, qty)
   if (!chk.ok) return fail('seleccion-invalida', 'Revisá las opciones marcadas antes de agregar.', { errors: chk.errors })
+  let giftId: string | undefined
+  if (c.giftCode) {
+    // canje de una invitación: una unidad del plato regalado, en su propia línea
+    const g = checkGiftForCart(s, c.giftCode, c.businessId, item.id, ctx.now)
+    if (!g.ok) return g
+    if (qty !== 1) return fail('regalo-una-unidad', 'La invitación cubre una unidad. Si querés más, agregalas aparte desde la carta.')
+    giftId = g.data!.id
+  }
   const cart = getOrCreateCart(s, c.businessId, c.locationId)
   const note = (c.note ?? '').trim()
-  const same = cart.lines.find((l) => l.itemId === item.id && l.note === note && JSON.stringify(sortSel(l.selections)) === JSON.stringify(sortSel(selections)))
+  const same = giftId ? undefined : cart.lines.find((l) => !l.giftId && l.itemId === item.id && l.note === note && JSON.stringify(sortSel(l.selections)) === JSON.stringify(sortSel(selections)))
   if (same) {
     const total = same.qty + qty
     if (total > item.maxQty) return fail('cantidad-maxima', `Máximo ${item.maxQty} por pedido de este plato.`)
@@ -71,14 +80,17 @@ const cartAdd: Handler = (s, c, ctx) => {
       qty,
       note,
       unitCentsSeen: chk.unitCents,
+      ...(giftId ? { giftId } : {}),
     }
     cart.lines.push(line)
   }
   touchCart(cart, ctx)
-  // métrica local del pasaporte: uso de la selección guardada en el carrito
-  const pass = s.passports.find((p) => p.businessId === c.businessId && p.customerId === (s.session.customerByBusiness[c.businessId as Cart['businessId']] ?? null))
-  if (pass && pass.savedPreference === item.id) pass.metrics.usedInCart++
-  return ok({ cartId: cart.id, total: cartTotal(s, cart) })
+  // métrica local del pasaporte: "uso" = la selección guardada se agregó desde el pasaporte (no es una venta)
+  if (c.source === 'pasaporte') {
+    const pass = s.passports.find((p) => p.businessId === c.businessId && p.customerId === (s.session.customerByBusiness[c.businessId as Cart['businessId']] ?? null))
+    if (pass && pass.savedPreference === item.id) pass.metrics.usedInCart++
+  }
+  return ok({ cartId: cart.id, total: cartTotal(s, cart) }, giftId ? `${item.name} agregado: tu invitación cubre el plato base` : undefined)
 }
 const sortSel = (sel: Record<string, string[]>) => Object.keys(sel).sort().map((k) => [k, [...sel[k]].sort()])
 
@@ -87,8 +99,15 @@ export function cartTotal(s: AppState, cart: Cart): number {
     const item = byId(s.menuItems, l.itemId)
     if (!item) return a
     const chk = checkLine(s, item, l.selections, l.qty)
-    return a + chk.unitCents * l.qty
+    return a + chk.unitCents * l.qty - lineGiftCover(s, l, chk.unitCents)
   }, 0)
+}
+
+/** Importe que cubre la invitación en una línea: el precio base regalado, sin superar el unitario. */
+export function lineGiftCover(s: AppState, l: CartLine, unitCents: number): number {
+  if (!l.giftId) return 0
+  const g = byId(s.gifts, l.giftId)
+  return g ? Math.min(g.coveredCents, unitCents) : 0
 }
 
 const cartSetQty: Handler = (s, c, ctx) => {
@@ -98,6 +117,8 @@ const cartSetQty: Handler = (s, c, ctx) => {
   const item = byId(s.menuItems, line.itemId)!
   if (c.qty <= 0) {
     cart.lines = cart.lines.filter((l) => l.id !== line.id)
+  } else if (line.giftId && c.qty !== 1) {
+    return fail('regalo-una-unidad', 'La invitación cubre una unidad. Si querés más, agregalas aparte desde la carta.')
   } else {
     if (!Number.isInteger(c.qty) || c.qty > item.maxQty) return fail('cantidad-maxima', `La cantidad debe estar entre 1 y ${item.maxQty}.`)
     line.qty = c.qty
@@ -174,6 +195,10 @@ export function buildOrderLines(s: AppState, cart: Cart): Outcome<{ lines: Order
       continue
     }
     if (chk.unitCents !== l.unitCentsSeen) changes.push({ lineId: l.id, name: item.name, oldCents: l.unitCentsSeen, newCents: chk.unitCents })
+    if (l.giftId) {
+      const g = byId(s.gifts, l.giftId)
+      if (!g || !giftUsable(g, s.clock.nowMs)) return fail('regalo-invalido', `La invitación de ${item.name} ya no es válida (cancelada o vencida). Quitá esa línea para enviar.`, { lineId: l.id })
+    }
     lines.push({
       id: nextId(s, 'OL', 4),
       itemId: item.id,
@@ -184,6 +209,7 @@ export function buildOrderLines(s: AppState, cart: Cart): Outcome<{ lines: Order
       station: item.station,
       selections: chk.picked,
       note: l.note,
+      ...(l.giftId ? { giftId: l.giftId, coveredCents: lineGiftCover(s, l, chk.unitCents) } : {}),
     })
   }
   if (soldOut.length) {
@@ -290,6 +316,7 @@ const orderSubmit: Handler = (s, c, ctx) => {
   const ticket: KitchenTicket = { id: ticketId, ...base(s, cart.businessId), orderId, status: 'nuevo', startedAt: null, incident: null }
   s.orders.push(order)
   s.tickets.push(ticket)
+  redeemGifts(s, ctx, order)
   cart.lines = []
   cart.pendingOperationId = null
   cart.version++
@@ -368,6 +395,7 @@ const orderReject: Handler = (s, c, ctx) => {
   releaseForOrder(s, ctx, o, 'reject')
   o.status = 'rechazado'
   o.reason = reason
+  restoreGifts(s, ctx, o)
   o.version++
   setTicket(s, o, 'rechazado')
   audit(s, ctx, o.businessId, 'order.rejected', 'Order', o.id, `Pedido ${o.id} rechazado: ${reason}`)
@@ -424,6 +452,7 @@ const orderCancel: Handler = (s, c, ctx) => {
     releaseForOrder(s, ctx, o, 'cancel')
     o.status = 'cancelado'
     o.reason = reason
+    restoreGifts(s, ctx, o)
     o.reviewed = true
     o.version++
     setTicket(s, o, 'cancelado')
@@ -469,6 +498,7 @@ const orderResolveCancel: Handler = (s, c, ctx) => {
   } else {
     o.status = 'cancelado'
     o.reason = o.reason ?? 'Cancelado con pedido en preparación (decisión del encargado)'
+    restoreGifts(s, ctx, o)
     o.cancelRequested = false
     setTicket(s, o, 'cancelado')
     task.resolution = decision === 'cancelar-con-merma' ? 'Cancelado; consumo conservado como merma' : 'Cancelado; consumo conservado, sin merma'
@@ -545,6 +575,8 @@ const orderEdit: Handler = (s, c, ctx) => {
     next.push({ ...l, qty, lineCents: l.unitCents * qty })
   }
   if (!next.length) return fail('pedido-vacio', 'El pedido quedaría sin platos: cancelalo con un motivo.')
+  const removed = o.lines.filter((l) => !next.some((x) => x.id === l.id)).map((l) => l.id)
+  if (removed.length) restoreGifts(s, ctx, o, removed)
   const wasAccepted = o.status === 'aceptado'
   const prevLines = o.lines
   if (wasAccepted) releaseForOrder(s, ctx, o, `edit${o.version}`)

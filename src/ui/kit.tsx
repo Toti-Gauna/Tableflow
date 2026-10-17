@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { dispatch } from '../store'
 import type { Outcome } from '../domain/core'
 import type { Command } from '../domain/reducer'
@@ -29,8 +29,9 @@ export function LiveRegion() {
       setMsg('')
       setTimeout(() => setMsg(m), 20)
       const n = ++id.current
-      setToasts((t) => [...t.slice(-2), { id: n, msg: m, tone }])
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n)), 4500)
+      // un solo aviso visible a la vez: discreto, no tapa el contenido ni se apila
+      setToasts([{ id: n, msg: m, tone }])
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== n)), 3200)
     }
     listeners.add(l)
     return () => {
@@ -44,7 +45,7 @@ export function LiveRegion() {
       </div>
       <div className="toast-region" aria-hidden="true">
         {toasts.map((t) => (
-          <div key={t.id} className="toast fx">
+          <div key={t.id} className={`toast ${t.tone === 'err' ? 'err' : ''}`}>
             {t.msg}
           </div>
         ))}
@@ -69,16 +70,58 @@ export function DemoTag({ children = 'DEMO' }: { children?: ReactNode }) {
   return <span className="badge demo">{children}</span>
 }
 
-export function Empty({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+export function Empty({ title, children, action, art }: { title: string; children?: ReactNode; action?: ReactNode; art?: ReactNode }) {
   return (
-    <div className="empty" role="group" aria-label={title}>
+    <div className={`empty ${art ? 'has-art' : ''}`} role="group" aria-label={title}>
+      {art && <div className="empty-art">{art}</div>}
       <h3>{title}</h3>
       {children && <p className="muted">{children}</p>}
       {action}
     </div>
   )
 }
-export function Callout({ tone = 'info', children, role }: { tone?: 'info' | 'warn' | 'err' | 'ok'; children: ReactNode; role?: string }) {
+/** Acciones secundarias de una fila: un botón "⋯" que despliega la lista (Escape o clic afuera la cierra). */
+export function RowMenu({ label, children }: { label: string; children: ReactNode }) {
+  const [pos, setPos] = useState<CSSProperties | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const open = !!pos
+  // la lista se posiciona fija respecto del botón: no la recorta el contenedor con scroll de la tabla
+  const toggle = () => {
+    if (pos) return setPos(null)
+    const r = ref.current!.getBoundingClientRect()
+    const below = r.bottom + 230 < window.innerHeight
+    setPos({ position: 'fixed', right: Math.max(8, window.innerWidth - r.right), ...(below ? { top: r.bottom + 6 } : { bottom: window.innerHeight - r.top + 6 }) })
+  }
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setPos(null) }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setPos(null); ref.current?.querySelector('button')?.focus() } }
+    const onScroll = () => setPos(null)
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScroll, true)
+    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); window.removeEventListener('scroll', onScroll, true) }
+  }, [open])
+  return (
+    <div className="row-menu" ref={ref}>
+      <button type="button" className="icon-btn row-menu-btn" aria-expanded={open} aria-label={label} onClick={toggle}>
+        <span aria-hidden="true">⋯</span>
+      </button>
+      {pos && <div className="row-menu-list" style={pos} onClick={(e) => { if ((e.target as HTMLElement).closest('button, a')) setPos(null) }}>{children}</div>}
+    </div>
+  )
+}
+
+/** Nota de la capa de demo (no del producto): sello DEMO y borde punteado, siempre distinguible del contenido. */
+export function DemoHint({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`demo-hint ${className ?? ''}`}>
+      <span className="seal" aria-hidden="true">DEMO</span>
+      <span>{children}</span>
+    </p>
+  )
+}
+export function Callout({ tone = 'info', children, role }: { tone?: 'info' | 'warn' | 'err' | 'ok' | 'review'; children: ReactNode; role?: string }) {
   return (
     <div className={`callout ${tone === 'info' ? '' : tone}`} role={role ?? (tone === 'err' ? 'alert' : undefined)}>
       {children}
@@ -128,15 +171,21 @@ export function Dialog({
   title,
   children,
   testId,
+  titleId: ownTitleId,
+  className,
 }: {
   open: boolean
   onClose: () => void
   title: string
   children: ReactNode
   testId?: string
+  /** Si el contenido ya trae su propio título visible (con este id), el diálogo no agrega otro. */
+  titleId?: string
+  className?: string
 }) {
   const ref = useRef<HTMLDialogElement>(null)
-  const titleId = { current: useId() }
+  const autoId = useId()
+  const titleId = ownTitleId ?? autoId
   useEffect(() => {
     const d = ref.current
     if (!d) return
@@ -146,7 +195,8 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      aria-labelledby={titleId.current}
+      className={className}
+      aria-labelledby={titleId}
       data-testid={testId}
       onCancel={(e) => {
         e.preventDefault()
@@ -158,7 +208,7 @@ export function Dialog({
     >
       {open && (
         <div className="dialog-body">
-          <h2 id={titleId.current}>{title}</h2>
+          {!ownTitleId && <h2 id={titleId}>{title}</h2>}
           {children}
         </div>
       )}

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
+
+const MV_LABEL: Record<string, string> = { reserva: 'Reserva', liberacion: 'Liberación', consumo: 'Consumo', ajuste: 'Ajuste', reposicion: 'Reposición', merma: 'Merma' }
 import { act, Badge, Callout, ConfirmDialog, ErrorText } from '../../ui/kit'
 import { available, itemNeeds } from '../../domain/stock'
 import { fmtDateTime } from '../../domain/time'
@@ -57,7 +59,7 @@ export function AdminStock() {
           </table>
         </div>
       </section>
-      <div className="grid cols-2" style={{ marginTop: 14 }}>
+      <div className="admin-grid" style={{ marginTop: 14 }}>
         <section className="card" aria-labelledby="rec">
           <h2 id="rec">Recetas</h2>
           <p className="small muted">Los platos sin receta no controlan stock (alcance de muestra).</p>
@@ -87,14 +89,29 @@ export function AdminStock() {
         </section>
         <section className="card" aria-labelledby="movs">
           <h2 id="movs">Últimos movimientos</h2>
-          <ul className="small" style={{ paddingLeft: 16 }}>
-            {mvs.map((m) => (
-              <li key={m.id}>
-                {fmtDateTime(m.createdAt)} · <strong>{m.kind}</strong> · {state.ingredients.find((i) => i.id === m.ingredientId)?.name} · {m.deltaOnHand ? `stock ${m.deltaOnHand > 0 ? '+' : ''}${m.deltaOnHand}` : ''} {m.deltaReserved ? `reserva ${m.deltaReserved > 0 ? '+' : ''}${m.deltaReserved}` : ''}
-                <div className="muted">clave {m.eventKey}</div>
-                <button className="btn ghost small" type="button" onClick={() => { const o = act({ type: 'stock/replay', movementId: m.id }); setMsg({ tone: o.ok ? 'ok' : 'err', text: o.message ?? 'Evento repetido ignorado.' }) }}>Reintentar este evento</button>
-              </li>
-            ))}
+          <ul className="mv-log">
+            {mvs.map((m) => {
+              const ing = state.ingredients.find((i) => i.id === m.ingredientId)
+              return (
+                <li key={m.id}>
+                  <span className={`mv-kind ${m.kind}`}>{MV_LABEL[m.kind] ?? m.kind}</span>
+                  <span className="mv-main">
+                    <strong>{ing?.name ?? m.ingredientId}</strong>
+                    <span className="small muted">
+                      {fmtDateTime(m.createdAt)}
+                      {m.deltaOnHand ? ` · stock ${m.deltaOnHand > 0 ? '+' : ''}${m.deltaOnHand} ${ing?.unit ?? ''}` : ''}
+                      {m.deltaReserved ? ` · reservado ${m.deltaReserved > 0 ? '+' : ''}${m.deltaReserved} ${ing?.unit ?? ''}` : ''}
+                      {m.orderId ? ` · pedido ${m.orderId}` : ''}
+                    </span>
+                  </span>
+                  <details className="tech">
+                    <summary>Detalle técnico</summary>
+                    <span className="small muted">Clave de idempotencia {m.eventKey}</span>
+                    <button className="btn ghost small" type="button" onClick={() => { const o = act({ type: 'stock/replay', movementId: m.id }); setMsg({ tone: o.ok ? 'ok' : 'err', text: o.message ?? 'Evento repetido ignorado.' }) }}>Reintentar este evento</button>
+                  </details>
+                </li>
+              )
+            })}
           </ul>
         </section>
       </div>

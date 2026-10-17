@@ -1,12 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Empty } from '../ui/kit'
 import { PageHead } from '../ui/Shell'
+import { HouseChar } from '../ui/art/characters'
 
 export function NotFound({ what = 'página', back = '/', backLabel = 'Volver al inicio' }: { what?: string; back?: string; backLabel?: string }) {
+  const { pathname } = useLocation()
+  const biz = pathname.startsWith('/ritual-cafe') ? 'ritual-cafe' : 'mesa-clara'
   return (
-    <main className="wrap">
+    <main className="wrap notfound">
       <PageHead title={`No encontramos esa ${what}`} />
-      <Empty title="Este enlace no lleva a ningún registro" action={<Link className="btn" to={back}>{backLabel}</Link>}>
+      <Empty title="Este enlace no lleva a ningún registro" art={<HouseChar biz={biz} mood="pensando" size={132} />} action={<Link className="btn" to={back}>{backLabel}</Link>}>
         El identificador puede ser de otro perfil, de un seed anterior o estar mal escrito. No se creó ni modificó nada.
       </Empty>
     </main>
