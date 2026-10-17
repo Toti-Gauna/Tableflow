@@ -6,10 +6,12 @@ import { act, Badge, Callout, Empty, ErrorText } from '../../ui/kit'
 import { ORDER_LABEL } from '../../ui/format'
 import { StatusBadge } from '../../ui/kit'
 import { checkLine } from '../../domain/menu'
-import { pickupSlots } from '../../domain/pickup'
+import { pickupCount, pickupSlots } from '../../domain/pickup'
+import { Glyph } from '../../ui/glyphs'
+import { sedeShort } from '../../ui/format'
 import { activeSessionAt } from '../../domain/sessions'
 import { fmtARS } from '../../domain/money'
-import { hhmm, minutesOfDay, parseHHMM } from '../../domain/time'
+import { dateKeyOf, hhmm, minutesOfDay, parseHHMM } from '../../domain/time'
 import { dispatch } from '../../store'
 import type { Outcome } from '../../domain/core'
 
@@ -73,7 +75,7 @@ export function MiPedido() {
 
   return (
     <main>
-      <PageHead title="Mi pedido" sub={`${loc.name} · no se cobra nada en la demo`} />
+      <PageHead title="Mi pedido" sub={`${sedeShort(loc.name)} · no se cobra nada en la demo`} />
       {!cart || cart.lines.length === 0 ? (
         <Empty
           title="Tu pedido está vacío"
@@ -87,25 +89,28 @@ export function MiPedido() {
           Agregá al menos un plato para poder enviarlo. Mientras no haya pedido, no se genera ningún folio.
         </Empty>
       ) : (
-        <div className="grid cols-2">
-          <section className="card" aria-labelledby="lineas">
-            <h2 id="lineas">Platos</h2>
+        <div className="checkout">
+          <section className="ticket-paper receipt" aria-labelledby="lineas">
+            <p className="eyebrow">{biz.name} · {sedeShort(loc.name)}</p>
+            <h2 id="lineas">Tu pedido</h2>
             {cart.lines.map((l) => {
               const it = state.menuItems.find((m) => m.id === l.itemId)!
               const chk = checkLine(state, it, l.selections, l.qty)
               const out = soldOut.find((x) => x.lineId === l.id)
               return (
-                <div className="line" key={l.id}>
+                <div className="line fx-cart" key={`${l.id}-${l.qty}`}>
                   <div>
                     <strong>{it.name}</strong>
                     <div className="opts">{chk.picked.map((p) => p.optionName).join(' · ') || 'Sin opciones'}</div>
                     {l.note && <div className="opts">Nota: {l.note}</div>}
                     {out && <ErrorText>{out.reason}. Quitalo o elegí otra opción.</ErrorText>}
-                    <div className="qty" role="group" aria-label={`Cantidad de ${it.name}`}>
-                      <button type="button" aria-label={`Menos ${it.name}`} onClick={() => dispatch({ type: 'cart/setQty', cartId: cart.id, lineId: l.id, qty: l.qty - 1 })}>−</button>
-                      <output>{l.qty}</output>
-                      <button type="button" aria-label={`Más ${it.name}`} onClick={() => { const o = dispatch({ type: 'cart/setQty', cartId: cart.id, lineId: l.id, qty: l.qty + 1 }); if (!o.ok) setErr(o) }}>+</button>
-                      <button type="button" className="btn ghost small" onClick={() => act({ type: 'cart/remove', cartId: cart.id, lineId: l.id }, `${it.name} quitado`)}>Quitar</button>
+                    <div className="line-qty">
+                      <div className="qty" role="group" aria-label={`Cantidad de ${it.name}`}>
+                        <button type="button" aria-label={`Menos ${it.name}`} onClick={() => dispatch({ type: 'cart/setQty', cartId: cart.id, lineId: l.id, qty: l.qty - 1 })}><Glyph name="minus" size={16} /></button>
+                        <output>{l.qty}</output>
+                        <button type="button" aria-label={`Más ${it.name}`} onClick={() => { const o = dispatch({ type: 'cart/setQty', cartId: cart.id, lineId: l.id, qty: l.qty + 1 }); if (!o.ok) setErr(o) }}><Glyph name="plus" size={16} /></button>
+                      </div>
+                      <button type="button" className="btn ghost small" onClick={() => act({ type: 'cart/remove', cartId: cart.id, lineId: l.id }, `${it.name} quitado`)}>Quitar<span className="sr-only"> {it.name}</span></button>
                     </div>
                   </div>
                   <span className="money">{fmtARS(chk.unitCents * l.qty)}</span>
@@ -113,15 +118,15 @@ export function MiPedido() {
               )
             })}
             <div className="total-row"><span>Total</span><span className="money" data-testid="cart-total">{fmtARS(total)}</span></div>
-            <p className="small muted">El resumen es el mismo que verá la cocina en la comanda.</p>
+            <p className="small muted" style={{ marginTop: 10 }}>El resumen es el mismo que verá la cocina en la comanda.</p>
           </section>
 
           <section className="card" aria-labelledby="entrega">
             <h2 id="entrega">¿Cómo lo recibís?</h2>
             {canMesa && canRetiro && (
-              <div className="row" role="radiogroup" aria-label="Modo de entrega">
-                <label className="choice"><input type="radio" name="kind" checked={f.kind === 'mesa'} onChange={() => setKind('mesa')} /> En mi mesa</label>
-                <label className="choice"><input type="radio" name="kind" checked={f.kind === 'retiro'} onChange={() => setKind('retiro')} /> Retiro en barra</label>
+              <div className="segmented" role="radiogroup" aria-label="Modo de entrega" style={{ marginBottom: 14 }}>
+                <label><input type="radio" name="kind" checked={f.kind === 'mesa'} onChange={() => setKind('mesa')} /> <Glyph name="floor" size={16} /> En mi mesa</label>
+                <label><input type="radio" name="kind" checked={f.kind === 'retiro'} onChange={() => setKind('retiro')} /> <Glyph name="cup" size={16} /> Retiro en barra</label>
               </div>
             )}
             {f.kind === 'mesa' ? (
@@ -158,14 +163,18 @@ export function MiPedido() {
                   <span className="hint" id="hora-hint">Franjas de 15 minutos. Hora actual simulada: {hhmm(minutesOfDay(state.clock.nowMs))}.</span>
                 </div>
                 <div>
-                  <p className="label small muted" style={{ margin: 0 }}>Próximas franjas con lugar</p>
+                  <p className="eyebrow" style={{ margin: '0 0 6px' }}>Próximas franjas con lugar</p>
                   {slots.length ? (
                     <div className="slot-grid">
-                      {slots.map((m) => (
-                        <button type="button" key={m} aria-pressed={f.kind === 'retiro' && f.startMin === m} onClick={() => { setTimeInput(hhmm(m)); setFulfillment({ fulfillment: { kind: 'retiro', startMin: m } }) }}>
-                          {hhmm(m)}
-                        </button>
-                      ))}
+                      {slots.map((m) => {
+                        const free = biz.pickupPerSlot - pickupCount(state, locationId, dateKeyOf(state.clock.nowMs), m)
+                        return (
+                          <button type="button" key={m} aria-pressed={f.kind === 'retiro' && f.startMin === m} onClick={() => { setTimeInput(hhmm(m)); setFulfillment({ fulfillment: { kind: 'retiro', startMin: m } }) }}>
+                            {hhmm(m)}
+                            <small>{free} {free === 1 ? 'lugar' : 'lugares'}</small>
+                          </button>
+                        )
+                      })}
                     </div>
                   ) : (
                     <p className="muted">No quedan franjas de retiro hoy en el día simulado.</p>
@@ -178,8 +187,9 @@ export function MiPedido() {
                 </div>
               </div>
             )}
-            <button className="btn accent" style={{ width: '100%', marginTop: 8 }} type="button" onClick={send} data-testid="send-order">
-              Enviar pedido
+            <button className="btn accent lg" style={{ width: '100%', marginTop: 8, justifyContent: 'space-between' }} type="button" onClick={send} data-testid="send-order">
+              <span>Enviar pedido</span>
+              <span className="money">{fmtARS(total)}</span>
             </button>
             <p className="small muted">Se envía a recepción y cocina: “Solicitud recibida; el equipo todavía debe aceptarla”. Pago simulado: no se realiza ningún cargo.</p>
           </section>
@@ -242,15 +252,18 @@ export function MiPedido() {
         </div>
       )}
 
-      <section className="card" style={{ marginTop: 18 }} aria-labelledby="recientes">
-        <h2 id="recientes">Pedidos recientes de este perfil (demo)</h2>
+      <section className="home-sec" style={{ marginTop: 40 }} aria-labelledby="recientes">
+        <p className="eyebrow">Historial local de la demo</p>
+        <h2 id="recientes">Pedidos recientes de este perfil</h2>
         {myOrders.length === 0 ? (
           <p className="muted">Todavía no hay pedidos.</p>
         ) : (
-          <ul style={{ paddingLeft: 0, listStyle: 'none' }}>
+          <ul className="order-list">
             {myOrders.map((o) => (
-              <li key={o.id} className="line">
-                <span><Link to={`/${biz.id}/pedido/${o.id}`}>{o.id}</Link> · {o.alias} · <span className="money">{fmtARS(o.totalCents)}</span></span>
+              <li key={o.id}>
+                <Link to={`/${biz.id}/pedido/${o.id}`} className="folio-link">{o.id}</Link>
+                <span className="muted">{o.alias} · {o.kind === 'mesa' ? 'mesa' : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''}`}</span>
+                <span className="money">{fmtARS(o.totalCents)}</span>
                 <StatusBadge s={ORDER_LABEL[o.status]} />
               </li>
             ))}

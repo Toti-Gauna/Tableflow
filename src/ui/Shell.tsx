@@ -224,15 +224,16 @@ export function Footer() {
   )
 }
 
-export function PageHead({ title, children, sub }: { title: string; children?: ReactNode; sub?: ReactNode }) {
+export function PageHead({ title, children, sub, eyebrow, heading, className }: { title: string; children?: ReactNode; sub?: ReactNode; eyebrow?: ReactNode; heading?: ReactNode; className?: string }) {
   useEffect(() => {
     document.title = `${title} · TableFlow demo`
   }, [title])
   return (
-    <div className="page-title">
+    <div className={`page-title ${className ?? ''}`}>
       <div>
-        <h1 tabIndex={-1} id="page-h1">{title}</h1>
-        {sub && <p className="muted" style={{ margin: 0 }}>{sub}</p>}
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h1 tabIndex={-1} id="page-h1">{heading ?? title}</h1>
+        {sub && <p className="sub">{sub}</p>}
       </div>
       {children && <div className="row">{children}</div>}
     </div>

@@ -1,100 +1,240 @@
 import { Link } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
-import { act, Badge, Callout } from '../../ui/kit'
+import { act, Callout } from '../../ui/kit'
+import { Glyph, glyphFor } from '../../ui/glyphs'
+import { fmtMenu } from '../../ui/food'
 import { windowsFor, locationOpenNow } from '../../domain/availability'
-import { dateKeyOf, hhmm, minutesOfDay } from '../../domain/time'
+import { itemUnavailable } from '../../domain/menu'
+import { pickupCount } from '../../domain/pickup'
+import { dateKeyOf, fmtDateShort, hhmm, minutesOfDay } from '../../domain/time'
 import { eventSeats } from '../../domain/cmd-engage'
-import { fmtDateShort } from '../../domain/time'
+import { BOARD_PICKS, ORIGINS } from '../../domain/content'
+import type { AppState, BusinessProfile, ServiceWindow } from '../../domain/types'
+
+const DAY_FROM = 8 * 60
+const DAY_TO = 24 * 60
+const pct = (m: number) => `${((Math.min(DAY_TO, Math.max(DAY_FROM, m)) - DAY_FROM) / (DAY_TO - DAY_FROM)) * 100}%`
+
+/** Línea del día con las franjas de servicio y la hora simulada. */
+function Rhythm({ wins, nowMin }: { wins: ServiceWindow[]; nowMin: number }) {
+  return (
+    <div>
+      <div className="rhythm" role="img" aria-label={`Servicio de hoy: ${wins.map((w) => `${w.label} de ${hhmm(w.startMin)} a ${hhmm(w.endMin)}`).join('; ')}. Hora simulada ${hhmm(nowMin)}.`}>
+        {wins.map((w) => (
+          <span key={w.id} className="band" style={{ left: pct(w.startMin), width: `calc(${pct(w.endMin)} - ${pct(w.startMin)})` }}>
+            {w.label === 'Día completo' ? 'Barra' : w.label}
+          </span>
+        ))}
+        <span className="now" style={{ left: pct(nowMin) }} data-label={`Ahora ${hhmm(nowMin)}`} />
+      </div>
+      <div className="ticks" aria-hidden="true">
+        {[8, 12, 16, 20, 24].map((h) => <span key={h}>{String(h % 24).padStart(2, '0')}:00</span>)}
+      </div>
+    </div>
+  )
+}
+
+/** Mesa Clara: pizarra del día con la selección editorial y su estado real. */
+function DayBoard({ state, biz, locationId }: { state: AppState; biz: BusinessProfile; locationId: string }) {
+  const items = BOARD_PICKS[biz.id].map((id) => state.menuItems.find((m) => m.id === id)).filter((m) => !!m)
+  return (
+    <aside className="board fx-scene" aria-labelledby="pizarra">
+      <p className="eyebrow">Hoy en el salón</p>
+      <h2 id="pizarra">Pizarra del día</h2>
+      <ul>
+        {items.map((i) => {
+          const un = itemUnavailable(state, i, locationId)
+          return (
+            <li key={i.id}>
+              <Link to={`/${biz.id}/carta/${i.id}`} className="pick">{i.name}</Link>
+              <span className="leader" aria-hidden="true" />
+              <span className="price">{un ? <span className="off">{un === 'fuera-de-franja' ? 'fuera de franja' : 'agotado'}</span> : fmtMenu(i.priceCents)}</span>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="foot">Precios ficticios de muestra · <Link to={`/${biz.id}/carta`}>carta completa</Link></p>
+    </aside>
+  )
+}
+
+/** Ritual Café: ocupación de retiros por franja de 15 min, desde la hora simulada. */
+function BarRhythm({ state, biz, locationId }: { state: AppState; biz: BusinessProfile; locationId: string }) {
+  const today = dateKeyOf(state.clock.nowMs)
+  const nowMin = minutesOfDay(state.clock.nowMs)
+  const cap = biz.pickupPerSlot
+  const w = windowsFor(state, locationId, today)[0]
+  const start = Math.max(w?.startMin ?? DAY_FROM, Math.floor(nowMin / 15) * 15)
+  const slots = w ? Array.from({ length: 8 }, (_, i) => start + i * 15).filter((m) => m + 15 <= w.endMin) : []
+  return (
+    <aside className="board fx-scene" aria-labelledby="ritmo">
+      <p className="eyebrow">Retiro por franja · cupo {cap} por franja</p>
+      <h2 id="ritmo">Ritmo de la barra</h2>
+      {slots.length === 0 ? (
+        <p>La barra ya cerró en el día simulado. Mañana abre a las {w ? hhmm(w.startMin) : '08:00'}.</p>
+      ) : (
+        <>
+          <div className="slot-meter" aria-hidden="true">
+            {slots.map((m) => {
+              const n = pickupCount(state, locationId, today, m)
+              return (
+                <div className="col" key={m}>
+                  <div className="bar-v" style={{ height: '100%' }}>
+                    <span style={{ height: `${Math.min(100, (n / cap) * 100)}%` }} />
+                  </div>
+                  <span className="lbl">{hhmm(m)}</span>
+                </div>
+              )
+            })}
+          </div>
+          <ul className="sr-only">
+            {slots.map((m) => <li key={m}>{hhmm(m)}: {pickupCount(state, locationId, today, m)} de {cap} retiros</li>)}
+          </ul>
+        </>
+      )}
+      <p className="foot">Datos del estado local de la demo · <Link to={`/${biz.id}/pedido`}>pedir para retirar</Link></p>
+    </aside>
+  )
+}
 
 export function Home() {
   const { state, biz, locationId } = useBiz()
   const today = dateKeyOf(state.clock.nowMs)
-  const wins = windowsFor(state, locationId, today)
+  const wins = windowsFor(state, locationId, today).sort((a, b) => a.startMin - b.startMin)
   const open = locationOpenNow(state, locationId)
   const events = state.tastingEvents.filter((e) => e.businessId === biz.id && e.status === 'abierta')
   const isRest = biz.kind === 'bodegon'
   const nowMin = minutesOfDay(state.clock.nowMs)
   const nextOpen = wins.find((w) => w.startMin > nowMin)
+  const methods = state.menuItems.filter((m) => m.businessId === biz.id && m.category === 'Métodos')
   return (
     <main>
-      <PageHead title={biz.name} sub={biz.tagline} />
       <section className="hero">
-        <p className="lead">{biz.story}</p>
-        <div className="row">
-          <Link className="btn" to={`/${biz.id}/carta`}>Ver la carta</Link>
-          {biz.reservationsEnabled ? (
-            <Link className="btn accent" to={`/${biz.id}/reservar`}>Reservar una mesa</Link>
-          ) : (
-            <Badge tone="info" label="Atendemos por orden de llegada" icon="➜" />
+        <div className="fx-scene">
+          <PageHead
+            title={biz.name}
+            eyebrow={isRest ? 'Bodegón contemporáneo · negocio ficticio' : 'Café de especialidad · negocio ficticio'}
+            heading={isRest ? <>Comida de casa, <em>mesa larga.</em></> : <>Café de origen, <em>mañanas lentas.</em></>}
+          />
+          <p className="lead">{biz.story}</p>
+          <div className="row" style={{ marginTop: 20 }}>
+            <Link className="btn lg" to={`/${biz.id}/carta`}>Ver la carta <Glyph name="arrow" size={18} /></Link>
+            {biz.reservationsEnabled ? (
+              <Link className="btn lg accent" to={`/${biz.id}/reservar`}>Reservar una mesa</Link>
+            ) : (
+              <Link className="btn lg secondary" to={`/${biz.id}/explorar`}>Explorar sabores</Link>
+            )}
+          </div>
+          {!biz.reservationsEnabled && (
+            <div style={{ marginTop: 16 }}>
+              <Callout>
+                En este perfil atendemos por orden de llegada: no tomamos reservas. La carta está disponible y podés {biz.kind === 'cafe' ? 'pedir para retirar por franja' : 'pedir en tu mesa'}.
+              </Callout>
+            </div>
           )}
-          <Link className="btn secondary" to={`/${biz.id}/explorar`}>Explorar sabores</Link>
         </div>
-        {!biz.reservationsEnabled && (
-          <Callout>
-            En este perfil atendemos por orden de llegada: no tomamos reservas. La carta está disponible y podés {biz.kind === 'cafe' ? 'pedir para retirar por franja' : 'pedir en tu mesa'}.
-          </Callout>
+        {isRest ? <DayBoard state={state} biz={biz} locationId={locationId} /> : <BarRhythm state={state} biz={biz} locationId={locationId} />}
+      </section>
+
+      <section className="day-strip" aria-labelledby="hoy">
+        <div className="row between" style={{ alignItems: 'baseline' }}>
+          <h2 id="hoy">Hoy, {fmtDateShort(today)}</h2>
+          <p className="small" style={{ margin: 0 }}>
+            <span className={`state-dot ${open ? 'on' : ''}`} aria-hidden="true" />
+            {open ? 'Abierto ahora' : nextOpen ? `Cerrado · abre a las ${hhmm(nextOpen.startMin)}` : 'Cerrado por hoy'} <span className="muted">(reloj simulado {hhmm(nowMin)})</span>
+          </p>
+        </div>
+        {wins.length ? <Rhythm wins={wins} nowMin={nowMin} /> : <p className="muted">Hoy no hay servicio.</p>}
+        {!open && isRest && nextOpen && (
+          <button className="btn secondary small" style={{ marginTop: 12 }} type="button" onClick={() => act({ type: 'clock/jump', minutes: nextOpen.startMin }, `Reloj en ${hhmm(nextOpen.startMin)}`)}>
+            <Glyph name="clock" size={16} /> Ir a las {hhmm(nextOpen.startMin)}
+          </button>
         )}
       </section>
 
-      <div className="grid cols-2" style={{ marginTop: 18 }}>
-        <section className="card" aria-labelledby="hoy">
-          <h2 id="hoy">Hoy · {fmtDateShort(today)}</h2>
-          <p>
-            {open ? <Badge tone="ok" label="Abierto ahora" icon="●" /> : <Badge tone="warn" label="Cerrado en este momento" icon="○" />}{' '}
-            <span className="muted small">(según el reloj simulado, {hhmm(nowMin)})</span>
-          </p>
-          <ul>
-            {wins.length ? wins.map((w) => <li key={w.id}>{w.label}: {hhmm(w.startMin)}–{hhmm(w.endMin)}</li>) : <li>Hoy no hay servicio.</li>}
-          </ul>
-          {!open && nextOpen && <p className="muted">Abre a las {hhmm(nextOpen.startMin)}. Usá el reloj de la demo para saltar a esa hora.</p>}
-          {!open && isRest && (
-            <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>
-              Ir a las 12:00
-            </button>
-          )}
-        </section>
+      {!isRest && (
+        <>
+          <section aria-labelledby="metodos" className="home-sec">
+            <p className="eyebrow">En la barra</p>
+            <h2 id="metodos">Métodos de la casa</h2>
+            <div className="methods">
+              {methods.map((m) => (
+                <Link key={m.id} to={`/${biz.id}/carta/${m.id}`} className="method">
+                  <Glyph name={glyphFor(m)} size={40} />
+                  <span>
+                    <strong>{m.name}</strong>
+                    <span className="muted small">{m.description}</span>
+                    <span className="small"> · desde {fmtMenu(m.priceCents)}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <section aria-labelledby="origenes" className="home-sec">
+            <p className="eyebrow">Notas de cata de muestra</p>
+            <h2 id="origenes">Orígenes de la semana</h2>
+            <ol className="origins">
+              {ORIGINS.map((o, i) => (
+                <li key={o.optionId}>
+                  <span className="num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <span>
+                    <strong>{o.name}</strong>
+                    <span className="muted">{o.notes} · {o.process}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
+      )}
+
+      <div className="grid cols-2 home-sec">
         <section className="card" aria-labelledby="catas">
+          <p className="eyebrow">Con cupo y lista de espera</p>
           <h2 id="catas">Próximas catas</h2>
           {events.length === 0 ? (
             <p className="muted">No hay catas programadas.</p>
           ) : (
-            <ul>
+            <ul className="plain-list">
               {events.map((e) => {
                 const { free } = eventSeats(state, e)
                 return (
                   <li key={e.id}>
-                    <Link to={`/${biz.id}/catas`}>{e.title}</Link> · {fmtDateShort(e.dateKey)} {hhmm(e.startMin)} · {free > 0 ? `${free} lugar(es)` : 'cupo completo'}
+                    <Link to={`/${biz.id}/catas`}>{e.title}</Link>
+                    <span className="muted small"> · {fmtDateShort(e.dateKey)} {hhmm(e.startMin)} · {free > 0 ? `${free} lugar(es)` : 'cupo completo: lista de espera'}</span>
                   </li>
                 )
               })}
             </ul>
           )}
         </section>
+        <section className="card" aria-labelledby="tour">
+          <p className="eyebrow">60–90 segundos</p>
+          <h2 id="tour">Recorrido guiado</h2>
+          {isRest ? (
+            <ol className="steps">
+              <li>
+                <span>
+                  Pasá el reloj a las 12:00 (el salón abre al mediodía).{' '}
+                  <button className="linklike" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button>
+                </span>
+              </li>
+              <li><span><Link to={`/${biz.id}/carta`}>Elegí una milanesa</Link> con guarnición y agregala.</span></li>
+              <li><span><Link to={`/${biz.id}/pedido`}>Mi pedido</Link>: indicá tu mesa y enviá. Verás el folio.</span></li>
+              <li><span>Como <Link to="/admin/pedidos">recepción</Link>, aceptá el pedido; en <Link to="/admin/cocina">cocina</Link> prepará y marcá listo; el <Link to="/admin/salon">mozo</Link> lo sirve.</span></li>
+              <li><span>En <Link to="/admin/caja">caja</Link> abrí la caja, dividí la cuenta, registrá los pagos DEMO y cerrá la mesa.</span></li>
+            </ol>
+          ) : (
+            <ol className="steps">
+              <li><span>Elegí la sede en los controles de la demo (Centro o Norte).</span></li>
+              <li><span><Link to={`/${biz.id}/explorar`}>Explorá sabores</Link> o andá a la <Link to={`/${biz.id}/carta`}>carta</Link>.</span></li>
+              <li><span>Configurá un flat white (tamaño y leche) y pedilo para <Link to={`/${biz.id}/pedido`}>retirar</Link>.</span></li>
+              <li><span>Como <Link to="/admin/cocina">barra</Link>, aceptá, prepará y marcá listo; después marcá retirado.</span></li>
+            </ol>
+          )}
+        </section>
       </div>
-
-      <section className="card" style={{ marginTop: 14 }} aria-labelledby="tour">
-        <h2 id="tour">Recorrido guiado de 60–90 segundos</h2>
-        {isRest ? (
-          <ol>
-            <li>
-              Pasá el reloj a las 12:00 (el salón abre al mediodía):{' '}
-              <button className="btn secondary small" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button>
-            </li>
-            <li><Link to={`/${biz.id}/carta`}>Elegí una milanesa</Link> con guarnición y agregala.</li>
-            <li><Link to={`/${biz.id}/pedido`}>Mi pedido</Link>: indicá tu mesa y enviá. Verás el folio.</li>
-            <li>Como <Link to="/admin/pedidos">recepción</Link>, aceptá el pedido; en <Link to="/admin/cocina">cocina</Link> prepará y marcá listo; el <Link to="/admin/salon">mozo</Link> lo sirve.</li>
-            <li>En <Link to="/admin/caja">caja</Link> abrí la caja, dividí la cuenta, registrá los pagos DEMO y cerrá la mesa.</li>
-          </ol>
-        ) : (
-          <ol>
-            <li>Elegí la sede en la barra de la demo (Centro o Norte).</li>
-            <li><Link to={`/${biz.id}/explorar`}>Explorá sabores</Link> o andá a la <Link to={`/${biz.id}/carta`}>carta</Link>.</li>
-            <li>Configurá un flat white (tamaño y leche) y pedilo para <Link to={`/${biz.id}/pedido`}>retirar</Link>.</li>
-            <li>Como <Link to="/admin/cocina">barra</Link>, aceptá, prepará y marcá listo; después marcá retirado.</li>
-          </ol>
-        )}
-      </section>
     </main>
   )
 }

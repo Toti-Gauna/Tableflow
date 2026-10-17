@@ -41,7 +41,7 @@ export function AdminConfig() {
     <>
       <PageHead title="Configuración" sub={`${biz.name} · reglas de reserva, horarios, consentimientos, reinicio y diagnóstico`} />
       {msg && <Callout tone="ok" role="status">{msg}</Callout>}
-      <div className="grid cols-2">
+      <div className="admin-grid">
         <section className="card" aria-labelledby="res-h">
           <h2 id="res-h">Reglas de reserva y retiro</h2>
           <label className="choice"><input type="checkbox" checked={biz.reservationsEnabled} onChange={(e) => act({ type: 'config/set', businessId: bizId, patch: { reservationsEnabled: e.target.checked } }, e.target.checked ? 'Reservas activadas' : 'Reservas desactivadas: atención por orden de llegada')} data-testid="cfg-reservations" /> Tomar reservas (si está apagado: atención por orden de llegada, sin acción de reservar en UI, chat ni URL directa)</label>

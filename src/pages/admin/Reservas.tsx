@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, ConfirmDialog, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { RES_LABEL } from '../../ui/format'
+import { CHANNEL_LABEL, RES_LABEL } from '../../ui/format'
 import { alternatives, businessDuration, holdsTable } from '../../domain/availability'
 import { addDays, dateKeyOf, fmtDateShort, fmtDateTime, hhmm } from '../../domain/time'
 import type { AppState, Reservation, ReservationStatus } from '../../domain/types'
@@ -66,7 +66,7 @@ export function AdminReservas() {
       {id ? (
         <p><Link to="/admin/reservas">← Todas las reservas</Link></p>
       ) : (
-        <div className="row" style={{ marginBottom: 10 }}>
+        <div className="filters" role="group" aria-label="Filtros de reservas">
           <div className="field" style={{ margin: 0 }}>
             <label htmlFor="fdate">Día</label>
             <input id="fdate" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -78,9 +78,12 @@ export function AdminReservas() {
               {(Object.keys(RES_LABEL) as ReservationStatus[]).map((s) => <option key={s} value={s}>{RES_LABEL[s].label}</option>)}
             </select>
           </div>
-          <button className="btn ghost small" type="button" onClick={() => setDate(addDays(date, -1))}>Día anterior</button>
-          <button className="btn ghost small" type="button" onClick={() => setDate(addDays(date, 1))}>Día siguiente</button>
-          <button className="btn ghost small" type="button" onClick={() => setDate(today)}>Hoy</button>
+          <div className="row" style={{ gap: 6 }}>
+            <button className="btn secondary small" type="button" onClick={() => setDate(addDays(date, -1))}>Día anterior</button>
+            <button className="btn secondary small" type="button" aria-pressed={date === today} onClick={() => setDate(today)}>Hoy</button>
+            <button className="btn secondary small" type="button" onClick={() => setDate(addDays(date, 1))}>Día siguiente</button>
+          </div>
+          <p className="small muted" style={{ margin: '0 0 0 auto', alignSelf: 'center' }}>{list.length} reserva(s) · {fmtDateShort(date)}</p>
         </div>
       )}
       {list.length === 0 ? (
@@ -95,12 +98,12 @@ export function AdminReservas() {
               <thead><tr><th>Folio</th><th>Hora</th><th>Personas</th><th>A nombre de</th><th>Canal</th><th>Mesa</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
                 {list.map((r) => (
-                  <tr key={r.id} data-testid={`res-row-${r.id}`}>
+                  <tr key={r.id} data-testid={`res-row-${r.id}`} data-status={r.status}>
                     <td><Link to={`/admin/reservas/${r.id}`}>{r.id}</Link></td>
                     <td className="num">{id ? fmtDateShort(r.dateKey) + ' ' : ''}{hhmm(r.startMin)}</td>
                     <td className="num">{r.party}</td>
                     <td>{r.alias}{r.dietaryNote ? <div className="small">⚑ {r.dietaryNote}</div> : null}</td>
-                    <td>{r.channel}</td>
+                    <td>{CHANNEL_LABEL[r.channel] ?? r.channel}</td>
                     <td>{tableName(r)}</td>
                     <td><StatusBadge s={RES_LABEL[r.status]} /></td>
                     <td>{actions(r)}</td>
@@ -111,9 +114,10 @@ export function AdminReservas() {
           </div>
           <div className="cards-m">
             {list.map((r) => (
-              <div className="card" key={r.id}>
+              <div className="card mcard" key={r.id} data-status={r.status}>
                 <div className="row between"><strong>{r.id} · {hhmm(r.startMin)}</strong><StatusBadge s={RES_LABEL[r.status]} /></div>
-                <p>{r.party} pers. · {r.alias} · mesa {tableName(r)}</p>
+                <p style={{ margin: '6px 0 10px' }}>{r.party} pers. · {r.alias} · mesa {tableName(r)} · {CHANNEL_LABEL[r.channel] ?? r.channel}</p>
+                {r.dietaryNote && <p className="small" style={{ margin: '0 0 10px' }}>⚑ {r.dietaryNote}</p>}
                 {actions(r)}
               </div>
             ))}
@@ -122,7 +126,7 @@ export function AdminReservas() {
       )}
 
       {!id && (
-        <div className="grid cols-2" style={{ marginTop: 18 }}>
+        <div className="admin-grid" style={{ marginTop: 18 }}>
           <section className="card" aria-labelledby="cupos">
             <h2 id="cupos">Cupos por mesa · {fmtDateShort(date)}</h2>
             <p className="small muted">Duración {biz.serviceMinutes} min + margen {biz.bufferMinutes}. Cada bloque retiene la mesa hasta el fin del margen.</p>

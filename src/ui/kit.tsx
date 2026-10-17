@@ -79,7 +79,7 @@ export function Empty({ title, children, action }: { title: string; children?: R
     </div>
   )
 }
-export function Callout({ tone = 'info', children, role }: { tone?: 'info' | 'warn' | 'err' | 'ok'; children: ReactNode; role?: string }) {
+export function Callout({ tone = 'info', children, role }: { tone?: 'info' | 'warn' | 'err' | 'ok' | 'review'; children: ReactNode; role?: string }) {
   return (
     <div className={`callout ${tone === 'info' ? '' : tone}`} role={role ?? (tone === 'err' ? 'alert' : undefined)}>
       {children}

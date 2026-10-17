@@ -5,7 +5,9 @@ import { PageHead } from '../../ui/Shell'
 import { act, Callout, ErrorText, Field, StatusBadge, Empty } from '../../ui/kit'
 import { RES_LABEL } from '../../ui/format'
 import { slotStarts, slotAvailable, windowsFor } from '../../domain/availability'
-import { addDays, dateKeyOf, fmtDateShort, hhmm } from '../../domain/time'
+import { addDays, dateKeyOf, dayName, fmtDateShort, hhmm, monthName } from '../../domain/time'
+import { Glyph } from '../../ui/glyphs'
+import { sedeShort } from '../../ui/format'
 import { numberWord } from '../../domain/nlu'
 import { dispatch } from '../../store'
 import type { Outcome } from '../../domain/core'
@@ -45,6 +47,11 @@ export function Reservar() {
   }
   const big = party > biz.maxPartyAuto
   const starts = slotStarts(state, biz.id, locationId, dateKey)
+  const groups = windowsFor(state, locationId, dateKey)
+    .sort((a, b) => a.startMin - b.startMin)
+    .map((w) => ({ w, list: starts.filter((m) => m >= w.startMin && m < w.endMin) }))
+    .filter((g) => g.list.length)
+  const loc = state.locations.find((l) => l.id === locationId)
   const q = (m: number) => ({ businessId: biz.id, locationId, dateKey, startMin: m, party: Math.min(party, biz.maxPartyAuto), sectorPref: sector })
   const submit = () => {
     const errs: Record<string, string> = {}
@@ -85,38 +92,65 @@ export function Reservar() {
   }
   return (
     <main>
-      <PageHead title="Reservar una mesa" sub={`${biz.name} · servicio de ${biz.serviceMinutes} min + ${biz.bufferMinutes} de margen`} />
-      <div className="grid cols-2">
-        <form className="card" onSubmit={(e) => { e.preventDefault(); submit() }} noValidate aria-labelledby="form-h">
-          <h2 id="form-h">Tu solicitud</h2>
-          <Field label="Nombre para la reserva (alias de muestra)" htmlFor="alias" error={fieldErr.alias}>
-            <input id="alias" type="text" value={alias} onChange={(e) => setAlias(e.target.value)} aria-invalid={!!fieldErr.alias} aria-describedby={fieldErr.alias ? 'alias-err' : undefined} data-testid="res-alias" />
-          </Field>
-          <div className="grid cols-2">
-            <Field label="Día" htmlFor="dia">
-              <select id="dia" value={dateKey} onChange={(e) => { setDateKey(e.target.value); setStartMin(null); setRes(null) }} data-testid="res-date">
-                {days.map((d) => <option key={d} value={d}>{fmtDateShort(d)}{d === today ? ' (hoy)' : ''}</option>)}
-              </select>
-            </Field>
-            <Field label="Personas" htmlFor="party" error={fieldErr.party} hint={big ? `Más de ${biz.maxPartyAuto}: el equipo revisa el caso, no se asigna mesa sola.` : undefined}>
-              <input id="party" type="number" min={1} max={40} value={party} onChange={(e) => { setParty(Number(e.target.value)); setRes(null) }} aria-invalid={!!fieldErr.party} data-testid="res-party" />
-            </Field>
-          </div>
-          <fieldset aria-describedby={fieldErr.slot ? 'slots-err' : undefined} className={fieldErr.slot ? 'invalid' : ''}>
-            <legend>Franja</legend>
-            <div className="slot-grid" id="slots" tabIndex={-1}>
-              {starts.map((m) => {
-                const okSlot = big ? true : slotAvailable(state, q(m))
+      <PageHead
+        title="Reservar una mesa"
+        eyebrow={`Reservas · ${loc ? sedeShort(loc.name) : biz.name}`}
+        sub={`Servicio de ${biz.serviceMinutes} min + ${biz.bufferMinutes} de margen · cada solicitud la confirma el equipo`}
+      />
+      <div className="res-layout">
+        <form className="card res-form" onSubmit={(e) => { e.preventDefault(); submit() }} noValidate aria-labelledby="form-h">
+          <h2 id="form-h" className="sr-only">Tu solicitud</h2>
+          <fieldset className="plain">
+            <legend><span className="step-n">1</span> Día</legend>
+            <div className="date-chips" data-testid="res-date">
+              {days.map((d) => {
+                const [, mm, dd] = d.split('-')
                 return (
-                  <button type="button" key={m} disabled={!okSlot} aria-pressed={startMin === m} onClick={() => { setStartMin(m); setRes(null); setFieldErr({}) }} title={okSlot ? 'Con cupo' : 'Sin cupo para este grupo'} data-testid={`slot-${m}`}>
-                    {hhmm(m)}
+                  <button type="button" key={d} aria-pressed={dateKey === d} onClick={() => { setDateKey(d); setStartMin(null); setRes(null) }} aria-label={`${fmtDateShort(d)}${d === today ? ' (hoy)' : ''}`}>
+                    <span className="d">{d === today ? 'Hoy' : dayName(d).slice(0, 3)}</span>
+                    <span className="n">{Number(dd)}</span>
+                    <span className="m">{monthName(Number(mm)).slice(0, 3)}</span>
                   </button>
                 )
               })}
             </div>
-            <p className="hint muted small">Los horarios tachados no tienen mesa libre para {numberWord(Math.min(party, biz.maxPartyAuto))} {party === 1 ? 'persona' : 'personas'}. Cupos según los datos de muestra.</p>
+          </fieldset>
+          <div className="field">
+            <label htmlFor="party"><span className="step-n">2</span> Personas</label>
+            <div className="party">
+              <button type="button" className="icon-btn bordered" aria-label="Una persona menos" onClick={() => { setParty((p) => Math.max(1, (Number.isInteger(p) ? p : 1) - 1)); setRes(null) }}><Glyph name="minus" size={18} /></button>
+              <input id="party" type="number" min={1} max={40} value={Number.isNaN(party) ? '' : party} onChange={(e) => { setParty(Number(e.target.value)); setRes(null) }} aria-invalid={!!fieldErr.party} aria-describedby={[big ? 'party-hint' : '', fieldErr.party ? 'party-err' : ''].join(' ').trim() || undefined} data-testid="res-party" />
+              <button type="button" className="icon-btn bordered" aria-label="Una persona más" onClick={() => { setParty((p) => Math.min(40, (Number.isInteger(p) ? p : 0) + 1)); setRes(null) }}><Glyph name="plus" size={18} /></button>
+            </div>
+            {big && <span className="hint" id="party-hint">Más de {biz.maxPartyAuto}: el equipo revisa el caso, no se asigna mesa sola.</span>}
+            <ErrorText id="party-err">{fieldErr.party}</ErrorText>
+          </div>
+          <fieldset aria-describedby={['slots-hint', fieldErr.slot ? 'slots-err' : ''].join(' ').trim()} className={`plain ${fieldErr.slot ? 'invalid' : ''}`}>
+            <legend><span className="step-n">3</span> Horario</legend>
+            <div id="slots" tabIndex={-1}>
+              {groups.map(({ w, list }) => (
+                <div className="slot-group" key={w.id}>
+                  <h3 className="slot-h"><Glyph name={w.startMin >= 18 * 60 ? 'moon' : 'sun'} size={16} /> {w.label} <span className="muted">{hhmm(w.startMin)}–{hhmm(w.endMin)}</span></h3>
+                  <div className="slot-grid">
+                    {list.map((m) => {
+                      const okSlot = big ? true : slotAvailable(state, q(m))
+                      return (
+                        <button type="button" key={m} disabled={!okSlot} aria-pressed={startMin === m} onClick={() => { setStartMin(m); setRes(null); setFieldErr({}) }} title={okSlot ? 'Con cupo' : 'Sin cupo para este grupo'} data-testid={`slot-${m}`}>
+                          {hhmm(m)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="hint muted small" id="slots-hint">Los horarios tachados no tienen mesa libre para {numberWord(Math.min(party || 1, biz.maxPartyAuto))} {party === 1 ? 'persona' : 'personas'}. Cupos según los datos de muestra.</p>
             <ErrorText id="slots-err">{fieldErr.slot}</ErrorText>
           </fieldset>
+          <p className="step-title"><span className="step-n">4</span> Tus datos</p>
+          <Field label="Nombre para la reserva (alias de muestra)" htmlFor="alias" error={fieldErr.alias}>
+            <input id="alias" type="text" value={alias} onChange={(e) => setAlias(e.target.value)} aria-invalid={!!fieldErr.alias} aria-describedby={fieldErr.alias ? 'alias-err' : undefined} data-testid="res-alias" />
+          </Field>
           <Field label="Sector preferido" htmlFor="sector" hint="Preferencia de terraza, sujeta a confirmación: no garantiza sector.">
             <select id="sector" value={sector} onChange={(e) => setSector(e.target.value as typeof sector)}>
               <option value="cualquiera">Sin preferencia</option>
@@ -127,7 +161,9 @@ export function Reservar() {
           <Field label="Alergia o restricción alimentaria (opcional)" htmlFor="diet" hint="Se deriva al equipo para revisión humana. Esta demo no puede garantizar ausencia de alérgenos.">
             <textarea id="diet" value={diet} onChange={(e) => setDiet(e.target.value)} data-testid="res-diet" />
           </Field>
-          <button className="btn accent" type="submit" data-testid="res-submit">Solicitar reserva</button>
+          <button className="btn accent lg" style={{ width: '100%' }} type="submit" data-testid="res-submit">
+            Solicitar reserva{startMin !== null ? ` · ${fmtDateShort(dateKey)} ${hhmm(startMin)}` : ''}
+          </button>
           <p className="small muted">Enviar crea una <strong>solicitud</strong>: el equipo todavía debe confirmarla.</p>
         </form>
 
@@ -150,14 +186,17 @@ export function Reservar() {
             </div>
           )}
           <section className="card" aria-labelledby="mias">
+            <p className="eyebrow">Historial local de la demo</p>
             <h2 id="mias">Mis reservas</h2>
             {myReservations.length === 0 ? (
               <p className="muted">Todavía no tenés reservas en esta demo. Si te identificás como cliente recurrente (Ana) vas a ver las tuyas.</p>
             ) : (
-              <ul style={{ paddingLeft: 0, listStyle: 'none' }}>
+              <ul className="order-list">
                 {myReservations.map((r) => (
-                  <li key={r.id} className="line">
-                    <span><Link to={`/${biz.id}/reservas/${r.id}`}>{r.id}</Link> · {r.party} pers. · {fmtDateShort(r.dateKey)} {hhmm(r.startMin)}</span>
+                  <li key={r.id}>
+                    <Link to={`/${biz.id}/reservas/${r.id}`} className="folio-link">{r.id}</Link>
+                    <span className="muted">{r.party} pers. · {fmtDateShort(r.dateKey)} {hhmm(r.startMin)}</span>
+                    <span />
                     <StatusBadge s={RES_LABEL[r.status]} />
                   </li>
                 ))}

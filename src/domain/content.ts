@@ -113,3 +113,16 @@ export const PASSPORT_PICKS: Record<BusinessId, { id: string; label: string }[]>
 }
 
 export const STAMPS_FOR_BADGE = 5
+
+/** Orígenes de la semana en Ritual Café: notas de cata de MUESTRA (ficticias). */
+export const ORIGINS: { optionId: string; name: string; notes: string; process: string }[] = [
+  { optionId: 'or-huila', name: 'Colombia · Huila', notes: 'Panela, cacao y naranja', process: 'Lavado' },
+  { optionId: 'or-guji', name: 'Etiopía · Guji', notes: 'Jazmín, durazno y té negro', process: 'Natural' },
+  { optionId: 'or-cerrado', name: 'Brasil · Cerrado', notes: 'Nuez, caramelo y chocolate con leche', process: 'Semilavado' },
+]
+
+/** Pizarra del día de Mesa Clara (selección editorial de la carta de muestra). */
+export const BOARD_PICKS: Record<BusinessId, string[]> = {
+  'mesa-clara': ['MC-06', 'MC-12', 'MC-15', 'MC-22'],
+  'ritual-cafe': ['RC-07', 'RC-04', 'RC-09', 'RC-11'],
+}

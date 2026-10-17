@@ -57,7 +57,7 @@ export function AdminStock() {
           </table>
         </div>
       </section>
-      <div className="grid cols-2" style={{ marginTop: 14 }}>
+      <div className="admin-grid" style={{ marginTop: 14 }}>
         <section className="card" aria-labelledby="rec">
           <h2 id="rec">Recetas</h2>
           <p className="small muted">Los platos sin receta no controlan stock (alcance de muestra).</p>

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
-import { ORDER_LABEL } from '../../ui/format'
+import { ORDER_LABEL, sedeShort } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
 import type { Order, OrderStatus } from '../../domain/types'
@@ -14,18 +14,18 @@ export function OrderTimeline({ o }: { o: Order }) {
   const flow = o.kind === 'retiro' ? (['enviado', 'aceptado', 'en_preparacion', 'listo', 'retirado', 'cerrado'] as OrderStatus[]) : FLOW
   if (o.status === 'rechazado' || o.status === 'cancelado') {
     return (
-      <ol className="timeline" aria-label="Estado del pedido">
-        <li data-state="done">Enviado</li>
-        <li data-state="off">{ORDER_LABEL[o.status].label}{o.reason ? `: ${o.reason}` : ''}</li>
+      <ol className="track short" aria-label="Estado del pedido">
+        <li data-state="done"><span className="sr-only">Hecho: </span>Enviado</li>
+        <li data-state="off" aria-current="step"><span className="sr-only">Estado actual: </span>{ORDER_LABEL[o.status].label}</li>
       </ol>
     )
   }
   const idx = flow.indexOf(o.status)
   return (
-    <ol className="timeline" aria-label="Estado del pedido">
+    <ol className="track" aria-label="Estado del pedido">
       {flow.map((st, i) => (
         <li key={st} data-state={i < idx ? 'done' : i === idx ? 'now' : 'todo'} aria-current={i === idx ? 'step' : undefined}>
-          {i < idx ? '✓ ' : i === idx ? '● ' : '○ '}
+          <span className="sr-only">{i < idx ? 'Hecho: ' : i === idx ? 'Estado actual: ' : 'Pendiente: '}</span>
           {ORDER_LABEL[st].label}
         </li>
       ))}
@@ -60,8 +60,19 @@ export function PedidoDetalle() {
   void minutesOfDay
   return (
     <main>
-      <PageHead title={`Pedido ${o.id}`} sub={`${loc?.name} · ${o.kind === 'mesa' ? `mesa ${table ?? ''}` : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} a nombre de ${o.alias}`}`}>
+      <PageHead
+        title={`Pedido ${o.id}`}
+        eyebrow="Seguimiento del pedido"
+        heading={<><span className="folio-pre">Pedido</span> <span className="folio">{o.id}</span></>}
+        sub={`${loc ? sedeShort(loc.name) : ''} · ${o.kind === 'mesa' ? `mesa ${table ?? ''}` : `retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''} a nombre de ${o.alias}`}`}
+      >
         <StatusBadge s={ORDER_LABEL[o.status]} />
+        {o.kind === 'retiro' && !['rechazado', 'cancelado'].includes(o.status) && (
+          <div className="pickup-code" aria-label={`Código de retiro ${o.pickupCode}`}>
+            <small>Código de retiro</small>
+            <span className="num">{o.pickupCode}</span>
+          </div>
+        )}
       </PageHead>
       <OrderTimeline o={o} />
       {o.status === 'enviado' && <Callout>Solicitud recibida; el equipo todavía debe aceptarla.</Callout>}
@@ -76,12 +87,13 @@ export function PedidoDetalle() {
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}
       {o.cancelRequested && <Callout tone="warn">Pediste cancelar con el pedido ya en marcha. El encargado debe decidir; la comanda no se borra.</Callout>}
       {noticeMsg && <p className="small muted">Aviso local ({noticeMsg.status}): “{noticeMsg.text}”</p>}
-      <section className="card" style={{ marginTop: 14 }} aria-labelledby="det">
+      <section className="ticket-paper receipt" style={{ marginTop: 20, maxWidth: 640 }} aria-labelledby="det">
+        <p className="eyebrow">Comanda {o.ticketId}</p>
         <h2 id="det">Detalle</h2>
         {o.lines.map((l) => (
           <div className="line" key={l.id}>
             <div>
-              <strong>{l.qty}× {l.name}</strong> <span className="badge neutral">{l.station}</span>
+              <strong>{l.qty}× {l.name}</strong> <span className="st-tag">{l.station}</span>
               <div className="opts">{l.selections.map((s) => s.optionName).join(' · ')}</div>
               {l.note && <div className="opts">Nota: {l.note}</div>}
             </div>

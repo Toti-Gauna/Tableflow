@@ -1,6 +1,6 @@
 import type { OrderStatus, ReservationStatus, Role } from '../domain/types'
 
-export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral'
+export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral' | 'review'
 export interface Label {
   label: string
   tone: Tone
@@ -12,7 +12,7 @@ export const RES_LABEL: Record<ReservationStatus, Label> = {
   solicitada: { label: 'Solicitada', tone: 'warn', icon: '◔' },
   confirmada: { label: 'Confirmada', tone: 'ok', icon: '✓' },
   alternativa_ofrecida: { label: 'Alternativa ofrecida', tone: 'info', icon: '⇄' },
-  revision_humana: { label: 'Revisión humana', tone: 'warn', icon: '⚑' },
+  revision_humana: { label: 'Revisión humana', tone: 'review', icon: '⚑' },
   llegada: { label: 'Llegó', tone: 'info', icon: '➜' },
   sentada: { label: 'Sentada', tone: 'ok', icon: '◉' },
   completada: { label: 'Completada', tone: 'neutral', icon: '✔' },
