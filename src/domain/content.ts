@@ -110,6 +110,10 @@ export const PASSPORT_PICKS: Record<BusinessId, { id: string; label: string }[]>
     { id: 'MC-07', label: 'Ñoquis de papa' },
     { id: 'MC-12', label: 'Milanesa de ternera' },
   ],
+  // Copo, Taberna Compás y Brasa Rápida todavía no tienen pasaporte de sabores: su mecánica de fidelidad es de L6.
+  copo: [],
+  compas: [],
+  brasa: [],
 }
 
 export const STAMPS_FOR_BADGE = 5
@@ -125,6 +129,9 @@ export const ORIGINS: { optionId: string; name: string; notes: string; process: 
 export const BOARD_PICKS: Record<BusinessId, string[]> = {
   'mesa-clara': ['MC-06', 'MC-12', 'MC-15', 'MC-22'],
   'ritual-cafe': ['RC-07', 'RC-04', 'RC-09', 'RC-11'],
+  copo: ['CO-02', 'CO-03', 'CO-05', 'CO-06'],
+  compas: ['TC-01', 'TC-02', 'TC-06', 'TC-10'],
+  brasa: ['BR-01', 'BR-04', 'BR-06', 'BR-10'],
 }
 
 /** Sección para chicos: platos de la carta que suelen pedir (sin ítems nuevos ni precios inventados). */
@@ -141,9 +148,27 @@ export const KIDS_MENU: Record<BusinessId, { itemId: string; note: string }[]> =
     { itemId: 'RC-14', note: 'Porción de budín de limón.' },
     { itemId: 'RC-13', note: 'Tostado cortado en triángulos.' },
   ],
+  copo: [
+    { itemId: 'CO-01', note: 'Un gusto, en cucurucho o pedilo en vasito.' },
+    { itemId: 'CO-03', note: 'Vasito con cucharita: dos gustos chicos.' },
+    { itemId: 'CO-08', note: 'Licuado de frutilla, sin alcohol.' },
+  ],
+  compas: [
+    { itemId: 'TC-02', note: 'Croquetas cremosas para compartir.' },
+    { itemId: 'TC-04', note: 'Pan con tomate, suave.' },
+    { itemId: 'TC-10', note: 'Jarra de limonada para la mesa, sin alcohol.' },
+  ],
+  brasa: [
+    { itemId: 'BR-03', note: 'La clásica, se puede pedir sin cebolla ni pepino.' },
+    { itemId: 'BR-07', note: 'Nuggets de pollo.' },
+    { itemId: 'BR-10', note: 'Cono de helado de crema.' },
+  ],
 }
 /** Parejas del memotest: platos de cada carta. */
 export const MEMO_ITEMS: Record<BusinessId, string[]> = {
   'mesa-clara': ['MC-12', 'MC-07', 'MC-22', 'MC-01', 'MC-04', 'MC-02'],
   'ritual-cafe': ['RC-05', 'RC-11', 'RC-12', 'RC-14', 'RC-09', 'RC-13'],
+  copo: [],
+  compas: [],
+  brasa: [],
 }

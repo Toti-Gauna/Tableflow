@@ -61,7 +61,7 @@ const callStart: Handler = (s, c, ctx) => {
     }
   }
   const call: CallSession = {
-    id: nextId(s, 'CALL'),
+    id: nextId(s, 'CALL', 3, biz.id),
     ...base(s, biz.id),
     conversationId: conv.id,
     status: 'iniciando',
@@ -74,7 +74,7 @@ const callStart: Handler = (s, c, ctx) => {
     token: 1,
     pendingResponse: null,
     waitedSec: 0,
-    operationId: nextId(s, 'OP', 4),
+    operationId: nextId(s, 'OP', 4, biz.id),
   }
   s.callSessions.push(call)
   say(call, 'sistema', 'Llamada de demostración: no se realiza ninguna llamada real ni se usa el micrófono.')

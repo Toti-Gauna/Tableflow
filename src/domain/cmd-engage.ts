@@ -73,7 +73,7 @@ function ensurePassport(s: AppState, businessId: BusinessId, customerId: string 
   let p = getPassport(s, businessId, customerId)
   if (!p) {
     p = {
-      id: nextId(s, 'PP'),
+      id: nextId(s, 'PP', 3, businessId),
       ...base(s, businessId),
       customerId,
       cards: {},
@@ -209,7 +209,7 @@ const visitCredit: Handler = (s, c, ctx) => {
   const otherLoc = s.visits.find((v) => v.customerId === cu.id && v.dateKey === dateKey && v.status === 'acreditada')
   if (otherLoc) return fail('sello-diario', 'Criterio conservador: un sello por persona y fecha en todo el negocio (evita acumular entre sedes). Ya hay uno ese día.')
   const v = {
-    id: nextId(s, 'V'),
+    id: nextId(s, 'V', 3, biz.id),
     ...base(s, biz.id),
     locationId: c.locationId,
     customerId: cu.id,
@@ -270,7 +270,7 @@ const eventEnroll: Handler = (s, c, ctx) => {
   const { free } = eventSeats(s, e)
   if (free <= 0 && !c.joinWaitlist) return fail('cupo-lleno', 'No quedan lugares. Podés anotarte en la lista de espera.', { canWait: true })
   const b = {
-    id: nextId(s, 'EB'),
+    id: nextId(s, 'EB', 3, e.businessId),
     ...base(s, e.businessId),
     eventId: e.id,
     customerId: cu.id,

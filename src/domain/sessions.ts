@@ -26,7 +26,7 @@ export function openSession(
     }
   }
   const ts: TableSession = {
-    id: nextId(s, 'S'),
+    id: nextId(s, 'S', 3, p.businessId),
     ...base(s, p.businessId),
     locationId: p.locationId,
     kind: p.kind,
@@ -66,4 +66,16 @@ export function billableLines(s: AppState, sessionId: string) {
   const paid = new Set(s.payments.filter((p) => p.sessionId === sessionId && p.status === 'registrado').flatMap((p) => p.lineIds))
   // una línea cubierta por completo por una invitación no queda pendiente de cobro
   return billableOrders(s, sessionId).flatMap((o) => o.lines.map((l) => ({ order: o, line: l, paid: paid.has(l.id) || lineDue(l) === 0, due: lineDue(l) })))
+}
+
+/**
+ * P5-L5 · Estado de pago de un pedido. Se deriva SOLO del saldo de su cuenta (pagos registrados en caja),
+ * nunca del estado de preparación ni de una animación: un retiro aceptado con pago en el local sigue «pendiente».
+ */
+export type OrderPayment = { state: 'pendiente-local' | 'pagado' | 'cuenta-mesa' | 'no-aplica'; balanceCents: number }
+export function orderPayment(s: AppState, o: Order): OrderPayment {
+  if (DEAD.includes(o.status)) return { state: 'no-aplica', balanceCents: 0 }
+  const balanceCents = sessionBalance(s, o.sessionId)
+  if (o.kind === 'mesa') return { state: balanceCents > 0 ? 'cuenta-mesa' : 'pagado', balanceCents }
+  return { state: balanceCents > 0 ? 'pendiente-local' : 'pagado', balanceCents }
 }

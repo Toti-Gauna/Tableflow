@@ -1,3 +1,4 @@
+import { BIZ_IDS, bizRecord } from './business'
 import { audit, byId, dup, emit, fail, nextId, ok } from './core'
 import { ensureCustomer } from './customers'
 import { atLocal, dateKeyOf, minutesOfDay, MINUTE } from './time'
@@ -37,9 +38,9 @@ const setRole: Handler = (s, c, ctx) => {
   if (!ROLES.includes(c.role)) return fail('rol-invalido', 'Rol inválido.')
   s.session.role = c.role
   if (c.role === 'cliente-invitado') {
-    s.session.customerByBusiness = { 'mesa-clara': null, 'ritual-cafe': null }
+    s.session.customerByBusiness = bizRecord(() => null)
   } else if (c.role === 'cliente-recurrente') {
-    for (const b of ['mesa-clara', 'ritual-cafe'] as BusinessId[]) {
+    for (const b of BIZ_IDS) {
       const existing = s.customers.find((x) => x.businessId === b && x.alias === 'Ana' && !x.mergedInto)
       s.session.customerByBusiness[b] = (existing ?? ensureCustomer(s, ctx, b, 'Ana', { whatsapp: true, voz: true })).id
     }

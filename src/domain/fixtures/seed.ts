@@ -2,7 +2,10 @@ import { processEvents } from '../automations'
 import { applyCommand, type Command } from '../reducer'
 import { atLocal } from '../time'
 import type { AppState } from '../types'
-import { baseState, customersService, emptySeed, tastingEvents } from './base'
+import { baseState, customersService, DEFAULT_LOCATION, emptySeed, tastingEvents } from './base'
+import { newConfig } from './nuevos'
+import { bizRecord } from '../business'
+import type { BusinessId } from '../types'
 
 export { emptySeed }
 
@@ -22,7 +25,7 @@ class Builder {
   as(role: AppState['session']['role'], cmd: Command, allowFail = false) {
     return this.do({ ...cmd, actor: role }, allowFail)
   }
-  setCustomer(businessId: 'mesa-clara' | 'ritual-cafe', id: string | null) {
+  setCustomer(businessId: BusinessId, id: string | null) {
     this.s.session.customerByBusiness[businessId] = id
   }
 }
@@ -80,8 +83,8 @@ function cafeOrder(
 export function serviceSeed(): AppState {
   const b = new Builder(baseState('servicio'))
   b.s.customers = customersService()
-  b.s.counters.CL = 8
-  b.s.tastingEvents = tastingEvents()
+  b.s.counters.CL = 14
+  b.s.tastingEvents = [...tastingEvents(), ...newConfig(b.s.clock.nowMs).tastingEvents]
   b.s.counters.E = 2
 
   // ---------------------------------------------------------------- jueves 15: hilos y reservas
@@ -251,14 +254,70 @@ export function serviceSeed(): AppState {
   b.as('cliente-recurrente', { type: 'chat/send', conversationId: 'C-004', text: 'Hola' })
   b.as('cliente-recurrente', { type: 'chat/send', conversationId: 'C-004', text: '¿Está libre de gluten el budín?' })
 
+  // ---------------------------------------------------------------- P5-L5: actividad de los negocios nuevos
+  newBusinessActivity(b)
+
   // ---------------------------------------------------------------- estado final de arranque
   b.at(MON, 10, 0)
   b.s.session = {
     role: 'cliente-invitado',
     businessId: 'mesa-clara',
-    locationByBusiness: { 'mesa-clara': 'L-MC-salon', 'ritual-cafe': 'L-RC-centro' },
-    customerByBusiness: { 'mesa-clara': null, 'ritual-cafe': null },
+    locationByBusiness: { ...DEFAULT_LOCATION },
+    customerByBusiness: bizRecord(() => null),
   }
   b.s.carts = []
   return b.s
+}
+
+/** Pedido de retiro en un negocio con pago en el local (Copo, Brasa Rápida). */
+function pickupOrder(b: Builder, businessId: BusinessId, customerId: string, alias: string, startMin: number, lines: { itemId: string; qty?: number; selections?: Record<string, string[]> }[]) {
+  const locationId = DEFAULT_LOCATION[businessId]
+  b.setCustomer(businessId, customerId)
+  const cartId = `CART-${locationId}`
+  for (const l of lines) b.do({ type: 'cart/add', businessId, locationId, itemId: l.itemId, qty: l.qty ?? 1, selections: l.selections ?? {} })
+  b.do({ type: 'cart/setFulfillment', cartId, fulfillment: { kind: 'retiro', startMin }, alias })
+  b.do({ type: 'cart/begin', cartId })
+  const op = b.s.carts.find((c) => c.id === cartId)!.pendingOperationId as string
+  const o = b.as('cliente-recurrente', { type: 'order/submit', cartId, operationId: op })
+  b.setCustomer(businessId, null)
+  return (o as any).data.orderId as string
+}
+
+/**
+ * Lunes 19 a la mañana en Brasa Rápida y Copo, y reservas de Taberna Compás para la noche de jazz del jueves.
+ * Va al final del seed para no cambiar los folios de Mesa Clara y Ritual Café (O-001…O-012, R-001…R-018).
+ */
+function newBusinessActivity(b: Builder) {
+  // Brasa Rápida: un combo ya retirado y cobrado, uno en la plancha y uno recién llegado
+  b.at(MON, 9, 0)
+  b.as('caja', { type: 'cash/open', businessId: 'brasa', locationId: 'L-BR-centro', openingFloatCents: 1_500_000 })
+  b.at(MON, 9, 5)
+  const br1 = pickupOrder(b, 'brasa', 'CL-011', 'Julián', 9 * 60 + 15, [{ itemId: 'BR-01', selections: { 'MG-BR-combo': ['bc-grande'], 'MG-BR-acomp': ['ba-papas'], 'MG-BR-bebida': ['bb-cola'], 'MG-BR-sin': ['bs-cebolla'] } }])
+  cycle(b, br1, { accept: [9, 6], prepare: [9, 7], ready: [9, 14], deliver: [9, 16] }, MON)
+  const s1 = b.s.orders.find((o) => o.id === br1)!
+  b.as('caja', { type: 'pay/register', sessionId: s1.sessionId, operationId: 'seed-pay-br-1', amountCents: s1.totalCents, method: 'tarjeta' })
+  b.as('caja', { type: 'session/close', sessionId: s1.sessionId })
+  b.at(MON, 9, 50)
+  const br2 = pickupOrder(b, 'brasa', 'CL-012', 'Carla', 10 * 60, [{ itemId: 'BR-04', selections: { 'MG-BR-extras': ['be-panceta'] } }, { itemId: 'BR-06', selections: { 'MG-BR-tamano': ['bt-mediano'] } }])
+  cycle(b, br2, { accept: [9, 51], prepare: [9, 53] }, MON)
+  b.at(MON, 9, 56)
+  pickupOrder(b, 'brasa', 'CL-011', 'Julián', 10 * 60 + 15, [{ itemId: 'BR-07' }, { itemId: 'BR-08', selections: { 'MG-BR-tamano': ['bt-chico'] } }])
+
+  // Taberna Compás: reservas para la noche de jazz del jueves 22 (una de 10 personas va a revisión humana)
+  b.at(MON, 9, 57)
+  const tc = (n: number, o: Record<string, unknown>) =>
+    b.as('recepcion', { type: 'res/request', businessId: 'compas', locationId: 'L-TC-salon', sectorPref: 'cualquiera', channel: 'recepcion', operationId: `seed-res-tc-${n}`, dateKey: '2026-10-22', ...o })
+  tc(1, { startMin: 21 * 60, party: 4, alias: 'Inés', customerId: 'CL-014' })
+  b.as('recepcion', { type: 'res/accept', id: b.s.reservations[b.s.reservations.length - 1].id })
+  tc(2, { startMin: 21 * 60, party: 2, alias: 'Pareja Luna' })
+  b.as('recepcion', { type: 'res/accept', id: b.s.reservations[b.s.reservations.length - 1].id })
+  tc(3, { startMin: 20 * 60 + 30, party: 10, alias: 'Grupo del taller', customerId: 'CL-013' })
+
+  // Copo: abre a las 10:00. Un cucurucho listo para retirar y un pote aceptado, los dos con el pago pendiente.
+  b.at(MON, 10, 0)
+  b.as('caja', { type: 'cash/open', businessId: 'copo', locationId: 'L-CO-mostrador', openingFloatCents: 1_000_000 })
+  const co1 = pickupOrder(b, 'copo', 'CL-009', 'Sofía', 10 * 60 + 15, [{ itemId: 'CO-02', selections: { 'MG-CO-gustos-2': ['hg-frutilla', 'hg-ddl'], 'MG-CO-bano': ['hb-chocolate'] } }])
+  cycle(b, co1, { accept: [10, 0], prepare: [10, 0], ready: [10, 0] }, MON)
+  const co2 = pickupOrder(b, 'copo', 'CL-010', 'Mateo', 10 * 60 + 30, [{ itemId: 'CO-05', selections: { 'MG-CO-gustos-m': ['hg-choco', 'hg-crema', 'hg-menta'] } }])
+  cycle(b, co2, { accept: [10, 0] }, MON)
 }

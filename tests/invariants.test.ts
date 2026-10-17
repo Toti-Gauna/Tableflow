@@ -25,13 +25,14 @@ function invariants(s: AppState) {
     expect(i.reserved).toBeLessThanOrEqual(i.onHand)
   }
   // el stock coincide con la suma de movimientos
-  const seedIng = makeSeed('servicio').ingredients
+  const seedIng = seedState.ingredients
   for (const i of s.ingredients) {
     const base = seedIng.find((x) => x.id === i.id)!
     const mv = s.stockMovements.filter((m) => m.ingredientId === i.id)
     const baseOn = base.onHand - makeSeedDelta(i.id)
     void baseOn
-    expect(mv.reduce((a, m) => a + m.deltaReserved, 0)).toBe(i.reserved - seedReserved(i.id))
+    // P5-L5: la semilla ya trae reservas de stock (pedidos de Copo en curso); se mide el delta desde la semilla
+    expect(mv.reduce((a, m) => a + m.deltaReserved, 0) - seedMovReserved(i.id)).toBe(i.reserved - seedReserved(i.id))
   }
   // una sesión activa por mesa; pagos nunca superan el total
   for (const ses of s.tableSessions) {
@@ -64,6 +65,7 @@ function invariants(s: AppState) {
 const seedState = makeSeed('servicio')
 const makeSeedDelta = (_id: string) => 0
 const seedReserved = (id: string) => seedState.ingredients.find((i) => i.id === id)!.reserved
+const seedMovReserved = (id: string) => seedState.stockMovements.filter((m) => m.ingredientId === id).reduce((a, m) => a + m.deltaReserved, 0)
 
 function randomCommand(s: AppState, r: () => number): Command {
   const pick = <T,>(a: T[]) => a[Math.floor(r() * a.length)]

@@ -1,4 +1,7 @@
 import { makeSeed } from './fixtures'
+import { newConfig } from './fixtures/nuevos'
+import { rulesFor, DEFAULT_LOCATION } from './fixtures/base'
+import { BIZ_IDS } from './business'
 import { SCHEMA_VERSION, STORAGE_NS, type AppState, type FixtureId } from './types'
 import { validateState } from './validate'
 
@@ -29,8 +32,10 @@ export type LoadResult =
   | { kind: 'needs-migration'; version: number; raw: string; byteLength: number }
 
 /**
- * Migraciones explícitas entre versiones de esquema (clave = versión de origen).
+ * Migraciones explícitas entre versiones de esquema (clave = versión de origen); se encadenan hasta la actual.
  * v1 → v2: agrega las invitaciones (regalos) y los ajustes de temporada; no toca ningún registro existente.
+ * v2 → v3 (P5-L5): agrega Copo, Taberna Compás y Brasa Rápida con su configuración (sin actividad), los clásicos
+ *   de Ritual Café y el pago en el local. Solo agrega: ningún registro existente cambia de id, negocio ni datos.
  */
 export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
   1: (old) => {
@@ -42,6 +47,54 @@ export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
       settings: { seasonByBusiness: { 'mesa-clara': 'auto', 'ritual-cafe': 'auto' } },
     }
   },
+  2: (old) => {
+    const s = old as Record<string, any>
+    const t0 = typeof s.clock?.nowMs === 'number' ? s.clock.nowMs : 0
+    const nc = newConfig(t0)
+    /** Agrega por id lo que falte; lo existente queda intacto. */
+    const add = <T extends { id: string }>(cur: T[] | undefined, extra: T[]): T[] => {
+      const list = Array.isArray(cur) ? cur : []
+      const have = new Set(list.map((x) => x.id))
+      return [...list, ...extra.filter((x) => !have.has(x.id))]
+    }
+    const businesses = (Array.isArray(s.businesses) ? s.businesses : []).map((b: any) => ('paysAtCounter' in b ? b : { ...b, paysAtCounter: b.id === 'ritual-cafe' }))
+    const session = s.session ?? {}
+    const loc = { ...(session.locationByBusiness ?? {}) }
+    const cust = { ...(session.customerByBusiness ?? {}) }
+    const season = { ...(s.settings?.seasonByBusiness ?? {}) }
+    for (const b of BIZ_IDS) {
+      if (!(b in loc)) loc[b] = DEFAULT_LOCATION[b]
+      if (!(b in cust)) cust[b] = null
+      if (!(b in season)) season[b] = 'auto'
+    }
+    return {
+      ...s,
+      schemaVersion: 3,
+      businesses: add(businesses, nc.businesses),
+      locations: add(s.locations, nc.locations),
+      serviceWindows: add(s.serviceWindows, nc.serviceWindows),
+      tables: add(s.tables, nc.tables),
+      modifierGroups: add(s.modifierGroups, nc.modifierGroups),
+      menuItems: add(s.menuItems, nc.menuItems),
+      ingredients: add(s.ingredients, nc.ingredients),
+      recipes: add(s.recipes, nc.recipes),
+      tastingEvents: add(s.tastingEvents, nc.tastingEvents),
+      rules: add(s.rules, ['copo', 'compas', 'brasa'].flatMap((b) => rulesFor(b as any))),
+      session: { ...session, locationByBusiness: loc, customerByBusiness: cust },
+      settings: { ...(s.settings ?? {}), seasonByBusiness: season },
+    }
+  },
+}
+
+/** Aplica las migraciones en cadena desde la versión guardada hasta la actual. */
+export function migrate(state: unknown, from: number): { ok: true; state: unknown } | { ok: false; at: number } {
+  let cur = state
+  for (let v = from; v < SCHEMA_VERSION; v++) {
+    const mig = MIGRATIONS[v]
+    if (!mig) return { ok: false, at: v }
+    cur = mig(cur)
+  }
+  return { ok: true, state: cur }
 }
 
 export function getBrowserStorage(): StorageLike | null {
@@ -79,9 +132,9 @@ export function loadState(storage: StorageLike | null): LoadResult {
   }
   if (env.schemaVersion > SCHEMA_VERSION) return { kind: 'future', version: env.schemaVersion, raw, byteLength }
   if (env.schemaVersion < SCHEMA_VERSION) {
-    const mig = MIGRATIONS[env.schemaVersion]
-    if (!mig) return { kind: 'needs-migration', version: env.schemaVersion, raw, byteLength }
-    const migrated = mig(env.state)
+    const m = migrate(env.state, env.schemaVersion)
+    if (!m.ok) return { kind: 'needs-migration', version: env.schemaVersion, raw, byteLength }
+    const migrated = m.state
     const errs = validateState(migrated)
     if (errs.length) return { kind: 'corrupt', errors: errs, raw, byteLength }
     return { kind: 'ok', state: migrated as AppState }

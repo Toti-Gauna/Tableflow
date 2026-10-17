@@ -1,9 +1,12 @@
 import type { BaseUnit, Unit } from './units'
 
-export const SCHEMA_VERSION = 2 as const
+// P5-L5: la versión detectada era 2 (P3, regalos y temporadas); la 3 suma los tres negocios nuevos y el pago en el local.
+export const SCHEMA_VERSION = 3 as const
 export const STORAGE_NS = 'tableflow.demo.v1'
 
-export type BusinessId = 'mesa-clara' | 'ritual-cafe'
+export type BusinessId = 'mesa-clara' | 'ritual-cafe' | 'copo' | 'compas' | 'brasa'
+/** Estaciones de preparación: cada negocio usa las suyas (barra, mostrador, plancha, freidora, armado…). */
+export type Station = 'cocina' | 'barra' | 'mostrador' | 'plancha' | 'freidora' | 'armado'
 export type Role =
   | 'cliente-invitado'
   | 'cliente-recurrente'
@@ -26,7 +29,7 @@ export interface Entity {
 export interface BusinessProfile extends Entity {
   id: BusinessId
   name: string
-  kind: 'bodegon' | 'cafe'
+  kind: 'bodegon' | 'cafe' | 'heladeria' | 'bar' | 'rapida'
   tagline: string
   story: string
   reservationsEnabled: boolean
@@ -42,6 +45,8 @@ export interface BusinessProfile extends Entity {
   rewardsEnabled: false
   pickupPerSlot: number
   categoryOrder: string[]
+  /** Retiro con pago en el local: el pedido aceptado queda con el pago pendiente hasta que caja lo registra. */
+  paysAtCounter: boolean
 }
 
 export interface Location extends Entity {
@@ -159,7 +164,7 @@ export interface MenuItem extends Entity {
   soldOut: boolean
   locationIds: string[] | null
   hours: { fromMin: number; toMin: number } | null
-  station: 'cocina' | 'barra'
+  station: Station
   maxQty: number
   foodNote: FoodNote
   tags: string[]
@@ -210,7 +215,7 @@ export interface OrderLine {
   qty: number
   unitCents: number
   lineCents: number
-  station: 'cocina' | 'barra'
+  station: Station
   selections: { groupId: string; groupName: string; optionId: string; optionName: string; deltaCents: number }[]
   note: string
   /** Invitación canjeada en esta línea y el importe que cubre (simulado, sin cobro real). */

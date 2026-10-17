@@ -85,7 +85,7 @@ const resRequest: Handler = (s, c: ReqParams, ctx) => {
   }
   const auto = !needsReview && biz.autoConfirmReservations
   const res: Reservation = {
-    id: nextId(s, 'R'),
+    id: nextId(s, 'R', 3, biz.id),
     ...base(s, biz.id),
     locationId: c.locationId,
     dateKey: c.dateKey,
@@ -306,7 +306,7 @@ const waitAdd: Handler = (s, c, ctx) => {
   if (!alias) return fail('alias-requerido', 'Poné un nombre para la lista de espera.')
   if (!Number.isInteger(c.party) || c.party < 1 || c.party > biz.maxPartyAuto) return fail('personas-invalidas', `La lista de espera acepta grupos de 1 a ${biz.maxPartyAuto}.`)
   const w: WaitlistEntry = {
-    id: nextId(s, 'W'),
+    id: nextId(s, 'W', 3, biz.id),
     ...base(s, biz.id),
     locationId: c.locationId,
     dateKey: c.dateKey,

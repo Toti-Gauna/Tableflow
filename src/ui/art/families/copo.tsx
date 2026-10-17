@@ -248,16 +248,16 @@ function CucuruchoDoble() {
 }
 
 export const COPO_FAMILY: FamilyPiece[] = [
-  { key: 'H-cucurucho-1', name: 'Cucurucho de un gusto', group: 'carta', Comp: CucuruchoSimple },
-  { key: 'H-cucurucho-2', name: 'Cucurucho de dos gustos', group: 'carta', Comp: CucuruchoDoble },
+  { key: 'CO-01', name: 'Cucurucho de un gusto', group: 'carta', Comp: CucuruchoSimple },
+  { key: 'CO-02', name: 'Cucurucho de dos gustos', group: 'carta', Comp: CucuruchoDoble },
   { key: 'H-cucurucho-banado', name: 'Cucurucho con baño de chocolate', group: 'carta', Comp: CucuruchoBanado },
-  { key: 'H-vasito', name: 'Vasito de dos gustos', group: 'carta', Comp: Vasito },
-  { key: 'H-cuarto', name: 'Pote de ¼ kg', group: 'carta', Comp: Cuarto },
-  { key: 'H-medio', name: 'Pote de ½ kg', group: 'carta', Comp: Medio },
-  { key: 'H-kilo', name: 'Pote de 1 kg', group: 'carta', Comp: Kilo },
+  { key: 'CO-03', name: 'Vasito de dos gustos', group: 'carta', Comp: Vasito },
+  { key: 'CO-04', name: 'Pote de ¼ kg', group: 'carta', Comp: Cuarto },
+  { key: 'CO-05', name: 'Pote de ½ kg', group: 'carta', Comp: Medio },
+  { key: 'CO-06', name: 'Pote de 1 kg', group: 'carta', Comp: Kilo },
   ...GUSTOS.map((g) => ({ key: `H-bacha-${g}`, name: `Bacha de ${GUSTO[g].name.toLowerCase()}`, group: 'carta' as const, Comp: () => <Bacha g={g} /> })),
-  { key: 'H-salsa', name: 'Salsa de chocolate (extra)', group: 'carta', Comp: Salsa },
-  { key: 'H-licuado', name: 'Licuado de frutilla (sin alcohol)', group: 'carta', Comp: Licuado },
+  { key: 'CO-07', name: 'Salsa de chocolate (extra)', group: 'carta', Comp: Salsa },
+  { key: 'CO-08', name: 'Licuado de frutilla (sin alcohol)', group: 'carta', Comp: Licuado },
   ...GUSTOS.map((g) => ({ key: `jg-hela-${g}`, name: `Bocha de ${GUSTO[g].name.toLowerCase()} (copiá el helado)`, group: 'juego' as const, Comp: () => <SoloBocha g={g} /> })),
   { key: 'jg-hela-cucurucho', name: 'Cucurucho vacío (copiá el helado)', group: 'juego', Comp: CucuruchoVacio },
 ]

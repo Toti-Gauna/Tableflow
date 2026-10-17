@@ -1,3 +1,4 @@
+import { BIZ_PREFIX } from './business'
 import type { AppState, AuditEvent, BusinessId, Role } from './types'
 
 export type Outcome<T = unknown> =
@@ -24,13 +25,22 @@ export interface Ctx {
 }
 
 /** IDs deterministas: contador persistente por prefijo (nunca Date.now ni Math.random). */
-export function nextNum(s: AppState, prefix: string): number {
-  const n = (s.counters[prefix] ?? 0) + 1
-  s.counters[prefix] = n
+/**
+ * P5-L5: los negocios nuevos numeran sus registros aparte (O-BR-001, R-TC-001…), así su actividad no corre los
+ * folios de Mesa Clara y Ritual Café, que conservan la numeración compartida de siempre (guardados v1/v2).
+ */
+const SHARED_NUMBERING = new Set<string>(['mesa-clara', 'ritual-cafe'])
+const scoped = (businessId?: BusinessId) => !!businessId && !SHARED_NUMBERING.has(businessId)
+export function nextNum(s: AppState, prefix: string, businessId?: BusinessId): number {
+  const key = scoped(businessId) ? `${prefix}@${businessId}` : prefix
+  const n = (s.counters[key] ?? 0) + 1
+  s.counters[key] = n
   return n
 }
-export function nextId(s: AppState, prefix: string, width = 3): string {
-  return `${prefix}-${String(nextNum(s, prefix)).padStart(width, '0')}`
+export function nextId(s: AppState, prefix: string, width = 3, businessId?: BusinessId): string {
+  const n = nextNum(s, prefix, businessId)
+  const p = scoped(businessId) ? `${prefix}-${BIZ_PREFIX[businessId!]}` : prefix
+  return `${p}-${String(n).padStart(width, '0')}`
 }
 
 export function base(s: AppState, businessId: BusinessId) {
@@ -49,7 +59,7 @@ export function audit(
   correlationId?: string,
 ): AuditEvent {
   const ev: AuditEvent = {
-    id: nextId(s, 'AUD', 4),
+    id: nextId(s, 'AUD', 4, businessId),
     businessId,
     createdAt: ctx.now,
     version: 1,

@@ -14,7 +14,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
       say(t, 'C-001', hi)
       expect(last(t, 'C-001')[0]).toBe('Hola, soy el asistente de Mesa Clara en esta demo. ¿Querés reservar, consultar la carta o seguir un pedido?')
       expect(lastMsg(t, 'C-001').actions.map((a) => a.label)).toEqual(['Reservar', 'Ver la carta', 'Seguir un pedido'])
-      expect(t.count('reservations')).toBe(18)
+      expect(t.count('reservations')).toBe(21)
     }
   })
   it('S28: vacío o solo espacios no crea burbuja ni evento', () => {
@@ -33,7 +33,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     expect(lastMsg(t, 'C-001').actions.map((a) => a.label)).toContain('21:45')
     say(t, 'C-001', '21:45', 'alt:1305')
     expect(last(t, 'C-001')[0]).toBe('Serían 4 personas el lunes 19 a las 21:45, salón. Tu preferencia no garantiza sector. ¿Confirmás la solicitud?')
-    expect(t.count('reservations')).toBe(18) // todavía no hay registro
+    expect(t.count('reservations')).toBe(21) // todavía no hay registro
     say(t, 'C-001', 'Confirmar solicitud', 'confirm')
     const r = t.get('reservations', 'R-019')
     expect(r).toMatchObject({ status: 'solicitada', party: 4, startMin: 21 * 60 + 45, conversationId: 'C-001', channel: 'whatsapp' })
@@ -42,7 +42,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     expect(r.status).not.toBe('confirmada') // una solicitud no se rotula confirmada antes de la aceptación
     // doble confirmación: no duplica
     say(t, 'C-001', 'Confirmar solicitud', 'confirm')
-    expect(t.count('reservations')).toBe(19)
+    expect(t.count('reservations')).toBe(22)
   })
   it('S12/S34: al aceptar R-019 el chat recibe la confirmación; cliente y admin ven el mismo estado', () => {
     const t = T.seed()
@@ -61,7 +61,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     const t = T.seed()
     say(t, 'C-001', 'Mesa para 2 el 27 a las 21')
     expect(last(t, 'C-001')[0]).toMatch(/¿Te referís al .* 27 de octubre\?/)
-    expect(t.count('reservations')).toBe(18)
+    expect(t.count('reservations')).toBe(21)
     say(t, 'C-001', 'Sí', 'confirm')
     expect(last(t, 'C-001')[0]).toMatch(/Serían 2 personas el .* 27 a las 21:00/)
     say(t, 'C-001', 'a las pronto')
@@ -135,7 +135,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     const r = t.get('reservations', 'R-019')
     expect(r).toMatchObject({ dateKey: '2026-10-21', startMin: 21 * 60 })
     expect(r.version).toBe(v + 1)
-    expect(t.count('reservations')).toBe(19)
+    expect(t.count('reservations')).toBe(22)
     expect(t.s.audit.some((a) => a.type === 'reservation.rescheduled' && a.entityId === 'R-019')).toBe(true)
   })
   it('S29: fuera de alcance dos veces → fallback y derivación con el texto conservado', () => {
@@ -160,24 +160,24 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     expect(last(t, 'C-003')[0]).toBe('¿A qué hora lo retirás?')
     say(t, 'C-003', '10:30', 'pickup:630')
     expect(last(t, 'C-003')[0]).toMatch(/Un Flat white \(mediano, vegetal \(avena\)\), sede Ritual Café · Centro, retiro 10:30, total \$ 7\.300,00\. ¿Confirmás el pedido\?/)
-    expect(t.count('orders')).toBe(12)
+    expect(t.count('orders')).toBe(17)
     say(t, 'C-003', 'Confirmar pedido', 'confirm')
     expect(t.get('orders', 'O-013')).toMatchObject({ status: 'enviado', conversationId: 'C-003', channel: 'whatsapp', kind: 'retiro' })
     expect(last(t, 'C-003')[0]).toMatch(/Listo: O-013 enviado a la barra/)
-    expect(t.count('orders')).toBe(13)
+    expect(t.count('orders')).toBe(18)
     // "Ya lo hice por la web": pide folio y enlaza, no crea otro
     say(t, 'C-003', 'Ya lo hice por la web')
     expect(last(t, 'C-003')[0]).toMatch(/Pasame el folio/)
     say(t, 'C-003', 'O-011')
     expect(t.get('orders', 'O-011').conversationId).toBe('C-003')
-    expect(t.count('orders')).toBe(13)
+    expect(t.count('orders')).toBe(18)
     expect(validateState(t.s)).toEqual([])
   })
   it('perfil sin reservas: intención de reservar explica la política y deriva (S15)', () => {
     const t = T.seed()
     say(t, 'C-003', 'Quiero reservar una mesa para 4')
     expect(last(t, 'C-003')[0]).toMatch(/atendemos por orden de llegada/)
-    expect(t.count('reservations')).toBe(18)
+    expect(t.count('reservations')).toBe(21)
     expect(t.s.tasks.some((x) => x.entityId === 'C-003')).toBe(true)
   })
   it('S34: web → chat → llamada conserva el folio; confirmar abre el registro existente', () => {
@@ -188,7 +188,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     expect(last(t, 'C-001')[0]).toMatch(/Seguimos tu solicitud R-019 por WhatsApp/)
     say(t, 'C-001', 'Confirmar solicitud', 'confirm')
     expect(last(t, 'C-001')[0]).toMatch(/ya está registrada como R-019.*no se creó otra/)
-    expect(t.count('reservations')).toBe(19)
+    expect(t.count('reservations')).toBe(22)
     // ahora por llamada
     const call = t.ok({ type: 'call/start', conversationId: 'C-001', reservationId: 'R-019' }) as any
     const callId = call.data.callId
@@ -196,7 +196,7 @@ describe('WhatsApp simulado: guion determinista (M11)', () => {
     t.ok({ type: 'call/say', callId, optionId: 'confirm' })
     t.ok({ type: 'call/respond', callId, token: 1 })
     expect(t.get('callSessions', callId)).toMatchObject({ status: 'solicitud_creada', reservationId: 'R-019' })
-    expect(t.count('reservations')).toBe(19)
+    expect(t.count('reservations')).toBe(22)
     expect(t.get('callSessions', callId).transcript.at(-1).text).toMatch(/Ya existe la solicitud R-019/)
   })
   it('reiniciar la conversación no cancela las reservas vinculadas', () => {
@@ -257,7 +257,7 @@ describe('Llamada simulada (M11)', () => {
     t.ok({ type: 'call/say', callId: id, optionId: 'silence' })
     const call = t.get('callSessions', id)
     expect(call).toMatchObject({ status: 'finalizada', endReason: 'silencio', reservationId: null })
-    expect(t.count('reservations')).toBe(18)
+    expect(t.count('reservations')).toBe(21)
   })
   it('rama B: tras el primer silencio se puede repetir opciones o pasar a recepción', () => {
     const t = T.seed()
@@ -278,7 +278,7 @@ describe('Llamada simulada (M11)', () => {
     const late = t.ok({ type: 'call/respond', callId: id, token: tokenBefore }) as any
     expect(late.duplicate).toBe(true) // callback tardío ignorado
     expect(t.get('callSessions', id).status).toBe('finalizada')
-    expect(t.count('reservations')).toBe(18)
+    expect(t.count('reservations')).toBe(21)
     // una opción que no corresponde al momento de la llamada se rechaza
     const id2 = start(t)
     t.fail({ type: 'call/say', callId: id2, optionId: 'accept' }, 'opcion-invalida')

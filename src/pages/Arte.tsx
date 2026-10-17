@@ -18,7 +18,7 @@ import './arte.css'
 // P5-L4 · Galería del arte por identidad: muestra a tamaño real, familia completa, piezas de juego y mockups.
 
 const ORDER: IdentityKey[] = ['cafe', 'resto', 'hela', 'bar', 'rapida']
-const SAMPLE: Record<IdentityKey, string> = { cafe: 'RC-03', resto: 'MC-13', hela: 'H-cucurucho-2', bar: 'T-bravas', rapida: 'B-doble' }
+const SAMPLE: Record<IdentityKey, string> = { cafe: 'RC-03', resto: 'MC-13', hela: 'CO-02', bar: 'TC-01', rapida: 'BR-04' }
 const SIZES = [40, 64, 96, 160, 320]
 const isIdentity = (x: string | undefined): x is IdentityKey => !!x && (ORDER as string[]).includes(x)
 

@@ -82,7 +82,7 @@ describe('Carta, carrito y envío (M01, M02, M05)', () => {
     cartMesa(t)
     const op = begin(t, 'CART-L-MC-salon')
     t.fail({ type: 'order/submit', cartId: 'CART-L-MC-salon', operationId: op }, 'local-cerrado')
-    expect(t.count('orders')).toBe(12)
+    expect(t.count('orders')).toBe(17)
   })
   it('S07: item agotado desde admin bloquea el envío y ofrece alternativas', () => {
     const t = T.seed()
@@ -94,7 +94,7 @@ describe('Carta, carrito y envío (M01, M02, M05)', () => {
     const o = t.fail({ type: 'order/submit', cartId: 'CART-L-MC-salon', operationId: op }, 'agotado') as any
     expect(o.data.alternatives.length).toBeGreaterThan(0)
     expect(t.get('carts', 'CART-L-MC-salon').lines).toHaveLength(1) // queda pendiente de corrección
-    expect(t.count('orders')).toBe(12)
+    expect(t.count('orders')).toBe(17)
     t.fail({ type: 'cart/add', ...MC, itemId: 'MC-12', qty: 1, selections: { 'MG-guarnicion': ['gu-ensalada'] } }, 'item-no-disponible')
   })
   it('S08: precio cambiado exige reconfirmación y no crea pedido al precio nuevo', () => {
@@ -106,7 +106,7 @@ describe('Carta, carrito y envío (M01, M02, M05)', () => {
     const op = begin(t, 'CART-L-MC-salon')
     const r = t.fail({ type: 'order/submit', cartId: 'CART-L-MC-salon', operationId: op }, 'precio-cambio') as any
     expect(r.data.changes[0]).toMatchObject({ oldCents: 1250000, newCents: 1400000 })
-    expect(t.count('orders')).toBe(12)
+    expect(t.count('orders')).toBe(17)
     t.ok({ type: 'cart/ackPrices', cartId: 'CART-L-MC-salon' })
     const op2 = begin(t, 'CART-L-MC-salon')
     const ok = t.ok({ type: 'order/submit', cartId: 'CART-L-MC-salon', operationId: op2 }) as any
@@ -131,7 +131,7 @@ describe('Carta, carrito y envío (M01, M02, M05)', () => {
       expect(m).toBeLessThan(20 * 60)
     }
     expect(r.data.alternatives[0]).toBe(10 * 60 + 15)
-    expect(t.count('orders')).toBe(12)
+    expect(t.count('orders')).toBe(17)
   })
   it('retiro lleno (6 por franja) ofrece otra franja', () => {
     const t = T.seed()
