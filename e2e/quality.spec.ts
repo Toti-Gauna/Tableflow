@@ -273,6 +273,8 @@ test.describe('Chat guionado por la UI (S27–S29)', () => {
 test.describe('Accesibilidad automática (axe: no certifica conformidad)', () => {
   const pages = ['/#/', '/#/mesa-clara', '/#/mesa-clara/carta', '/#/mesa-clara/pedido', '/#/mesa-clara/reservar', '/#/ritual-cafe/explorar', '/#/ritual-cafe/catas', '/#/mesa-clara/simulador', '/#/admin/resumen', '/#/admin/reservas', '/#/admin/salon', '/#/admin/pedidos', '/#/admin/cocina', '/#/admin/caja', '/#/admin/carta', '/#/admin/stock', '/#/admin/clientes', '/#/admin/automatizaciones', '/#/admin/reportes', '/#/admin/configuracion', '/#/comercial', '/#/mesa-clara/regalar', '/#/ritual-cafe/chicos', '/#/admin/regalos', '/#/arte']
   test('sin violaciones serias o críticas en las pantallas principales', async ({ page }) => {
+    // 25 análisis de axe seguidos: en contenedores lentos supera el límite global de 45 s sin que falle nada.
+    test.setTimeout(150_000)
     await fresh(page, '/#/')
     const bad: string[] = []
     for (const p of pages) {

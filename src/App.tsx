@@ -29,6 +29,9 @@ const Regalar = named(() => import('./pages/client/Regalar'), 'Regalar')
 const Regalo = named(() => import('./pages/client/Regalo'), 'Regalo')
 const Comercial = named(() => import('./pages/Comercial'), 'Comercial')
 const Arte = named(() => import('./pages/Arte'), 'Arte')
+// P5-L2: estudio de propuestas visuales, ruta aislada fuera del chrome de la demo.
+const PropuestasIndex = named(() => import('./pages/propuestas/Propuestas'), 'PropuestasIndex')
+const PropuestaStudio = named(() => import('./pages/propuestas/Propuestas'), 'PropuestaStudio')
 const AdminLayout = named(() => import('./pages/admin/AdminLayout'), 'AdminLayout')
 const AdminResumen = named(() => import('./pages/admin/Resumen'), 'AdminResumen')
 const AdminReservas = named(() => import('./pages/admin/Reservas'), 'AdminReservas')
@@ -124,6 +127,8 @@ export function App() {
   return (
     <HashRouter>
       <Routes>
+        <Route path="/propuestas" element={<Suspense fallback={<RouteLoader />}><PropuestasIndex /></Suspense>} />
+        <Route path="/propuestas/:id" element={<Suspense fallback={<RouteLoader />}><PropuestaStudio /></Suspense>} />
         <Route element={<Chrome />}>
           <Route path="/" element={<Landing />} />
           <Route path="/simulador" element={<SimRedirect />} />
