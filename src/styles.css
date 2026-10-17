@@ -176,16 +176,16 @@ h1[tabindex='-1']:focus { outline: none; }
 .console .sep { width: 1px; align-self: stretch; background: #3f4b3d; margin: 0 2px; }
 .console .console-toggle { display: none; }
 .console-mini { display: none; }
-.console select[data-testid='role-select'] { width: 212px; }
-.console select[data-testid='clock-jump'] { width: 132px; }
+.console select[data-testid='role-select'] { width: 230px; }
+.console select[data-testid='clock-jump'] { width: 118px; }
 .console .wide-only { display: inline; }
-@media (min-width: 1180px) {
+@media (min-width: 1280px) {
   .console-inner { flex-wrap: nowrap; gap: 10px; }
   .console .wide-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .console .sep { display: none; }
 }
 @media (min-width: 1440px) { .console .sep { display: block; } }
-@media (max-width: 1179px) {
+@media (max-width: 1279px) {
   .console-inner { align-items: center; }
   .console .console-toggle { display: inline-flex; }
   .console-mini { display: inline-flex; margin-left: auto; min-height: 44px; align-items: center; gap: 6px; font-weight: 800; font-size: .86rem; color: #f3f6ef; white-space: nowrap; }
@@ -787,10 +787,51 @@ fieldset.plain > legend, .step-title, .res-form .field > label:has(.step-n) { fo
 .slot-grid button { min-height: 44px; min-width: 76px; border: 1px solid var(--line-strong); background: #fff; border-radius: 10px; font-weight: 800; cursor: pointer; font-variant-numeric: tabular-nums; }
 .slot-grid button[aria-pressed='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
 .slot-grid button:disabled { background: var(--paper-2); color: var(--muted); cursor: not-allowed; text-decoration: line-through; }
-.stamp { width: 64px; height: 64px; border-radius: 50%; border: 3px dashed var(--line-strong); display: grid; place-items: center; font-weight: 800; color: var(--muted); }
-.stamp.on { border: 3px double var(--accent); color: var(--accent); background: #fff; transform: rotate(-6deg); }
-.pcard { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: var(--surface); }
-.pcard[data-done='true'] { border-color: var(--ok); background: #f6fbf7; }
+/* Pasaporte (M13) */
+.pp-steps { list-style: none; padding: 0; margin: 0 0 var(--s3); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.pp-steps li { position: relative; padding-top: 28px; text-align: center; font-size: .78rem; font-weight: 750; color: var(--muted); }
+.pp-steps li::before { content: ''; position: absolute; top: 6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--surface); z-index: 1; box-sizing: border-box; }
+.pp-steps li::after { content: ''; position: absolute; top: 13px; right: 50%; width: 100%; height: 2px; background: var(--line); }
+.pp-steps li:first-child::after { display: none; }
+.pp-steps li[data-on='true'] { color: var(--ink); }
+.pp-steps li[data-on='true']::before { background: var(--accent); border-color: var(--accent); }
+.pp-steps li[data-on='true']::after { background: var(--accent); }
+.pp-steps li[aria-current='step']::before { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
+@media (max-width: 480px) { .pp-steps li { font-size: .68rem; } }
+.pp-status { margin: 0 0 var(--s4); }
+.pcards { display: grid; gap: var(--s4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); margin: var(--s4) 0 var(--s5); align-items: start; }
+.pcard { border: 1px solid var(--line); border-radius: 18px; padding: var(--s5); background: var(--surface); }
+.pcard .axis { font-size: .7rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.pcard h2 { font-size: 1.4rem; }
+.pcard[data-done='true'] { border-color: #b7d9be; background: color-mix(in srgb, var(--ok-bg) 40%, var(--surface)); }
+.pcard .quiz { border: 0; padding: 0; margin: 12px 0 0; }
+.pcard .quiz legend { font-weight: 750; margin-bottom: 8px; padding: 0; }
+.pcard .answer { width: 100%; justify-content: flex-start; text-align: left; border-radius: 12px; margin-bottom: 8px; white-space: normal; }
+.retry-text { color: var(--warn); font-weight: 650; background: var(--warn-bg); border-radius: 10px; padding: 8px 12px; }
+.done-note { display: flex; gap: 8px; align-items: flex-start; }
+.medal { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: start; border: 1px solid var(--rule); border-radius: 20px; padding: var(--s5); background: var(--surface); margin-bottom: var(--s4); }
+.medal .seal { width: 88px; height: 88px; border-radius: 50%; display: grid; place-items: center; color: var(--accent); border: 3px double var(--accent); transform: rotate(-8deg); }
+@media (max-width: 480px) { .medal { grid-template-columns: minmax(0, 1fr); } }
+.saved-pick { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 14px; background: var(--surface); margin: 0 0 var(--s4); }
+.saved-pick .glyph { color: var(--accent); }
+.saved-pick.big { padding: 16px 20px; }
+.from-passport { display: flex; gap: 8px; align-items: flex-start; background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink); border-radius: 12px; padding: 10px 14px; font-size: .9rem; margin: 0 0 12px; }
+.from-passport .glyph { color: var(--accent); margin-top: 2px; }
+.passport-grid { display: grid; gap: var(--s4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); align-items: start; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 16px 0 6px; }
+.metrics > div { padding: 10px 12px; border-right: 1px solid var(--line); }
+.metrics > div:last-child { border-right: 0; }
+.metrics dt { font-size: .66rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.metrics dd { margin: 2px 0 0; font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (max-width: 420px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metrics > div:nth-child(2) { border-right: 0; } .metrics > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+.stamps { list-style: none; padding: 0; margin: 10px 0; display: flex; gap: 10px; flex-wrap: wrap; }
+.stamp { width: 60px; height: 60px; border-radius: 50%; border: 2px dashed var(--line-strong); display: grid; place-items: center; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stamp.on { border: 3px double var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); transform: rotate(-8deg); }
+.stamp.on:nth-child(2n) { transform: rotate(6deg); }
+.visit-list { list-style: none; padding: 0; margin: 10px 0 0; border-top: 1px solid var(--rule); }
+.visit-list li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: .92rem; }
+.visit-list li[data-status='revertida'] { color: var(--muted); }
+.rules { padding-left: 18px; }
 
 /* ==========================================================================
    Administración: sobria, densa, neutral

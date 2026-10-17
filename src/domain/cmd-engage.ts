@@ -2,6 +2,7 @@ import { audit, base, byId, dup, emit, fail, nextId, ok } from './core'
 import { ensureCustomer } from './customers'
 import { PASSPORT_CARDS, PASSPORT_PICKS, STAMPS_FOR_BADGE } from './content'
 import { dateKeyOf } from './time'
+import { itemUnavailable, UNAVAILABLE_TEXT } from './menu'
 import type { AppState, BusinessId, Passport, TastingEvent } from './types'
 import type { Handler } from './cmd-commerce'
 
@@ -168,6 +169,27 @@ const passReset: Handler = (s, c, ctx) => {
   return ok()
 }
 
+/**
+ * Revalida la selección guardada contra la carta ACTUAL antes de usarla: existe, se sirve en la sede,
+ * está en franja y con insumos. No guarda opciones viejas: el configurador se abre con las opciones vigentes.
+ */
+export function checkSavedPick(s: AppState, businessId: BusinessId, locationId: string):
+  | { ok: true; itemId: string; priceCents: number }
+  | { ok: false; code: string; text: string; alternatives: { id: string; name: string }[] } {
+  const p = getPassport(s, businessId, s.session.customerByBusiness[businessId] ?? null)
+  if (!p?.savedPreference) return { ok: false, code: 'sin-seleccion', text: 'Todavía no guardaste una selección.', alternatives: [] }
+  const item = byId(s.menuItems, p.savedPreference)
+  const alts = (cat: string | null) =>
+    s.menuItems
+      .filter((m) => m.businessId === businessId && m.id !== p.savedPreference && (!cat || m.category === cat) && !itemUnavailable(s, m, locationId))
+      .slice(0, 3)
+      .map((m) => ({ id: m.id, name: m.name }))
+  if (!item) return { ok: false, code: 'no-existe', text: 'Ese plato ya no está en la carta.', alternatives: alts(null) }
+  const un = itemUnavailable(s, item, locationId)
+  if (un) return { ok: false, code: un, text: `${item.name}: ${UNAVAILABLE_TEXT[un].toLowerCase()}.`, alternatives: alts(item.category) }
+  return { ok: true, itemId: item.id, priceCents: item.priceCents }
+}
+
 // ---------------------------------------------------------------- visitas / sellos
 export function stampsOf(s: AppState, customerId: string): number {
   return new Set(s.visits.filter((v) => v.customerId === customerId && v.status === 'acreditada').map((v) => v.dateKey)).size
@@ -176,6 +198,8 @@ export function stampsOf(s: AppState, customerId: string): number {
 const visitCredit: Handler = (s, c, ctx) => {
   const biz = byId(s.businesses, c.businessId)
   if (!biz) return fail('negocio-inexistente', 'Negocio inexistente.')
+  // regla didáctica: el sello lo acredita el personal en el local, nunca el propio cliente
+  if (ctx.actor === 'cliente-invitado' || ctx.actor === 'cliente-recurrente') return fail('solo-personal', 'Los sellos los acredita el personal del local; desde la vista cliente no se pueden sumar.')
   if (biz.passportPaused) return fail('mecanica-pausada', 'La mecánica de sellos está pausada.')
   const cu = byId(s.customers, c.customerId)
   if (!cu || cu.businessId !== biz.id) return fail('cliente-inexistente', 'Cliente inexistente en este negocio.')

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildReport } from '../src/domain/reports'
 import { validateState } from '../src/domain/validate'
 import { T, MON } from './helpers'
-import { stampsOf, passportDone } from '../src/domain/cmd-engage'
+import { checkSavedPick, stampsOf, passportDone } from '../src/domain/cmd-engage'
 
 const MC = { businessId: 'mesa-clara', locationId: 'L-MC-salon' }
 
@@ -28,9 +28,19 @@ describe('Pasaporte, fidelización, catas y reportes (M10, M13, M14, M15)', () =
     t.ok({ type: 'pass/save', businessId: biz, itemId: 'RC-07' })
     expect(pass()).toMatchObject({ badge: 'guardada', savedPreference: 'RC-07' })
     expect(t.s.orders.length).toBe(12) // logro sin comprar
-    // la selección guardada se usa en el carrito (métrica local)
+    // agregar el mismo plato desde la carta no cuenta como "uso" del pasaporte; desde el pasaporte sí (métrica local, no venta)
     t.ok({ type: 'cart/add', businessId: biz, locationId: 'L-RC-centro', itemId: 'RC-07', qty: 1, selections: { 'MG-origen': ['or-huila'] } })
+    expect(pass().metrics.usedInCart).toBe(0)
+    expect(checkSavedPick(t.s, biz, 'L-RC-centro')).toMatchObject({ ok: true, itemId: 'RC-07' })
+    t.ok({ type: 'cart/add', businessId: biz, locationId: 'L-RC-centro', itemId: 'RC-07', qty: 1, selections: { 'MG-origen': ['or-guji'] }, source: 'pasaporte' })
     expect(pass().metrics.usedInCart).toBe(1)
+    // revalidación: en la sede Norte el V60 no se sirve → no se usa una opción vieja, se proponen alternativas
+    const norte = checkSavedPick(t.s, biz, 'L-RC-norte')
+    expect(norte.ok).toBe(false)
+    if (!norte.ok) {
+      expect(norte.code).toBe('otra-sede')
+      expect(norte.alternatives.length).toBeGreaterThan(0)
+    }
     t.ok({ type: 'pass/reset', businessId: biz })
     expect(pass()).toMatchObject({ badge: 'reiniciada', savedPreference: null })
     expect(passportDone(t.s, pass())).toBe(0)
@@ -51,6 +61,12 @@ describe('Pasaporte, fidelización, catas y reportes (M10, M13, M14, M15)', () =
     expect(t.get('visits', a.data.visitId)).toMatchObject({ status: 'revertida', reversalReason: 'Se acreditó por error' })
     expect((t.ok({ type: 'visit/revert', visitId: a.data.visitId, reason: 'otra vez' }) as any).duplicate).toBe(true)
     expect(t.count('redemptions')).toBe(0) // no hay premios reales
+    // el cliente no puede sumarse sellos: solo el personal acredita visitas
+    t.fail({ type: 'visit/credit', ...MC, customerId: 'CL-001', dateKey: '2026-10-20' }, 'solo-personal', 'cliente-recurrente')
+    // pausa: no se acreditan sellos ni avanza el pasaporte, pero el historial y el contador quedan
+    t.ok({ type: 'pass/pause', businessId: 'mesa-clara', paused: true })
+    t.fail({ type: 'visit/credit', ...MC, customerId: 'CL-001', dateKey: '2026-10-20' }, 'mecanica-pausada', 'recepcion')
+    expect(stampsOf(t.s, 'CL-001')).toBe(4)
     expect(t.get('businesses', 'mesa-clara').rewardsEnabled).toBe(false)
   })
   it('S39: criterio conservador entre sedes: un sello por persona y fecha en todo el negocio', () => {

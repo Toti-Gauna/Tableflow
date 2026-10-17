@@ -75,9 +75,11 @@ const cartAdd: Handler = (s, c, ctx) => {
     cart.lines.push(line)
   }
   touchCart(cart, ctx)
-  // métrica local del pasaporte: uso de la selección guardada en el carrito
-  const pass = s.passports.find((p) => p.businessId === c.businessId && p.customerId === (s.session.customerByBusiness[c.businessId as Cart['businessId']] ?? null))
-  if (pass && pass.savedPreference === item.id) pass.metrics.usedInCart++
+  // métrica local del pasaporte: "uso" = la selección guardada se agregó desde el pasaporte (no es una venta)
+  if (c.source === 'pasaporte') {
+    const pass = s.passports.find((p) => p.businessId === c.businessId && p.customerId === (s.session.customerByBusiness[c.businessId as Cart['businessId']] ?? null))
+    if (pass && pass.savedPreference === item.id) pass.metrics.usedInCart++
+  }
   return ok({ cartId: cart.id, total: cartTotal(s, cart) })
 }
 const sortSel = (sel: Record<string, string[]>) => Object.keys(sel).sort().map((k) => [k, [...sel[k]].sort()])

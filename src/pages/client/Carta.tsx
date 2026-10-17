@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useBiz, useCart } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, Dialog, Empty, ErrorText } from '../../ui/kit'
@@ -9,6 +9,7 @@ import { categoriesOf, checkLine, groupsOf, itemUnavailable, menuFor, searchItem
 import { optionStockOk } from '../../domain/stock'
 import { windowsFor } from '../../domain/availability'
 import { sedeShort } from '../../ui/format'
+import { SavedPick } from '../../ui/passport'
 import { dateKeyOf, hhmm } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
 import { setPrefs, useSnapshot } from '../../store'
@@ -60,6 +61,8 @@ export function Carta() {
   const { state, biz, locationId } = useBiz()
   const { prefs } = useSnapshot()
   const { itemId } = useParams()
+  const [params] = useSearchParams()
+  const fromPassport = params.get('origen') === 'pasaporte'
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [onlyAvail, setOnlyAvail] = useState(false)
@@ -125,6 +128,7 @@ export function Carta() {
               {active && <button type="button" className="btn ghost small" onClick={clear}>Limpiar filtros</button>}
             </div>
           </form>
+          <SavedPick state={state} biz={biz.id} locationId={locationId} compact />
           <p className="allergen-key">
             <b>Alérgenos</b> (muestra): {allergenKey(all)}. Sin código: no declarados. Ante una alergia, consultá al equipo.
           </p>
@@ -179,7 +183,7 @@ export function Carta() {
           </div>
         </aside>
       </div>
-      <ItemDialog item={selected} biz={biz} locationId={locationId} state={state} fav={!!selected && prefs.favorites.includes(selected.id)} onFav={() => selected && toggleFav(selected.id)} onClose={() => nav(`/${biz.id}/carta`)} />
+      <ItemDialog item={selected} biz={biz} locationId={locationId} state={state} fromPassport={fromPassport && !!selected && saved === selected.id} fav={!!selected && prefs.favorites.includes(selected.id)} onFav={() => selected && toggleFav(selected.id)} onClose={() => nav(`/${biz.id}/carta`)} />
     </main>
   )
 }
@@ -298,7 +302,7 @@ function reqText(required: boolean, min: number, max: number, done: boolean) {
   return max > 1 ? `Opcional · hasta ${max}` : 'Opcional'
 }
 
-function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose }: { item?: MenuItem; biz: BusinessProfile; locationId: string; state: AppState; fav: boolean; onFav: () => void; onClose: () => void }) {
+function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPassport }: { item?: MenuItem; biz: BusinessProfile; locationId: string; state: AppState; fav: boolean; onFav: () => void; onClose: () => void; fromPassport?: boolean }) {
   const [sel, setSel] = useState<Record<string, string[]>>({})
   const [qty, setQty] = useState(1)
   const [note, setNote] = useState('')
@@ -328,7 +332,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose }: { ite
     })
   }
   const add = () => {
-    const o = act({ type: 'cart/add', businessId: biz.id, locationId, itemId: item.id, qty, selections: sel, note }, `${item.name} agregado al pedido`)
+    const o = act({ type: 'cart/add', businessId: biz.id, locationId, itemId: item.id, qty, selections: sel, note, source: fromPassport ? 'pasaporte' : undefined }, `${item.name} agregado al pedido`)
     if (!o.ok) {
       const errs = ((o.data as { errors?: Record<string, string> } | undefined)?.errors ?? {}) as Record<string, string>
       setErrors(Object.keys(errs).length ? errs : { _item: o.message })
@@ -357,6 +361,11 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose }: { ite
           <Glyph name="heart" size={22} />
         </button>
       </div>
+      {fromPassport && (
+        <p className="from-passport" data-testid="from-passport">
+          <Glyph name="star" size={16} /> Tu selección del pasaporte, revalidada recién: elegí las opciones de hoy; el precio es el actual.
+        </p>
+      )}
       <div className="food-note">
         <Glyph name={fn.tone === 'warn' ? 'flag' : 'alert'} size={16} />
         <span>
