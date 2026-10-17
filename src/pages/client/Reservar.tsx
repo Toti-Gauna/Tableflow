@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useBiz, useOperation } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, DemoHint, ErrorText, Field, StatusBadge, Empty } from '../../ui/kit'
-import { HeroMesa } from '../../ui/art/hero'
+import { BodegonArt } from '../../ui/art/scenes/bodegon'
 import { RES_LABEL } from '../../ui/format'
 import { slotStarts, slotAvailable, windowsFor } from '../../domain/availability'
 import { addDays, dateKeyOf, dayName, fmtDateShort, hhmm, monthName } from '../../domain/time'
@@ -170,7 +170,7 @@ export function Reservar() {
 
         <div className="stack res-side">
           <aside className="res-summary" aria-label="Resumen de tu solicitud">
-            <div className="res-art" aria-hidden="true"><HeroMesa size={360} slice /></div>
+            <div className="res-art" aria-hidden="true"><BodegonArt className="art" slice compact /></div>
             <div className="res-ticket">
               <p className="eyebrow">{biz.name} · {loc ? sedeShort(loc.name) : ''}</p>
               <h2>Tu mesa</h2>

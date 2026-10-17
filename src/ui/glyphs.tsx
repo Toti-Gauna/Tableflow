@@ -64,6 +64,7 @@ const P: Record<string, string> = {
   help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17h.01',
   envelope: 'M3.5 6h17v12h-17zM3.5 6.5l8.5 6.5 8.5-6.5',
   menu: 'M4 7h16M4 12h16M4 17h10',
+  film: 'M4 5.5h16v13H4zM4 9h16M4 15h16M8 5.5V9M12 5.5V9M16 5.5V9M8 15v3.5M12 15v3.5M16 15v3.5',
   music: 'M9 18V6l10-2v12M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM19 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
 }
 export type GlyphName = keyof typeof P

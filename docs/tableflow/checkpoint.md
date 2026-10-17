@@ -1,3 +1,90 @@
+# Checkpoint P5-L4 · TableFlow: arte SVG por identidad, mockups y galería
+
+> L4 se construyó sobre la rama de L3 (PR #5, todavía abierto) porque usa sus tokens. Especificación SDD, revisión de la muestra y límites: `p5-spec.md`, sección "L4".
+
+## Identificación
+- Fecha real: 17/10/2026. Rama `claude/tableflow-p5-l4`, creada desde `claude/tableflow-p5-l3` (`009e443`). `SCHEMA_VERSION` sigue en 2: no hay cambios de dominio.
+
+## Qué se hizo
+- **Familias** en `src/ui/art/families/`, con 127 piezas: café 23, bodegón 38, heladería 26, bar 19 y rápida 21. Cada una tiene su material y punto de vista y su marco `Piece` (sin el filtro de P4). Cubren carta, juego infantil y objetos de la casa.
+- **Muestra a tamaño real** antes de producir cada familia: cinco piezas revisadas a 40–320 px en claro y oscuro, cuatro rehechas. En la familia se corrigieron siete piezas más.
+- **Mockups** (`mockups.tsx` y `.css`): comprobante, tarjeta de fidelidad y teléfono con pantalla por identidad, en HTML con texto real.
+- **Galería** `#/arte` (índice) y `#/arte/<id>`: muestra a tamaño real, familia por grupo y mockups; sigue el tema.
+- **App:** `DishArt` usa las familias. Las escenas firma de L2b pasan a `src/ui/art/scenes/` y reemplazan la "mesa desde arriba" en el inicio, las portadas y reservas. Se borró el arte de platos de P4, que ya no se usaba.
+
+## Pruebas nuevas
+- `tests/art.test.ts` (132):
+  - cobertura de los 42 ítems;
+  - claves únicas;
+  - bebidas marcadas "sin alcohol";
+  - una prueba por pieza: `viewBox`, ids únicos entre dos instancias, referencias resueltas, sin NaN ni enlaces externos, nombre accesible;
+  - mockups.
+- `e2e/p5-l4.spec.ts` (3):
+  - galería completa sin red externa ni errores de consola;
+  - piezas sin deformar;
+  - la app usa las familias y las escenas;
+  - axe en claro y oscuro, a 1440 y 390 px, sin scroll horizontal.
+- No cambió ninguna prueba existente; en `screens.spec.ts` solo se agregó el bloque de capturas de L4.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 15 archivos, 574 pruebas (442 + 132) |
+| `npm run build` | 0 | OK. Chunk inicial: 348 kB JS (antes 326; suman las familias de los cinco negocios). Galería: chunk diferido de 15 kB |
+| `npx playwright test` | 0 | 86 pasadas (83 + 3), 6 omitidas (capturas) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L4"` | 0 | 43 capturas en `screens/p5-l4/`, cuantizadas: 3,0 MB |
+
+## Siguiente tarea exacta
+PR de L4 (encadenado a L3), seguimiento hasta verde y espera del ok de Ignacio. Después, **L5**: los tres negocios nuevos con fixtures, migración a esquema 3, retiro con pago en local y los cinco juegos infantiles, usando estas familias.
+
+---
+
+# Checkpoint P5-L3 · TableFlow: shell, identidad aplicada y modo oscuro
+
+> L1 (PR #3) y L2b (PR #4) están en `main`. Ignacio aprobó las cinco identidades de L2b el 17/10/2026. L3 las aplica a los dos negocios que hoy existen (Ritual Café y Mesa Clara), agrega el modo oscuro, reemplaza la consola superior por un dock y suma la bienvenida por rol. Especificación SDD y límites: `p5-spec.md`, sección "L3".
+
+## Identificación
+- Fecha real: 17/10/2026. HEAD de entrada: `2ee3dda` (merge del PR #4). Rama `claude/tableflow-p5-l3`, creada desde `main`.
+- `SCHEMA_VERSION` sigue en 2: el estado del dominio no cambia. Las preferencias suman `theme` (`system` | `light` | `dark`) y `roleIntroSeen`. Si las preferencias guardadas son viejas o tienen un valor desconocido, se completan con los valores por defecto sin perder el resto.
+
+## Qué se hizo
+- **Tema:** `src/ui/theme.ts` aplica `html[data-theme]` antes del primer render y sigue a `prefers-color-scheme` en vivo mientras la preferencia sea "sistema". El reinicio de la demo conserva el tema y la bienvenida.
+- **Tokens:** `styles.css` tiene seis temas (TableFlow, Mesa Clara y Ritual Café, en claro y oscuro) con nombres semánticos. `html[data-biz]` lo fija `Chrome` según la ruta. Los colores fijos de campos, avisos, estados, salón, caja, regalos, juegos y chat pasaron a tokens.
+- **Identidad:** Mesa Clara usa el cartel enlozado en Ultra, Bitter y Caveat Brush. Ritual Café usa Bodoni Moda, EB Garamond, Pinyon Script, bordó y oro, y un doble filete. Las tipografías se cargan desde el build (OFL), sin CDN.
+- **Shell:** franja DEMO fina (≤ 32 px, medido en SH-01) y en una sola línea en móvil. `DemoDock` reemplaza a `DemoBar`:
+  - rol con descripción, negocio, sede, reloj, cinco casos, tema, sonidos, movimiento, guía, tráiler con estado honesto y reinicio confirmado;
+  - abajo a la derecha en escritorio, dentro de la franja DEMO cuando hay barra inferior;
+  - se cierra con Escape o con un clic afuera.
+- **Bienvenida:** `RoleIntro` aparece una vez en la portada, después de la carga. Se puede omitir.
+- **FX-01…03:** artículo del 404, plural del resumen y contexto de "Pedidos de hoy".
+- **Accesibilidad:**
+  - los `input` sin `type` (regalos) no tomaban el estilo de campo; ya lo toman;
+  - la tabla de turnos de Caja con desplazamiento ahora se puede enfocar con teclado (axe a 390 px).
+
+## Pruebas cambiadas, y por qué
+- `e2e/*.spec.ts`: los controles que antes estaban siempre visibles ahora están dentro del dock, así que antes de usarlos se llama a `ensureConsole`. `setRole` y `jump` cierran el dock. No se quitó ninguna aserción.
+- `playwright.config.ts` y `fresh()`: arrancan con la bienvenida ya omitida. La bienvenida se prueba aparte, con almacenamiento vacío (`p5-l3.spec.ts`, SH-02).
+- `design.spec.ts`: la excepción de superposición pasa de `.console` a `.dock`.
+- `motion.spec.ts`: abre el dock antes de usar "Reducir movimiento".
+- `tests/contrast.test.ts`:
+  - los pares literales de Mesa Clara y Ritual Café usaban la paleta vieja; se reemplazaron por pares leídos de `styles.css` (40 pares por tema en 6 temas, más la pizarra), así ya no pueden quedar desfasados;
+  - los pares de la consola, que ya no existe, se reemplazaron por los del dock.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 14 archivos, 442 pruebas. Antes: 205. Se suman los pares de contraste por tema y `theme.test.ts` (3) |
+| `npm run build` | 0 | OK |
+| `npx playwright test` | 0 | 83 pasadas (73 + 10 de `p5-l3.spec.ts`), 6 omitidas (capturas) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L3"` | 0 | 22 capturas en `screens/p5-l3/`, cuantizadas a 256 colores: 3,6 MB |
+
+## Siguiente tarea exacta
+PR de L3 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L4**: familia SVG propia por identidad con buen render en claro y oscuro (AR-01…05). Los tres negocios nuevos (heladería, bar, comida rápida) entran en L5 con este mismo sistema de tokens.
+
+---
+
 # Checkpoint P5 · TableFlow: cinco negocios (L1 hecho, L2 rehecho como L2b; puerta de aprobación visual)
 
 > Prompt P5: una fase en diez lotes. L1 (especificación) se mergeó con el PR #3. La primera ronda de L2 (15 conceptos) también entró con ese PR, pero Ignacio la rechazó por genérica. **L2b la reemplaza con una identidad propia por negocio.** L3–L10 esperan su aprobación.

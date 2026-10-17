@@ -11,7 +11,8 @@ import { dateKeyOf, fmtDateShort, hhmm, minutesOfDay } from '../../domain/time'
 import { eventSeats } from '../../domain/cmd-engage'
 import { BOARD_PICKS, ORIGINS } from '../../domain/content'
 import { SeasonBand } from '../../ui/season'
-import { HeroBarra, HeroMesa } from '../../ui/art/hero'
+import { BodegonArt } from '../../ui/art/scenes/bodegon'
+import { SalonArt } from '../../ui/art/scenes/salon'
 import type { AppState, BusinessProfile, ServiceWindow } from '../../domain/types'
 
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -139,7 +140,7 @@ export function Home() {
           )}
         </div>
         <div className="hero-figure">
-          {isRest ? <HeroMesa size={520} /> : <HeroBarra size={520} />}
+          {isRest ? <BodegonArt className="art scene" label="Mesa Clara: pingüino de vino, sifón, panera y milanesa napolitana sobre el mantel a cuadros" /> : <SalonArt className="art scene" label="Ritual Café: el salón bajo el vitral, con café con leche y medialunas en la bandeja" />}
           <div className="hero-board">
             {isRest ? <DayBoard state={state} biz={biz} locationId={locationId} /> : <BarRhythm state={state} biz={biz} locationId={locationId} />}
           </div>

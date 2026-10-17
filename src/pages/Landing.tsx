@@ -4,7 +4,8 @@ import { act } from '../ui/kit'
 import { Glyph } from '../ui/glyphs'
 import { useApp } from '../store'
 import { DEFAULT_ADMIN } from '../ui/format'
-import { HeroBarra, HeroMesa } from '../ui/art/hero'
+import { BodegonArt } from '../ui/art/scenes/bodegon'
+import { SalonArt } from '../ui/art/scenes/salon'
 import { DishArt } from '../ui/art'
 import { SeasonArt } from '../ui/art/season'
 import { activeSeason } from '../domain/season'
@@ -44,7 +45,7 @@ export function Landing() {
       <div className="covers">
         {state.businesses.map((b) => (
           <section key={b.id} className="cover cover-v2 fx-scene" data-biz={b.id} aria-labelledby={`b-${b.id}`}>
-            <div className="cover-art" aria-hidden="true">{b.id === 'mesa-clara' ? <HeroMesa size={300} slice /> : <HeroBarra size={300} slice />}</div>
+            <div className="cover-art" aria-hidden="true">{b.id === 'mesa-clara' ? <BodegonArt className="art" slice compact /> : <SalonArt className="art" slice />}</div>
             <div className="cover-body">
               <p className="eyebrow">{b.kind === 'bodegon' ? 'Bodegón' : 'Café de especialidad'}</p>
               <h2 id={`b-${b.id}`}>{b.name}</h2>

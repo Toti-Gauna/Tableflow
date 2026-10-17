@@ -132,9 +132,9 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Retiro con pago en local | E (hoy: pago DEMO en caja) | n/a | E | n/a | E |
 | Propuestas visuales (L2, 1.ª ronda) | rechazada por genérica | rechazada | rechazada | rechazada | rechazada |
 | Identidad propia (L2b) | C P · confitería notable | C P · bodegón de pizarra | C P · la vitrina es el menú | C P · club de jazz | C P · brasa a la vista |
-| Aprobación de la identidad | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio | B · espera a Ignacio |
-| Shell, header, modo oscuro (L3) | E | E | E | E | E |
-| Arte propio (L4) | C (estilo actual) | C (estilo actual) | E | E | E |
+| Aprobación de la identidad | aprobada | aprobada | aprobada | aprobada | aprobada |
+| Shell, header, modo oscuro (L3) | C P | C P | E (tokens en L5) | E (tokens en L5) | E (tokens en L5) |
+| Arte propio (L4) | C P · 23 piezas | C P · 38 piezas | C P · 26 piezas (negocio en L5) | C P · 19 piezas (negocio en L5) | C P · 21 piezas (negocio en L5) |
 | Juego infantil propio (L5) | C compartido → E | C compartido → E | E | E | E |
 | Growth y asistentes (L6) | E | E | E | E | E |
 | QR y códigos (L7) | parcial (códigos) | parcial | E | E | E |
@@ -150,9 +150,88 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 
 | Negocio | Identidad L2b | Aprobación de Ignacio |
 |---|---|---|
-| Cafetería · Ritual Café | Confitería notable porteña | pendiente |
-| Heladería · Copo | La vitrina es el menú | pendiente |
-| Restaurante · Mesa Clara | Bodegón de pizarra y pingüino | pendiente |
-| Bar gastronómico · Taberna Compás | Club de jazz y tapas | pendiente |
-| Comida rápida · Brasa Rápida | Brasa a la vista | pendiente |
+| Cafetería · Ritual Café | Confitería notable porteña | aprobada (17/10/2026) |
+| Heladería · Copo | La vitrina es el menú | aprobada (17/10/2026) |
+| Restaurante · Mesa Clara | Bodegón de pizarra y pingüino | aprobada (17/10/2026) |
+| Bar gastronómico · Taberna Compás | Club de jazz y tapas | aprobada (17/10/2026) |
+| Comida rápida · Brasa Rápida | Brasa a la vista | aprobada (17/10/2026) |
+Ignacio aprobó las cinco el 17/10/2026: "Apruebo todos los diseños, vos seguí, de última luego reemplazamos algo". Cualquier identidad se puede reemplazar más adelante sin rehacer el sistema de tokens de L3.
+
 Detalle y evidencia: `p5-l2-propuestas.md`.
+
+
+## L3 · Shell, identidad aplicada y modo oscuro (SDD)
+Construido el 17/10/2026 sobre `main` (`2ee3dda`). Cubre los dos negocios que hoy existen en la app y la portada de TableFlow. Heladería, bar y comida rápida todavía no existen como negocio: entran en L5 y reutilizan este sistema de tokens con las paletas ya medidas en L2b.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| SH-01 | Entrar a un negocio en escritorio o móvil | franja DEMO siempre visible; cabecera de marca sin controles de demo | `DemoBanner` (fina, ≤ 32 px), `ClientLayout` (marca por identidad) | la marca arranca debajo de la franja; ningún control de la demo en la página | `p5-l3.spec.ts` SH-01 |
+| SH-02 | Primera visita a la portada | sin ver → visible después del evento `load` → elegido u omitido (no vuelve) | `RoleIntro`, `prefs.roleIntroSeen`, `ROLE_DESC` | 7 roles con descripción; "Omitir por ahora"; un enlace directo no la muestra; el rol se cambia después desde el dock | SH-02 (3 casos, con almacenamiento vacío) |
+| SH-03 | Presentar: cambiar rol, negocio, sede, hora o caso; abrir guía, tráiler, sonidos, movimiento, reinicio | cerrado → abierto → se cierra con Escape, clic afuera o al cambiar rol, negocio, sede o caso | `DemoDock` (abajo a la derecha en escritorio; en la franja DEMO cuando hay barra inferior, < 1000 px), `CASES` | el botón no tapa controles ni el resumen del pedido; el foco vuelve al botón; el tráiler dice que todavía no existe (sin video) | SH-03 (2 pruebas) |
+| SH-04 | Cambiar entre claro y oscuro | sistema (en vivo) · claro · oscuro; se guarda y sobrevive al reinicio | `ui/theme.ts`, `html[data-theme]`, tokens `:root[data-theme='dark']` y por negocio | todas las superficies con tokens (campos, avisos, estados, salón, caja, regalos, juegos, gráficos); los objetos impresos (comanda, tarjeta de regalo, ticket) siguen claros a propósito | SH-04 (tema), SH-04 (axe en oscuro: 9 pantallas × 2 anchos + 6 de administración + dock), `contrast.test.ts` |
+| SH-05 | Cambiar de rol o de negocio con datos cargados | el rol cambia la vista; el negocio cambia los datos | `useRoleNav`, `switchBiz` | el negocio, los pedidos y el carrito siguen iguales al cambiar de rol; al cambiar de negocio, cada comanda en cocina pertenece al negocio elegido y el carrito del otro queda aparte | SH-05 |
+| FX-01 | `#/heladeria` | — | `NotFound` recibe la frase con su artículo | "No encontramos ese perfil" | FX-01..03 |
+| FX-02 | Resumen con 1 reserva solicitada | — | `Resumen` (`nRes`) | singular y plural según el número | FX-01..03 |
+| FX-03 | Resumen de Mesa Clara a las 10:00 del lunes | sin pedidos hoy → cerrado / abierto sin pedidos / sin más servicio | `Resumen` (`ordersNote`) | "Abre a las 12:00 · último servicio: sábado 17/10 (5 pedidos)" | FX-01..03 |
+
+### Identidad aplicada a la app
+- **Tokens:** `styles.css` define el claro de TableFlow, su oscuro y un bloque claro y otro oscuro por negocio, con el mismo juego de nombres semánticos: papel, tinta, campos, avisos con su borde y texto, estados suaves, sello DEMO, administración y lateral. Fuera de la franja DEMO y de los controles de la demo, las apariciones de color fijo en componentes bajaron de 229 a 142: se pasaron a tokens las de campos, avisos, estados, salón, caja, regalos, juegos y chat. Las que quedan son, a propósito, de cosas que no cambian con el tema: el tablero de cocina, la comanda impresa, la tarjeta de regalo, la pizarra, el lateral oscuro, las temporadas y el arte.
+- **Mesa Clara (bodegón):** el nombre es un cartel enlozado en Ultra; Bitter en títulos y carta; Caveat Brush para la bajada y el énfasis del titular; rojo de cartel y azul de sifón; el oscuro es la pizarra.
+- **Ritual Café (confitería notable):** Bodoni Moda en marca y títulos; EB Garamond en la carta; Pinyon Script en el énfasis; bordó, oro viejo y doble filete dorado bajo la cabecera; tarjetas con marco doble; el oscuro es el salón de caoba.
+- **Contraste medido:** `tests/contrast.test.ts` lee los bloques de `styles.css` y mide 40 pares por tema en 6 temas (TableFlow, Mesa Clara y Ritual Café, en claro y oscuro), más la pizarra. También verifica que el oscuro de cada negocio redefina todo lo que redefine su claro.
+
+### Límites declarados de L3
+- Las ilustraciones son las de P4: en oscuro se atenúan un poco, pero el arte propio por modo es de L4.
+- La "barra de botones" es un botón que abre un panel con todo agrupado; no son siete botones sueltos, para no tapar contenido.
+- Sin revisión con lector de pantalla ni en dispositivo físico. axe no certifica conformidad.
+- Las ramas de dominio por negocio (`b.kind === 'bodegon'`, etc.) siguen en el código: se ordenan en L5, cuando haya cinco negocios.
+
+
+## L4 · Arte SVG, mockups y activos (SDD)
+Construido el 17/10/2026 sobre la rama de L3 (PR #5), porque usa sus tokens. Hay una familia por identidad en `src/ui/art/families/` y la galería está en `#/arte` y `#/arte/<cafe|resto|hela|bar|rapida>`.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| AR-01 | Antes de producir la familia, revisar una muestra por negocio a tamaño real | muestra → revisión ampliada (40, 64, 96, 160 y 320 px, en claro y oscuro) → correcciones → familia | `Piece`, bloque "Muestra a tamaño real" de la galería | proporción, curvas, materiales y legibilidad revisados uno por uno (detalle abajo) | `p5-l4.spec.ts` AR-01/02 (10 tamaños por identidad) |
+| AR-02 | Ver la familia completa de cada identidad | carta · juego infantil · objetos de la casa | `cafe.tsx`, `bodegon.tsx`, `copo.tsx`, `compas.tsx`, `brasa.tsx` | 127 piezas en total: café 23, bodegón 38, heladería 26, bar 19 y rápida 21. Cada identidad tiene al menos 12 de carta y 5 de juego. Sin placeholders | `tests/art.test.ts`; AR-01/02 (conteo por identidad) |
+| AR-03 | Las piezas de la familia no comparten el acabado de P4 | — | marco `Piece` propio, sin el filtro de tinta y grano ni gradientes heredados | ninguna pieza de familia tiene `<filter>`; la carta y el inicio de los dos negocios usan las piezas y escenas nuevas | AR-03 |
+| AR-04 | SVG sanos en claro y oscuro | — | `viewBox` de 160, ids únicos por instancia, `role="img"` con nombre o `aria-hidden` | las 127 piezas renderizadas dos veces en el mismo documento: sin ids repetidos, toda referencia `url(#…)` resuelve, sin NaN y sin enlaces externos. axe sin violaciones serias en la galería, en claro y en oscuro, a 1440 y 390 px | `tests/art.test.ts` (una prueba por pieza); AR-04 |
+| AR-05 | Mockups con acabado final | — | `Ticket`, `Loyalty`, `PhoneFrame` y `PhoneScreen` (HTML con texto real) | un comprobante, una tarjeta de fidelidad y una pantalla en teléfono por identidad, con datos ficticios | AR-01/02, `tests/art.test.ts` |
+
+### Lenguaje de cada familia
+| Identidad | Punto de vista y material | Qué la distingue |
+|---|---|---|
+| Ritual Café | vajilla de porcelana blanca con filete dorado, a tres cuartos, sobre su plato | sin contorno: el volumen lo dan la porcelana, el oro y la luz; vidrio fino para latte, cold brew, lágrima y submarino; medialunas en gajos |
+| Mesa Clara | loza blanca con filete rojo, a tres cuartos, en tablas o en hierro | contorno de pincel marrón y colores planos con una sombra y un brillo, como un cartel de bodegón |
+| Copo | bochas de costado con cuello festoneado; bachas de acero vistas desde arriba | sin contorno, colores de gusto, trocitos y brillo de mostrador; formatos reales (cucurucho, vasito y potes) |
+| Taberna Compás | gráfica de tapa de disco | dos tintas (azul y mostaza) más el trazo, semitono de puntos; el trazo y el papel cambian con el tema |
+| Brasa Rápida | foto de producto dibujada, de frente | volúmenes grandes, brillo fuerte, marcas de parrilla y queso que se derrite; envases rojos con la llama |
+
+### Revisión de la muestra (AR-01) y correcciones
+Se dibujó una pieza por negocio: cortado y medialuna, napolitana, cucurucho de dos gustos, bravas y hamburguesa doble. Se revisó a 40, 96, 160 y 320 px, en claro y en oscuro, y después se corrigió:
+- el cortado ocupaba un tercio del cuadro: se agrandó para que se lea a 40 px;
+- la medialuna era un arco simétrico: se rehizo con gajos;
+- la napolitana, con capas concéntricas, se leía como huevo o pizza: se rehízo con la salsa irregular, la muzzarella corrida y el jamón asomando;
+- en las bravas, las papas parecían papelitos y el semitono se salía de la cazuela: se rehicieron como cubos con cantos y se recortó el semitono.
+
+En la familia, después de revisar cada pieza, se rehicieron:
+- el tostado (no se entendía el corte);
+- el submarino (la barra flotaba fuera del vaso);
+- la medialuna de grasa (era igual a la de manteca);
+- el panqueque (parecía un omelette);
+- los potes de helado (el recorte fallaba por un id con espacios);
+- el cuadriculado del cucurucho grande;
+- el disco en oscuro (quedaba crema).
+
+### Integración en la app
+- `DishArt` usa la familia de cada identidad. Los 42 ítems de Mesa Clara y Ritual Café tienen pieza propia, así que cambiaron la carta, el pedido, los regalos, la administración y el memotest.
+- Las escenas firma de L2b (`scenes/salon.tsx` y `scenes/bodegon.tsx`) reemplazan la "mesa vista desde arriba" de P4 en el inicio, las portadas y reservas. El estudio de identidades importa las mismas escenas.
+- Se borraron `art/hero.tsx`, `art/mesa-clara.tsx` y `art/ritual-cafe.tsx`, que no tienen más usos y quedan en el historial de git. Siguen los personajes, las temporadas y "Armá tu plato", que se reemplaza en L5.
+
+### Límites declarados de L4
+- **Fotografía:** no hay fotos con derechos adecuados, así que no se reemplazó ninguna foto pertinente. Todo es ilustración propia.
+- **QR:** se genera en L7. Los mockups no muestran un QR falso.
+- **Contenido provisional:** Copo, Taberna Compás y Brasa Rápida tienen claves de arte, pero sus negocios, fixtures y juegos se arman en L5.
+- **Revisión:** sin lector de pantalla ni dispositivo físico. La revisión visual fue por capturas a tamaño real.

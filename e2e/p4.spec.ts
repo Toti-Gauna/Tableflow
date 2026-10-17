@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, setRole, state } from './helpers'
+import { fresh, setRole, state, ensureConsole } from './helpers'
 
 // P4: capa de demo separada del producto, estructura nueva y acciones agrupadas del lado profesional.
 
@@ -7,6 +7,7 @@ test('la guía de la demo vive en la consola y lleva a los recorridos', async ({
   await fresh(page, '/#/mesa-clara')
   // el inicio del cliente ya no trae instrucciones de la demo
   await expect(page.getByRole('heading', { name: 'Recorrido guiado' })).toHaveCount(0)
+  await ensureConsole(page)
   await page.getByTestId('guide-open').click()
   const guide = page.getByTestId('guide')
   await expect(guide.getByRole('heading', { name: 'Mesa Clara · del pedido al cierre' })).toBeVisible()

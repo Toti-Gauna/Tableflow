@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, setRole, state } from './helpers'
+import { ensureConsole, fresh, setRole, state } from './helpers'
 
 // P2-L4: movimiento funcional medido (duraciones, propiedades), movimiento reducido, sonido voluntario y callbacks tardíos.
 
@@ -66,6 +66,7 @@ test('movimiento reducido: por preferencia del sistema y por el control de la co
   await page2.goto('/#/admin/cocina')
   const dur2 = () => page2.locator('.ticket').first().evaluate((el) => parseFloat(getComputedStyle(el).animationDuration))
   expect(await dur2()).toBeGreaterThan(0.1)
+  await ensureConsole(page2)
   await page2.getByRole('button', { name: 'Reducir movimiento' }).click()
   await expect(page2.locator('html')).toHaveAttribute('data-motion', 'reduced')
   expect(await dur2()).toBeLessThan(0.01)
@@ -75,6 +76,7 @@ test('movimiento reducido: por preferencia del sistema y por el control de la co
   expect(await chip.evaluate((el) => getComputedStyle(el).transform)).toBe('none')
   await page2.reload()
   await expect(page2.locator('html')).toHaveAttribute('data-motion', 'reduced')
+  await ensureConsole(page2)
   await page2.getByRole('button', { name: 'Reducir movimiento' }).click()
   await expect(page2.locator('html')).not.toHaveAttribute('data-motion', 'reduced')
   await page2.close()

@@ -15,6 +15,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173/',
     trace: 'off',
+    // P5-L3: el selector de rol de bienvenida ya omitido (se prueba aparte, con almacenamiento vacío)
+    storageState: { cookies: [], origins: [{ origin: 'http://127.0.0.1:4173', localStorage: [{ name: 'tableflow.demo.v1.prefs', value: '{"roleIntroSeen":true}' }] }] },
     launchOptions: { executablePath, args: ['--no-sandbox'] },
   },
   projects: [

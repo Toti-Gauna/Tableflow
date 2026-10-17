@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, setRole, state } from './helpers'
+import { fresh, setRole, state, ensureConsole } from './helpers'
 
 test('S05/S09 por la UI: pedido vacío sin folio; búsqueda sin resultados y limpieza', async ({ page }) => {
   await fresh(page, '/#/mesa-clara/pedido')
@@ -33,6 +33,7 @@ test('S10 por la UI: retiro 03:00 → fuera de horario con próximas franjas vá
 test('S24 por la UI: el pago reintentado con el mismo comprobante no se duplica', async ({ page }) => {
   await fresh(page, '/#/admin/caja')
   await setRole(page, /Caja/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/caja')
   await page.locator('[data-testid^="acct-S-"]').first().click()

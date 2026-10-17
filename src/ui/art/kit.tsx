@@ -5,6 +5,8 @@ import { createContext, useContext, useId, type ReactNode } from 'react'
 // grilla de 160 × 160, gradientes por material y brillos especulares suaves. Sin fotos ni assets de terceros.
 
 const IdCtx = createContext<(n: string) => string>((n) => n)
+/** Proveedor de ids por SVG, para marcos propios (familias de P5-L4). */
+export const ArtIdProvider = IdCtx.Provider
 /** Cada SVG tiene su propio prefijo de ids: dos ilustraciones iguales en la página no comparten gradientes. */
 export const useArtId = () => useContext(IdCtx)
 export const url = (id: string) => `url(#${id})`

@@ -42,7 +42,7 @@ export function AdminLayout() {
   const toLink = (s: (typeof ADMIN_SECTIONS)[number]) => ({ to: `/admin/${s.key}`, label: s.label, icon: ICON[s.key] ?? 'grid', badge: counts[s.key] || undefined })
   const quick = (mine.length ? mine : ADMIN_SECTIONS).slice(0, 4)
   return (
-    <div className="admin" data-biz={biz.id}>
+    <div className="admin">
       <div className="admin-layout">
         <aside className="admin-side">
           <div className="admin-brand">

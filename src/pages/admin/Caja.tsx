@@ -201,7 +201,7 @@ export function AdminCaja() {
       <section className="card" style={{ marginTop: 14 }} aria-labelledby="hist">
         <h2 id="hist">Turnos cerrados</h2>
         {history.length === 0 ? <p className="muted">Todavía no hay turnos cerrados.</p> : (
-          <div className="table-wrap"><table>
+          <div className="table-wrap" tabIndex={0} role="region" aria-labelledby="hist"><table>
             <thead><tr><th>Turno</th><th>Cierre</th><th>Esperado</th><th>Contado</th><th>Diferencia</th><th>Motivo</th></tr></thead>
             <tbody>{history.map((c) => <tr key={c.id}><td>{c.id}</td><td>{c.closedAt ? fmtDateTime(c.closedAt) : ''}</td><td className="money">{fmtARS(c.expectedCashCents ?? 0)}</td><td className="money">{fmtARS(c.countedCashCents ?? 0)}</td><td className="money"><strong>{fmtARS(c.differenceCents ?? 0)}</strong></td><td>{c.closeReason ?? '—'}</td></tr>)}</tbody>
           </table></div>

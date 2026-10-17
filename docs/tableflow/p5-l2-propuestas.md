@@ -1,6 +1,6 @@
 # P5-L2b · Una identidad propia por negocio
 
-> Estado: **construido y probado; falta la aprobación de Ignacio.** Reemplaza la primera ronda de L2: 15 conceptos que Ignacio rechazó el 17/10/2026 por genéricos, porque todos compartían la misma plantilla de pantalla y solo cambiaban color, tipografía y el dibujo. Hasta que apruebe, no se extiende ninguna identidad a la app (L3–L10 esperan).
+> Estado: **construido, probado y aprobado por Ignacio el 17/10/2026** ("Apruebo todos los diseños, vos seguí"). L3 aplica Ritual Café y Mesa Clara a la app; las otras tres entran con sus negocios en L5. Reemplaza la primera ronda de L2: 15 conceptos que Ignacio rechazó el 17/10/2026 por genéricos, porque todos compartían la misma plantilla de pantalla y solo cambiaban color, tipografía y el dibujo.
 
 ## Qué cambió respecto de la primera ronda
 - **Sin plantilla compartida:** cada negocio tiene su propio componente, su CSS, su composición de escritorio y su composición móvil (`src/pages/propuestas/{cafe,helado,bodegon,bar,rapida}.tsx` y sus `.css`). Lo único común es el estudio que los muestra.

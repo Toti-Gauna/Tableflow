@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { fresh, jump, setRole, state } from './helpers'
+import { fresh, jump, setRole, state, ensureConsole } from './helpers'
 
 test.describe('Recorrido protagonista: restaurante (Mesa Clara)', () => {
   test('carta → plato con modificadores → pedido → recepción → cocina → servido → división de cuenta → cierre', async ({ page }) => {
@@ -66,8 +66,10 @@ test.describe('Recorrido protagonista: restaurante (Mesa Clara)', () => {
 test.describe('Recorrido cafetería (Ritual Café)', () => {
   test('sede → café configurado → retiro → barra acepta → listo → retiro', async ({ page }) => {
     await fresh(page, '/#/ritual-cafe/carta')
+    await ensureConsole(page)
     await page.getByTestId('loc-select').selectOption('L-RC-norte')
     await expect(page.getByTestId('dish-RC-07')).toHaveCount(0) // el V60 solo se sirve en Centro
+    await ensureConsole(page)
     await page.getByTestId('loc-select').selectOption('L-RC-centro')
     await page.getByTestId('open-RC-04').click()
     await page.getByLabel('Mediano').check()

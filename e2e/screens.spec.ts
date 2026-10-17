@@ -1,5 +1,5 @@
 import { test } from '@playwright/test'
-import { fresh, jump, setRole } from './helpers'
+import { fresh, jump, setRole, ensureConsole } from './helpers'
 
 // Genera las capturas citadas en docs/tableflow/checkpoint.md (viewport y estado en el nombre).
 // P1 quedó en screens/p1; las "después" (mismo estado, viewport y nombre) van a screens/p2.
@@ -32,6 +32,7 @@ test('capturas de ambas experiencias y del admin', async ({ page }) => {
   await page.goto('/#/admin/salon')
   await settle(page); await page.screenshot({ path: `${OUT}/07-admin-salon-1280x900.png` })
   await setRole(page, /Encargado/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/cocina')
   await settle(page); await page.screenshot({ path: `${OUT}/08-admin-cocina-cafe-1280x900.png` })
@@ -82,6 +83,7 @@ test('capturas nuevas de P2 (módulos rediseñados)', async ({ page }) => {
   await settle(page); await page.screenshot({ path: `${OUT}/22-admin-salon-plano-mesa-M5-1280x900.png` })
   await page.setViewportSize({ width: 390, height: 844 })
   await setRole(page, /Cocina/)
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await page.goto('/#/admin/cocina')
   await settle(page); await page.screenshot({ path: `${OUT}/23-admin-kds-cafe-390x844.png` })
@@ -135,7 +137,6 @@ test('capturas P3', async ({ page }) => {
   await page.goto('/#/ritual-cafe/regalo/no-existe'); await shot('16-movil-regalo-inexistente-personaje-390x844')
   await setRole(page, /Cocina/)
   await page.goto('/#/admin/cocina')
-  await page.getByRole('button', { name: 'Controles de la demo' }).click() // pliega la consola para ver la pantalla
   await shot('17-movil-admin-barra-inferior-390x844')
 })
 
@@ -156,6 +157,7 @@ test('capturas P4', async ({ page }) => {
   await page.goto('/#/mesa-clara/carta'); await page.evaluate(() => window.scrollTo(0, 380)); await shot('04-carta-con-acabado-de-grabado-1440')
   await page.goto('/#/mesa-clara/reservar'); await page.getByTestId('slot-780').click(); await shot('05-reservar-resumen-vivo-1440')
   await page.goto('/#/ritual-cafe/pedido/O-008'); await shot('06-seguimiento-estado-protagonista-1440')
+  await ensureConsole(page)
   await page.getByTestId('guide-open').click(); await shot('07-guia-de-la-demo-en-la-consola-1440')
   await page.keyboard.press('Escape')
   await page.goto('/#/arte'); await page.locator('#g-hero').scrollIntoViewIfNeeded(); await shot('08-ilustraciones-firma-1440')
@@ -165,13 +167,12 @@ test('capturas P4', async ({ page }) => {
   await setRole(page, /Recepción/)
   await page.goto('/#/admin/reservas'); await page.getByRole('button', { name: 'Otras acciones para R-001' }).click(); await shot('10-admin-reservas-acciones-agrupadas-1440')
   await page.keyboard.press('Escape')
+  await ensureConsole(page)
   await page.getByTestId('biz-select').selectOption('ritual-cafe')
   await setRole(page, /Encargado/)
   await page.goto('/#/admin/reportes'); await shot('11-admin-reportes-grafico-con-eje-1440')
   await page.setViewportSize({ width: 390, height: 844 })
   await setRole(page, /invitado/)
-  const toggle = page.getByRole('button', { name: 'Controles de la demo' })
-  if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click() // consola plegada para ver la pantalla
   await page.goto('/#/mesa-clara'); await shot('12-movil-inicio-390')
   await page.goto('/#/mesa-clara/reservar'); await shot('13-movil-reservar-390', true)
 })
@@ -193,5 +194,80 @@ test('capturas P5-L2b (identidades por negocio)', async ({ page }) => {
     await page.locator('.pzx-phone').screenshot({ path: `${OUT}/${b}-movil.png` })
     await page.locator('.pzx-two .pzx-frame').first().screenshot({ path: `${OUT}/${b}-comercio.png` })
     await page.locator('.pzx-motion').screenshot({ path: `${OUT}/${b}-confirmacion.png` })
+  }
+})
+
+test.describe('capturas P5-L3', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+  test('tema, identidad, dock y bienvenida', async ({ page }) => {
+    test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+    test.setTimeout(240_000)
+    const OUT = process.env.OUT6 ?? 'docs/tableflow/screens/p5-l3'
+    const shot = async (name: string) => { await settle(page); await page.screenshot({ path: `${OUT}/${name}.png` }) }
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/#/'); await page.getByTestId('role-intro').waitFor(); await shot('00-bienvenida-por-rol-1440')
+    await page.getByTestId('role-intro-skip').click()
+    for (const mode of ['light', 'dark'] as const) {
+      await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+      const m = mode === 'light' ? 'claro' : 'oscuro'
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.goto('/#/'); await shot(`01-portada-${m}-1440`)
+      for (const b of ['mesa-clara', 'ritual-cafe']) {
+        await page.goto(`/#/${b}`); await shot(`02-${b}-inicio-${m}-1440`)
+        await page.goto(`/#/${b}/carta`); await page.evaluate(() => window.scrollTo(0, 300)); await shot(`03-${b}-carta-${m}-1440`)
+      }
+      await setRole(page, /Encargado/)
+      await page.goto('/#/admin/resumen'); await shot(`04-admin-resumen-${m}-1440`)
+      await page.goto('/#/admin/cocina'); await shot(`05-admin-cocina-${m}-1440`)
+      await setRole(page, /invitado/)
+      await page.setViewportSize({ width: 390, height: 844 })
+      for (const b of ['mesa-clara', 'ritual-cafe']) {
+        await page.goto(`/#/${b}`); await shot(`06-${b}-inicio-${m}-390`)
+      }
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+    await page.goto('/#/ritual-cafe/carta'); await ensureConsole(page); await shot('07-dock-abierto-movil-oscuro-390')
+    await page.keyboard.press('Escape')
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/#/mesa-clara'); await ensureConsole(page); await shot('08-dock-abierto-oscuro-1440')
+    await page.getByTestId('trailer-open').click(); await shot('09-trailer-estado-honesto-1440')
+  })
+})
+
+test('capturas P5-L4 (arte por identidad)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT7 ?? 'docs/tableflow/screens/p5-l4'
+  const ids = ['cafe', 'resto', 'hela', 'bar', 'rapida']
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await fresh(page, '/#/arte'); await settle(page)
+  await page.screenshot({ path: `${OUT}/00-galeria-indice-1440.png` })
+  for (const [i, id] of ids.entries()) {
+    await page.goto(`/#/arte/${id}`); await settle(page)
+    await page.locator('#gx-sample').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-a-muestra-tamano-real.png` })
+    await page.locator('#gx-carta').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-b-carta.png` })
+    await page.locator('#gx-juego').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-c-juego.png` })
+    await page.locator('.gx-mocks').screenshot({ path: `${OUT}/${i + 1}${id}-d-mockups-claro.png` })
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+  for (const [i, id] of ids.entries()) {
+    await page.goto(`/#/arte/${id}`); await settle(page)
+    await page.locator('#gx-carta').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-e-carta-oscuro.png` })
+    await page.locator('.gx-mocks').screenshot({ path: `${OUT}/${i + 1}${id}-f-mockups-oscuro.png` })
+  }
+  for (const mode of ['light', 'dark'] as const) {
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+    const m = mode === 'light' ? 'claro' : 'oscuro'
+    await page.setViewportSize({ width: 1440, height: 900 })
+    for (const b of ['mesa-clara', 'ritual-cafe']) {
+      await page.goto(`/#/${b}`); await settle(page); await page.screenshot({ path: `${OUT}/6-${b}-inicio-escena-${m}-1440.png` })
+      await page.goto(`/#/${b}/carta`); await settle(page); await page.evaluate(() => window.scrollTo(0, 360)); await page.screenshot({ path: `${OUT}/7-${b}-carta-${m}-1440.png` })
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const b of ['mesa-clara', 'ritual-cafe']) {
+      await page.goto(`/#/${b}/carta`); await settle(page); await page.evaluate(() => window.scrollTo(0, 420)); await page.screenshot({ path: `${OUT}/8-${b}-carta-${m}-390.png` })
+    }
   }
 })
