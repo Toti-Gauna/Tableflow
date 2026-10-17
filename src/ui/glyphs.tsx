@@ -1,4 +1,5 @@
 import type { MenuItem } from '../domain/types'
+import { DishArt, hasArt } from './art'
 
 // Sistema de ilustración propio de TableFlow: línea continua de 1,5 px (no escala con el tamaño),
 // esquinas redondeadas, grilla de 24. Dibujado para esta demo: no usa fotos ni assets de terceros.
@@ -96,8 +97,16 @@ export function glyphForCategory(cat: string): GlyphName {
   return BY_CAT[cat] ?? 'plate'
 }
 
-/** Placeholder ilustrado (no foto): plato con el motivo del ítem y texto accesible. */
-export function Plate({ item, size = 96, caption }: { item: Pick<MenuItem, 'id' | 'category' | 'name'>; size?: number; caption?: boolean }) {
+/** Ilustración del plato (no foto). Usa la pieza propia del set; si un ítem no la tiene, cae al glifo de línea. */
+export function Plate({ item, size = 96, caption, decorative }: { item: Pick<MenuItem, 'id' | 'category' | 'name'>; size?: number; caption?: boolean; decorative?: boolean }) {
+  if (hasArt(item.id)) {
+    return (
+      <figure className="plate plate-art" style={{ width: size }}>
+        <DishArt item={item} size={size} decorative={decorative} />
+        {caption && <figcaption className="plate-cap">Ilustración · sin foto de muestra</figcaption>}
+      </figure>
+    )
+  }
   return (
     <figure className="plate" style={{ width: size }}>
       <span className="plate-disc" style={{ width: size, height: size }} role="img" aria-label={`Ilustración de muestra de ${item.name} (sin foto)`}>

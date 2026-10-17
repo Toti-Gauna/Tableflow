@@ -10,6 +10,7 @@ import { optionStockOk } from '../../domain/stock'
 import { windowsFor } from '../../domain/availability'
 import { sedeShort } from '../../ui/format'
 import { SavedPick } from '../../ui/passport'
+import { HouseChar } from '../../ui/art/characters'
 import { dateKeyOf, hhmm } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
 import { setPrefs, useSnapshot } from '../../store'
@@ -24,7 +25,7 @@ export function MiniCart({ biz, locationId, state }: { biz: string; locationId: 
   if (!cart || !cart.lines.length) {
     return (
       <p className="empty-cart">
-        <Glyph name="receipt" size={28} />
+        <HouseChar biz={biz} mood="pensando" size={64} />
         Tu pedido está vacío. {cafe ? 'Elegí algo de la barra o de la vitrina.' : 'Elegí un plato de la carta.'}
       </p>
     )
@@ -35,7 +36,8 @@ export function MiniCart({ biz, locationId, state }: { biz: string; locationId: 
         const it = state.menuItems.find((m) => m.id === l.itemId)!
         const chk = checkLine(state, it, l.selections, l.qty)
         return (
-          <div className="line fx-cart" key={`${l.id}-${l.qty}`}>
+          <div className="line has-art fx-cart" key={`${l.id}-${l.qty}`}>
+            <Plate item={it} size={40} decorative />
             <div>
               <strong>{l.qty}× {it.name}</strong>
               <div className="opts">{chk.picked.map((p) => p.optionName).join(' · ')}</div>
@@ -134,7 +136,7 @@ export function Carta() {
           </p>
           <p className="sr-only" role="status" aria-live="polite">{items.length} resultado(s)</p>
           {items.length === 0 ? (
-            <Empty title="No encontramos platos con esos filtros" action={<button className="btn" type="button" onClick={clear} data-testid="clear-filters">Limpiar filtros</button>}>
+            <Empty title="No encontramos platos con esos filtros" art={<HouseChar biz={biz.id} mood="pensando" />} action={<button className="btn" type="button" onClick={clear} data-testid="clear-filters">Limpiar filtros</button>}>
               Probá con otra palabra o quitá algún filtro. La carta completa sigue intacta.
             </Empty>
           ) : cafe ? (
@@ -199,7 +201,8 @@ const offLabel = (un: string) => (un === 'fuera-de-franja' ? 'Fuera de su franja
 function Dish({ item, state, locationId, biz, saved, fav, onFav }: RowProps & { fav: boolean; onFav: () => void }) {
   const un = itemUnavailable(state, item, locationId)
   return (
-    <article className={`dish ${un ? 'is-off' : ''}`} data-testid={`dish-${item.id}`}>
+    <article className={`dish has-art ${un ? 'is-off' : ''}`} data-testid={`dish-${item.id}`}>
+      <Plate item={item} size={84} decorative />
       <div className="title-line">
         <h3>{item.name}</h3>
         <span className="leader" aria-hidden="true" />
@@ -239,8 +242,11 @@ function Drink({ item, state, locationId, biz, saved }: RowProps) {
   return (
     <article className={`drink ${un ? 'is-off' : ''}`} data-testid={`dish-${item.id}`}>
       <div className="info">
-        <h3>{item.name}</h3>
-        <p className="notes">{item.description}</p>
+        <Plate item={item} size={56} decorative />
+        <div>
+          <h3>{item.name}</h3>
+          <p className="notes">{item.description}</p>
+        </div>
       </div>
       <div className="meta">
         {un && <span className="stamp-off">{offLabel(un)}</span>}
@@ -272,7 +278,7 @@ function Pastry({ item, state, locationId, biz, saved }: RowProps) {
   const un = itemUnavailable(state, item, locationId)
   return (
     <article className={`pastry ${un ? 'is-off' : ''}`} data-testid={`dish-${item.id}`}>
-      <Plate item={item} size={72} />
+      <Plate item={item} size={120} decorative />
       <h3>{item.name}</h3>
       <p className="desc">{item.description}</p>
       <div className="meta">
@@ -348,7 +354,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
         <Glyph name="x" size={20} />
       </button>
       <div className="item-head">
-        <Plate item={item} size={96} />
+        <Plate item={item} size={168} />
         <div>
           <p className="eyebrow" style={{ marginBottom: 4 }}>{item.category}</p>
           <h2 id={titleId}>{item.name}</h2>

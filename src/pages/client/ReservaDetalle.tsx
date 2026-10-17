@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
+import { HouseChar } from '../../ui/art/characters'
 import { act, Callout, ConfirmDialog, Empty, ErrorText, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { CHANNEL_LABEL, RES_LABEL, sedeShort } from '../../ui/format'
 import { Glyph } from '../../ui/glyphs'
@@ -23,7 +24,7 @@ export function ReservaDetalle() {
     return (
       <main>
         <PageHead title="No encontramos esa reserva" />
-        <Empty title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/reservar`}>Volver a reservas</Link>}>No se creó ni modificó nada.</Empty>
+        <Empty art={<HouseChar biz={biz.id} mood="sorpresa" />} title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/reservar`}>Volver a reservas</Link>}>No se creó ni modificó nada.</Empty>
       </main>
     )
   }

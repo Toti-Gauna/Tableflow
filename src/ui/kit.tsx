@@ -70,9 +70,10 @@ export function DemoTag({ children = 'DEMO' }: { children?: ReactNode }) {
   return <span className="badge demo">{children}</span>
 }
 
-export function Empty({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+export function Empty({ title, children, action, art }: { title: string; children?: ReactNode; action?: ReactNode; art?: ReactNode }) {
   return (
-    <div className="empty" role="group" aria-label={title}>
+    <div className={`empty ${art ? 'has-art' : ''}`} role="group" aria-label={title}>
+      {art && <div className="empty-art">{art}</div>}
       <h3>{title}</h3>
       {children && <p className="muted">{children}</p>}
       {action}

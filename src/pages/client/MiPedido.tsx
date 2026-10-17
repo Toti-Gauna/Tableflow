@@ -2,12 +2,13 @@ import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBiz, useCart } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
+import { HouseChar } from '../../ui/art/characters'
 import { act, Badge, Callout, Empty, ErrorText } from '../../ui/kit'
 import { ORDER_LABEL } from '../../ui/format'
 import { StatusBadge } from '../../ui/kit'
 import { checkLine } from '../../domain/menu'
 import { pickupCount, pickupSlots } from '../../domain/pickup'
-import { Glyph } from '../../ui/glyphs'
+import { Glyph, Plate } from '../../ui/glyphs'
 import { sedeShort } from '../../ui/format'
 import { activeSessionAt } from '../../domain/sessions'
 import { fmtARS } from '../../domain/money'
@@ -79,6 +80,7 @@ export function MiPedido() {
       {!cart || cart.lines.length === 0 ? (
         <Empty
           title="Tu pedido está vacío"
+          art={<HouseChar biz={biz.id} mood="pensando" />}
           action={
             <div className="row" style={{ justifyContent: 'center' }}>
               <Link className="btn" to={`/${biz.id}/carta`} data-testid="go-carta">Ir a la carta</Link>
@@ -98,7 +100,8 @@ export function MiPedido() {
               const chk = checkLine(state, it, l.selections, l.qty)
               const out = soldOut.find((x) => x.lineId === l.id)
               return (
-                <div className="line fx-cart" key={`${l.id}-${l.qty}`}>
+                <div className="line has-art fx-cart" key={`${l.id}-${l.qty}`}>
+                  <Plate item={it} size={56} decorative />
                   <div>
                     <strong>{it.name}</strong>
                     <div className="opts">{chk.picked.map((p) => p.optionName).join(' · ') || 'Sin opciones'}</div>

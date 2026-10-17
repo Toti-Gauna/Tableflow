@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
+import { HouseChar } from '../../ui/art/characters'
 import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { ORDER_LABEL, sedeShort } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
@@ -44,7 +45,7 @@ export function PedidoDetalle() {
     return (
       <main>
         <PageHead title="No encontramos ese pedido" />
-        <Empty title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/pedido`}>Volver a mis pedidos</Link>}>
+        <Empty art={<HouseChar biz={biz.id} mood="sorpresa" />} title={`El folio ${id ?? ''} no existe en ${biz.name}`} action={<Link className="btn" to={`/${biz.id}/pedido`}>Volver a mis pedidos</Link>}>
           Puede ser de otro perfil o de un seed anterior. No se creó ni modificó nada.
         </Empty>
       </main>

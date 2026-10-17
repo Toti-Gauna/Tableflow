@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout } from '../../ui/kit'
-import { Glyph, glyphFor } from '../../ui/glyphs'
+import { Glyph, Plate } from '../../ui/glyphs'
 import { fmtMenu } from '../../ui/food'
 import { windowsFor, locationOpenNow } from '../../domain/availability'
 import { itemUnavailable } from '../../domain/menu'
@@ -47,6 +47,7 @@ function DayBoard({ state, biz, locationId }: { state: AppState; biz: BusinessPr
           const un = itemUnavailable(state, i, locationId)
           return (
             <li key={i.id}>
+              <Plate item={i} size={40} decorative />
               <Link to={`/${biz.id}/carta/${i.id}`} className="pick">{i.name}</Link>
               <span className="leader" aria-hidden="true" />
               <span className="price">{un ? <span className="off">{un === 'fuera-de-franja' ? 'fuera de franja' : 'agotado'}</span> : fmtMenu(i.priceCents)}</span>
@@ -161,7 +162,7 @@ export function Home() {
             <div className="methods">
               {methods.map((m) => (
                 <Link key={m.id} to={`/${biz.id}/carta/${m.id}`} className="method">
-                  <Glyph name={glyphFor(m)} size={40} />
+                  <Plate item={m} size={76} decorative />
                   <span>
                     <strong>{m.name}</strong>
                     <span className="muted small">{m.description}</span>

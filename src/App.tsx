@@ -18,6 +18,7 @@ import { Ayuda } from './pages/client/Ayuda'
 import { Simulador } from './pages/client/Simulador'
 import { Landing } from './pages/Landing'
 import { Comercial } from './pages/Comercial'
+import { Arte } from './pages/Arte'
 import { Recovery } from './pages/Recovery'
 import { NotFound } from './pages/NotFound'
 import { AdminLayout } from './pages/admin/AdminLayout'
@@ -111,6 +112,7 @@ export function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/simulador" element={<SimRedirect />} />
           <Route path="/comercial" element={<Comercial />} />
+          <Route path="/arte" element={<Arte />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="resumen" replace />} />
             <Route path="resumen" element={<AdminResumen />} />
