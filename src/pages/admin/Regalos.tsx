@@ -5,7 +5,7 @@ import { PageHead } from '../../ui/Shell'
 import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { Plate } from '../../ui/glyphs'
 import { GIFT_LABEL } from '../../ui/format'
-import { giftStatus, giftUsable } from '../../domain/gifts'
+import { giftCart, giftStatus, giftUsable } from '../../domain/gifts'
 import { dateKeyOf, fmtDateShort } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
 import { SEASON_NAME } from '../../domain/season'
@@ -29,10 +29,10 @@ export function AdminRegalos() {
   const coveredCents = state.orders.filter((o) => o.businessId === bizId && !['rechazado', 'cancelado'].includes(o.status)).flatMap((o) => o.lines).reduce((a, l) => a + (l.coveredCents ?? 0), 0)
   const item = (g: GiftInvite) => state.menuItems.find((m) => m.id === g.itemId)
   const day = (ms: number) => fmtDateShort(dateKeyOf(ms))
-  const actions = (g: GiftInvite) => (
+  const actions = (g: GiftInvite, mobile = false) => (
     <div className="row tight">
       <Link className="btn secondary small" to={`/${g.businessId}/regalo/${g.code}`}>Ver tarjeta<span className="sr-only"> {g.code}</span></Link>
-      {giftUsable(g, now) && <button className="btn ghost small" type="button" onClick={() => setCancel(g)} data-testid={`gift-cancel-${g.code}`}>Cancelar<span className="sr-only"> {g.code}</span></button>}
+      {giftUsable(g, now) && <button className="btn ghost small" type="button" onClick={() => setCancel(g)} data-testid={`${mobile ? "m-" : ""}gift-cancel-${g.code}`}>Cancelar<span className="sr-only"> {g.code}</span></button>}
     </div>
   )
   return (
@@ -70,7 +70,7 @@ export function AdminRegalos() {
                       <td><strong className="mono">{g.code}</strong><div className="small muted">{SEASON_NAME[g.theme]} · {g.delivery === 'whatsapp-simulado' ? 'WhatsApp simulado' : 'enlace'}</div></td>
                       <td>{g.fromAlias} → {g.toAlias}</td>
                       <td><span className="cell-dish">{it && <Plate item={it} size={36} decorative />}{g.itemName}<span className="money small muted"> · {fmtARS(g.coveredCents)}</span></span></td>
-                      <td><StatusBadge s={GIFT_LABEL[st(g)]} />{g.reason && <div className="small muted">{g.reason}</div>}</td>
+                      <td><StatusBadge s={GIFT_LABEL[st(g)]} />{g.reason && <div className="small muted">{g.reason}</div>}{giftCart(state, g.id) && <div className="small muted">En un pedido sin enviar</div>}</td>
                       <td>{day(g.createdAt)} · {day(g.expiresAt)}</td>
                       <td>{g.orderId ? <Link to={`/admin/pedidos/${g.orderId}`}>{g.orderId}</Link> : <span className="muted">—</span>}</td>
                       <td>{actions(g)}</td>
@@ -86,7 +86,7 @@ export function AdminRegalos() {
                 <div className="row between"><strong className="mono">{g.code}</strong><StatusBadge s={GIFT_LABEL[st(g)]} /></div>
                 <p style={{ margin: '6px 0' }}>{g.fromAlias} → {g.toAlias} · {g.itemName}</p>
                 <p className="small muted" style={{ margin: '0 0 10px' }}>Creada {day(g.createdAt)} · vence {day(g.expiresAt)}{g.orderId ? ` · pedido ${g.orderId}` : ''}</p>
-                {actions(g)}
+                {actions(g, true)}
               </div>
             ))}
           </div>

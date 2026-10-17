@@ -104,3 +104,33 @@ No hay CDN, Google Fonts ni imágenes remotas (lo verifica la prueba de red de `
 
 ## 6. Accesibilidad aplicada (medida, no certificada)
 Formularios con `label` asociado y ayudas/errores por `aria-describedby`; errores con `role="alert"` junto al campo o grupo; región viva discreta para confirmaciones (los avisos visuales son eco, un solo aviso a la vez); objetivos ≥ 44 px; foco visible de 3 px y restaurado al cerrar diálogos nativos; foco que no queda tapado por banner, categorías ni carrito (prueba S43); sin scroll horizontal a 320/390/768/640 (zoom 200 %)/1440 px; contraste de tokens medido. axe-core sin violaciones serias/críticas en 21 pantallas. Pendiente: lector de pantalla real y revisión manual con usuarios.
+
+---
+
+# P3 · ilustración, personajes, temporadas y plataforma
+
+> Análisis previo con hallazgos y prioridades: `p3-analisis.md`. Capturas: `screens/p3/`.
+
+## Sistema de ilustración (`src/ui/art/`)
+- **Una sola mano**: grilla de 160 × 160 (platos) y 120 × 120 (personajes y temporadas), luz cenital desde arriba a la izquierda, sombra abajo a la derecha, gradientes por material (porcelana con filete verde de Mesa Clara, gres moteado de Ritual Café, hierro, madera, vidrio) y brillos especulares suaves. `kit.tsx` concentra vajilla y guarniciones (salsas orgánicas, papas, limón, albahaca, tomates, romero, migas y salpicados deterministas con `mulberry32`).
+- **42 piezas**, una por ítem (`mesa-clara.tsx`, `ritual-cafe.tsx`): platos vistos desde arriba; métodos de filtrado de perfil; tazas con *latte art* (corazón, tulipán, roseta). Sin fotos, marcas ni assets de terceros. Cada SVG lleva su propio prefijo de ids (`useId`), así dos ilustraciones iguales no comparten gradientes.
+- Uso: renglón de carta (84 px, 64 px en móvil), pizarra de barra (56 px), vitrina (120 px), configurador (168 px; 136 px como protagonista de la hoja móvil), pizarra del inicio, métodos, pedido, regalo, sección infantil y carta admin. En listas es decorativa (`aria-hidden`); en el configurador se anuncia como "Ilustración de muestra de … (sin foto)".
+- Galería de revisión: `#/arte` (platos, personajes con sus 7 expresiones y ornamentos de temporada).
+
+## Personajes (`characters.tsx`)
+**Ñoqui** (Mesa Clara, con gorro de cocina), **Granito** (Ritual Café, grano con brote) y **Tomatito** (sección para chicos). Expresiones: feliz, guiño, pensando, festejo, dormido, triste, sorpresa, armadas con piezas compartidas de cara y brazos. Aparecen en estados vacíos (carta sin resultados, pedido vacío), 404 y folios inexistentes, sobre de regalo, sección para chicos y cargador de sección. Decorativos salvo cuando la expresión aporta información (memotest ganado).
+
+## Temporadas (`src/domain/season.ts`, `src/ui/art/season.tsx`)
+- Automáticas por **día simulado** (hemisferio sur): primavera 21/9–20/12, verano, otoño, invierno; fechas especiales con prioridad: Fiestas (1/12–6/1), San Valentín (7–15/2), Día del Padre y de la Madre (tercer domingo de junio/octubre, ventana previa y unos días después), Día del Amigo (13–22/7). El seed (lun 19/10/2026) cae en la ventana del Día de la Madre ("fue ayer: todavía estás a tiempo").
+- Cada temporada define acento (`--season-a/b/ink/tint` por `[data-season]`), ornamento ilustrado, titular y texto por negocio, tres platos sugeridos que existen en la carta (lo verifica `tests/season.test.ts`) y un mensaje sugerido de regalo.
+- Se ve en el distintivo del encabezado, la banda del inicio, el formulario y la tarjeta de regalo, y la vista previa de Configuración. **Configuración → Experiencia del cliente** permite forzar una temporada por negocio (auditado como `config.season`) o volver a automática. No cambia precios ni carta.
+
+## Invitar a comer
+- Tarjeta (`src/ui/gift.tsx`): banda de temporada con ornamento, plato ilustrado, "Para …", titular serif con el plato en el acento de la temporada, mensaje en itálica y pie con código (`MC-7KQ4`, sin 0/O ni 1/I/L) y vencimiento. Siempre con sello DEMO.
+- Flujo en cuatro pasos numerados con vista previa en vivo (columna fija en escritorio); sobre que se abre para quien recibe; sello "Canjeada / Vencida / Cancelada" sobre la tarjeta; línea "Invitación … · cubre $" en el configurador, Mi pedido, seguimiento, Pedidos y Caja.
+
+## Plataforma
+- **Barra inferior**: cliente ≤ 760 px (Inicio, Carta, Pedido con contador, Regalar, Secciones) y administración ≤ 999 px (hasta 4 secciones del rol + Secciones con el resto agrupado). Con *safe area*, fondo translúcido con desenfoque y píldora del activo. Arriba queda el encabezado compacto; el pedido flota como píldora encima de la barra y los avisos suben por encima de ambos.
+- **Hoja "Secciones"**: diálogo modal (hoja inferior en móvil) con ícono, nombre y una línea de ayuda por sección.
+- **Carga**: pantalla estática en `index.html` y carga diferida por ruta (bundle inicial 307 KB / 93 KB gzip, antes 676 KB); cargador con esqueleto y personaje.
+- **Lado profesional**: entidades con nombre humano ("Reserva R-012 · Ana, 4 personas", "Insumo I-07 · Leche de avena"), tipo de tarea en español, detalle técnico plegable (IDs, hilo, claves de idempotencia), disponibilidad corta en la carta admin ("Agotado · sin insumos") con miniatura, filtros compactos, KPIs 2 × 2 en móvil, horas de 24 h sin cortes.

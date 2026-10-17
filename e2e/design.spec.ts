@@ -58,7 +58,7 @@ for (const w of [320, 390]) {
     await fresh(page, '/#/ritual-cafe/carta')
     await page.getByTestId('open-RC-04').click()
     // pie del configurador visible y sin cortar el total (medido al terminar la entrada de la hoja)
-    await page.waitForFunction(() => document.querySelector('dialog.item')?.getAnimations().length === 0)
+    await page.waitForFunction(() => !!document.querySelector('dialog.item[open]') && document.querySelector('dialog.item')!.getAnimations().length === 0)
     const foot = await page.locator('.item-foot').boundingBox()
     expect(foot && foot.y + foot.height).toBeLessThanOrEqual(700 + 1)
     await page.getByTestId('add-to-cart').click()

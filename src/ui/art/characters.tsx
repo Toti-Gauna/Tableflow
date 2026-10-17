@@ -267,6 +267,6 @@ export function Character({ who, mood = 'feliz', size = 120, label, animate = fa
 export const MOODS = Object.keys(MOOD_TEXT) as Mood[]
 
 /** Personaje de la casa del negocio (decorativo): Ñoqui en Mesa Clara, Granito en Ritual Café. */
-export function HouseChar({ biz, mood = 'feliz', size = 96, animate = true, className }: { biz: string; mood?: Mood; size?: number; animate?: boolean; className?: string }) {
+export function HouseChar({ biz, mood = 'feliz', size = 96, animate = false, className }: { biz: string; mood?: Mood; size?: number; animate?: boolean; className?: string }) {
   return <Character who={houseCharacter(biz)} mood={mood} size={size} animate={animate} className={className} />
 }

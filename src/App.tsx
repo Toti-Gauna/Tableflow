@@ -24,6 +24,7 @@ const Pasaporte = named(() => import('./pages/client/Pasaporte'), 'Pasaporte')
 const Catas = named(() => import('./pages/client/Catas'), 'Catas')
 const Ayuda = named(() => import('./pages/client/Ayuda'), 'Ayuda')
 const Simulador = named(() => import('./pages/client/Simulador'), 'Simulador')
+const Chicos = named(() => import('./pages/client/Chicos'), 'Chicos')
 const Regalar = named(() => import('./pages/client/Regalar'), 'Regalar')
 const Regalo = named(() => import('./pages/client/Regalo'), 'Regalo')
 const Comercial = named(() => import('./pages/Comercial'), 'Comercial')
@@ -162,6 +163,7 @@ export function App() {
             <Route path="ayuda" element={<Ayuda />} />
             <Route path="simulador" element={<Simulador />} />
             <Route path="regalar" element={<Regalar />} />
+            <Route path="chicos" element={<Chicos />} />
             <Route path="regalo/:code" element={<Regalo />} />
             <Route path="*" element={<NotFound what="página" />} />
           </Route>

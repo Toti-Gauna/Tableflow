@@ -1,4 +1,4 @@
-import type { GiftStatus, OrderStatus, ReservationStatus, Role } from '../domain/types'
+import type { AppState, GiftStatus, OrderStatus, ReservationStatus, Role } from '../domain/types'
 
 export type Tone = 'ok' | 'warn' | 'err' | 'info' | 'neutral' | 'review'
 export interface Label {
@@ -87,3 +87,33 @@ export const BIZ_PATH = { 'mesa-clara': 'mesa-clara', 'ritual-cafe': 'ritual-caf
 
 /** "Ritual Café · Centro" → "Centro": dentro del perfil, la marca ya está a la vista. */
 export const sedeShort = (name: string) => name.split(' · ').slice(1).join(' · ') || name
+
+/** Nombres humanos de las entidades para el lado profesional (nunca el tipo técnico en inglés). */
+export const ENTITY_LABEL: Record<string, string> = {
+  Reservation: 'Reserva', Order: 'Pedido', Ingredient: 'Insumo', Conversation: 'Conversación', CallSession: 'Llamada',
+  MenuItem: 'Plato', TableSession: 'Cuenta', EventBooking: 'Inscripción a cata', Visit: 'Visita', GiftInvite: 'Invitación', Clock: 'Reloj',
+}
+export const TASK_KIND_LABEL: Record<string, string> = {
+  alimentaria: 'Consulta alimentaria', 'grupo-grande': 'Grupo grande', 'fuera-de-alcance': 'Fuera de alcance', 'canal-desconocido': 'Canal desconocido',
+  'sin-consentimiento': 'Sin consentimiento', 'receta-unidad': 'Unidad de receta', stock: 'Stock', 'cancelacion-preparacion': 'Cancelación en preparación',
+  'incidencia-cocina': 'Incidencia de cocina', otro: 'Otro',
+}
+/** "Reserva R-012 · Ana, 4 personas", "Insumo I-07 · Leche de avena"… con enlace a su pantalla cuando existe. */
+export function entityRef(s: AppState, type: string, id: string): { text: string; to: string | null } {
+  const kind = ENTITY_LABEL[type] ?? type
+  if (type === 'Reservation') {
+    const r = s.reservations.find((x) => x.id === id)
+    return { text: `${kind} ${id}${r ? ` · ${r.alias}, ${r.party} persona${r.party === 1 ? '' : 's'}` : ''}`, to: `/admin/reservas/${id}` }
+  }
+  if (type === 'Order') return { text: `${kind} ${id}`, to: `/admin/pedidos/${id}` }
+  if (type === 'Ingredient') {
+    const i = s.ingredients.find((x) => x.id === id)
+    return { text: `${kind} ${id}${i ? ` · ${i.name}` : ''}`, to: '/admin/stock' }
+  }
+  if (type === 'MenuItem') {
+    const m = s.menuItems.find((x) => x.id === id)
+    return { text: `${kind} ${id}${m ? ` · ${m.name}` : ''}`, to: '/admin/carta' }
+  }
+  if (type === 'Conversation') return { text: `${kind} ${id}`, to: null }
+  return { text: `${kind} ${id}`, to: null }
+}

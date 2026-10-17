@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useApp } from '../../store'
+import { setPrefs, useApp, useSnapshot } from '../../store'
+import { sfx } from '../../ui/sfx'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, Empty, ReasonDialog } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
@@ -26,6 +27,16 @@ export function AdminCocina() {
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
   const orders = state.orders.filter((o) => o.businessId === bizId && COLS.some((c) => c.status === o.status))
   const say = (r: ReturnType<typeof act>) => setMsg(r.ok ? null : { tone: 'err', text: r.message })
+  // aviso sonoro opcional: suena solo cuando aparece una comanda nueva mientras la pantalla está abierta
+  const { prefs } = useSnapshot()
+  const fresh = orders.filter((o) => o.status === 'enviado').map((o) => o.id).join(',')
+  const seen = useRef(fresh)
+  useEffect(() => {
+    const before = new Set(seen.current.split(',').filter(Boolean))
+    const added = fresh.split(',').filter((id) => id && !before.has(id))
+    if (added.length && prefs.kdsChime) sfx('chime', { force: true })
+    seen.current = fresh
+  }, [fresh, prefs.kdsChime])
   const mins = (o: Order) => {
     const t = state.tickets.find((k) => k.id === o.ticketId)
     return t?.startedAt ? Math.max(0, Math.round((state.clock.nowMs - t.startedAt) / 60000)) : null
@@ -47,6 +58,9 @@ export function AdminCocina() {
               </button>
             ))}
           </div>
+          <button type="button" className="kds-chime" aria-pressed={prefs.kdsChime} onClick={() => setPrefs({ kdsChime: !prefs.kdsChime })} data-testid="kds-chime">
+            <Glyph name={prefs.kdsChime ? 'volume' : 'mute'} size={16} /> Aviso de comanda nueva
+          </button>
           <p className="legend" style={{ margin: 0 }}>
             <span><Glyph name="alert" size={16} /> Tarde: más de {LATE_MIN} min en preparación</span>
             <span><Glyph name="arrow" size={16} /> Sin arrastre: cada comanda avanza con su botón</span>

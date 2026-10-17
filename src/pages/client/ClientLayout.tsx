@@ -50,6 +50,8 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
     ['explorar', 'Explorar sabores'],
     ['pasaporte', 'Mi pasaporte'],
     ['catas', 'Catas'],
+    ['regalar', 'Regalar'],
+    ['chicos', 'Para chicos'],
     ['ayuda', 'Ayuda'],
   ]
   const hideBar = /\/(pedido|simulador|regalar|regalo)(\/|$)/.test(loc.pathname)

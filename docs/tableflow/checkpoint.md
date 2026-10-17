@@ -1,3 +1,47 @@
+# Checkpoint P3 · TableFlow — ilustración propia, regalos, temporadas, sección infantil y plataforma (P3-A…F)
+
+> Checkpoint de trabajo de P3, no un cierre de demo. Lo que sigue es lo construido y medido en esta construcción. A continuación se encara P4 (auditoría por fases pedida por el operador: SVGs, estructura por página y UX/UI).
+
+## Identificación
+- Fecha real: 17/10/2026. Reloj simulado: lunes 19/10/2026 10:00 ART (sin cambios).
+- Rama `claude/tableflow-demo` (PR #2 a `main`, abierto). Commits P3: `5d54b6d` (A/B), `a9f43c2` (C/D en curso) y el commit que contiene este archivo.
+- `schemaVersion`: **2** con migración explícita desde 1 (agrega `gifts` y `settings.seasonByBusiness`; ningún registro existente cambia). Persistencia `tableflow.demo.v1` (+ `.prefs`, que suma `uiSounds` y `kdsChime`, apagados por defecto).
+- Modelo/versión/esfuerzo: registrados en la conversación (no se versionan identificadores de modelo en el repo).
+
+## Especificado → construido → probado → pendiente
+| | |
+|---|---|
+| **Construido** | A: análisis completo (`p3-analisis.md`). B: kit de ilustración y 42 SVG propios (uno por ítem), personajes Ñoqui/Granito/Tomatito con 7 expresiones, integrados en carta, pizarra, vitrina, configurador, inicio, pedido, vacíos y 404; galería `#/arte`. C: pantalla de carga sin JS, carga diferida por ruta con cargador de marca, barra inferior cliente/admin con hoja de secciones, sonidos de interfaz opcionales, motor de temporadas con override. D: invitar a comer (crear, compartir, mensaje simulado, sobre, abrir, canjear con extras, cubrir en pedido/caja, cancelar con motivo, vencer) y sección Regalos. E: sección para chicos (menú, memotest sin temporizadores, "Armá tu plato"), aviso sonoro opcional del KDS y pendientes de P2 del lado profesional. |
+| **Probado** | 193 Vitest (12 archivos; nuevos `gifts`, `season`, migración) y 65 Playwright (+3 omitidas de capturas): 63 en `chromium` (55 previas + 8 de `p3.spec.ts`) y 2 en `movimiento-reducido`. axe sin violaciones serias/críticas en 25 pantallas. |
+| **Pendiente / no ejecutado** | lector de pantalla real, dispositivos físicos, revisión con usuarios (incluidos chicos), varias pestañas reales; auditoría P4. |
+
+## Comandos y resultados (cwd `/home/user/tableflow`, corrida final de P3)
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npm run typecheck` | 0 | sin errores |
+| `npm test` | 0 | 12 archivos, 193 pruebas OK |
+| `npm run build` | 0 | bundle inicial JS 307 KB / 93 KB gzip (antes 676 KB sin dividir) + 30 fragmentos por ruta; CSS 108 KB / 25 KB gzip |
+| `npx playwright test` | 0 | 65 OK, 3 omitidas (capturas, solo con `CAPTURE=1`) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "capturas P3"` | 0 | 17 capturas en `screens/p3/` |
+
+## Escenarios
+- **Nuevos (P3):** invitación de punta a punta, cancelación con motivo, vencimiento, temporada automática/forzada, memotest con teclado, barra inferior móvil, carga diferida con foco, sonidos apagados por defecto, migración v1 → v2. **Regresión:** S01–S46 y AU01–AU10 en la misma corrida.
+- **Defectos encontrados y corregidos en P3:** consola partida en dos filas a 1280 px al sumar el botón de sonidos; el aviso de regalo del configurador se partía en columnas; IDs de prueba duplicados entre tabla y tarjetas móviles de Regalos; contraste insuficiente en etiquetas de temporada, chips infantiles y el acento de la tarjeta; dos esperas de pruebas que suponían tiempos (hoja del configurador, perfil antes del KDS) y fallaban con la carga diferida.
+
+## Decisiones (reversibles)
+- El regalo cubre el **precio base** del plato al regalar; los extras los paga quien canjea. Una invitación = una unidad, en su propia línea; se libera si el pedido se rechaza o cancela antes de preparar.
+- Sin teléfonos ni correos en regalos (se rechazan): la demo no envía nada. El "WhatsApp simulado" crea un hilo sin cliente ni contacto.
+- Personajes quietos en pantallas de tarea; movimiento solo en celebraciones y con modo reducido apagado.
+- El menú para chicos usa platos existentes (S01 sigue en 42 ítems); la media porción se coordina con el equipo, sin precios inventados.
+
+## Bloqueos con impacto
+Ninguno. Pendiente del operador fuera del repo: borrar la rama `claude/tableflow-demo` de `DentalOS`.
+
+## Siguiente acción exacta
+P4 por fases (pedido del operador): auditoría de SVGs, estructura por página y UX/UI con capturas, luego mejoras por fase, QA y actualización del PR #2.
+
+---
+
 # Checkpoint P2 · TableFlow — diseño premium "carta de casa" (lotes P2-L1…L4)
 
 > Checkpoint de trabajo de P2, **no** un cierre de demo ni una declaración de "premium listo": lo que sigue es lo construido y lo medido en esta construcción. El cierre en Notion corresponde a P4.

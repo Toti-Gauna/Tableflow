@@ -53,6 +53,8 @@ test('movimiento reducido: por preferencia del sistema y por el control de la co
   const ctx = await browser.newContext({ reducedMotion: 'reduce' })
   const page = await ctx.newPage()
   await page.goto('/#/ritual-cafe')
+  // el perfil se fija al montar la vista cliente: se espera antes de pasar a administración
+  await page.locator('[data-biz="ritual-cafe"]').first().waitFor()
   await page.goto('/#/admin/cocina')
   const dur = () => page.locator('.ticket').first().evaluate((el) => parseFloat(getComputedStyle(el).animationDuration))
   expect(await dur()).toBeLessThan(0.01)
@@ -60,6 +62,7 @@ test('movimiento reducido: por preferencia del sistema y por el control de la co
   // sin preferencia del sistema, el control de la consola produce el mismo efecto y se recuerda
   const page2 = await browser.newPage()
   await page2.goto('/#/ritual-cafe')
+  await page2.locator('[data-biz="ritual-cafe"]').first().waitFor()
   await page2.goto('/#/admin/cocina')
   const dur2 = () => page2.locator('.ticket').first().evaluate((el) => parseFloat(getComputedStyle(el).animationDuration))
   expect(await dur2()).toBeGreaterThan(0.1)

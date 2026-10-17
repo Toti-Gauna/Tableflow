@@ -32,3 +32,11 @@ El movimiento en TableFlow **comunica un cambio de estado**; nunca decora ni ret
 
 ## Pruebas
 `e2e/motion.spec.ts` (tokens en rango y propiedades animadas, totales instantáneos, movimiento reducido por sistema y por consola, S33 con callback tardío, S34, sonido con limpieza, S44 café) · `e2e/quality.spec.ts` (S31–S33) · proyecto `movimiento-reducido` (S44, ambos recorridos).
+
+## P3 · momentos de marca, carga y sonidos de interfaz
+- **Pantalla de carga** (`index.html`): estática, sin JS; un punto que gira y una barra que se desplaza (transform). Con movimiento reducido queda quieta. React la reemplaza al montar.
+- **Cargador de sección** (`src/ui/Loader.tsx`, carga diferida por ruta): aparece recién a los 180 ms (retardo en CSS, sin espera agregada) con un brillo que se desplaza (`tf-shimmer`, transform). Sin movimiento con la preferencia reducida.
+- **Personajes**: vaivén de 2,5 px (`tf-char-bob`) y confeti (`tf-char-pop`) **solo en momentos de celebración** (sección para chicos, memotest ganado, galería). En estados vacíos y 404 el personaje está quieto. Todo se apaga con movimiento reducido.
+- **Regalo**: la solapa del sobre "respira" (`tf-flap`, scale) y la tarjeta entra al abrirse (`tf-gift-reveal`, translate/scale/opacity, `--dur-scene`). **Memotest**: giro de carta en 3D (`rotateY`, `--dur-scene`); con movimiento reducido el giro es instantáneo. **Barra inferior**: la píldora del ítem activo crece con transform.
+- **Sonidos de interfaz** (`src/ui/sfx.ts`): tonos sintéticos de 30–600 ms (agregar, enviado, regalo, sello, listo, comanda nueva, giro y pareja del memotest). **Apagados por defecto**; se activan con "Sonidos de interfaz" en la consola o en Configuración, que también tiene volumen y "Probar". El aviso de comanda nueva de Cocina/barra es una opción aparte. Sin preferencia activada no se crea ningún `AudioContext` (prueba en `e2e/p3.spec.ts`). Nunca voz ni micrófono.
+- Sin temporizadores en los juegos: el memotest deja a la vista dos cartas que no son pareja hasta el próximo toque (WCAG 2.2.1).

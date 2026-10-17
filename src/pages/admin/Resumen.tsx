@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
+import { entityRef, TASK_KIND_LABEL } from '../../ui/format'
 import { act, Empty, ReasonDialog } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
 import { dateKeyOf, fmtDateShort } from '../../domain/time'
@@ -47,9 +48,13 @@ export function AdminResumen() {
                 <li key={t.id} className="task-row" data-testid="task">
                   <Glyph name="flag" size={18} />
                   <div>
-                    <strong>{t.entityType} {t.entityId}</strong> <span className="badge review">{t.kind}</span>
+                    {(() => {
+                      const ref = entityRef(state, t.entityType, t.entityId)
+                      return <strong>{ref.to ? <Link to={ref.to}>{ref.text}</Link> : ref.text}</strong>
+                    })()}{' '}
+                    <span className="badge review">{TASK_KIND_LABEL[t.kind] ?? t.kind}</span>
                     <div className="small">{t.note}</div>
-                    <div className="small muted">{t.id} · hilo {t.correlationId}</div>
+                    <details className="tech"><summary>Detalle técnico</summary><span className="small muted">{t.id} · hilo {t.correlationId}</span></details>
                   </div>
                   <button className="btn secondary small" type="button" onClick={() => setResolve(t.id)}>Resolver<span className="sr-only"> {t.id}</span></button>
                 </li>

@@ -385,7 +385,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
       {gift && (
         <p className={`gift-note ${gift.problem ? 'off' : ''}`} data-testid="gift-note">
           <Glyph name="gift" size={16} />
-          {gift.problem ?? <>Invitación de <strong>{gift.gift.fromAlias}</strong> ({gift.gift.code}): el plato base ({fmtARS(gift.gift.coveredCents)}) queda cubierto. Elegí las opciones; los extras se pagan.</>}
+          <span>{gift.problem ?? <>Invitación de <strong>{gift.gift.fromAlias}</strong> ({gift.gift.code}): el plato base ({fmtARS(gift.gift.coveredCents)}) queda cubierto. Elegí las opciones; los extras se pagan.</>}</span>
         </p>
       )}
       {fromPassport && (
@@ -466,7 +466,7 @@ function ItemDialog({ item, biz, locationId, state, fav, onFav, onClose, fromPas
           </div>
           <div className="item-foot">
             {giftOn ? (
-              <span className="gift-qty"><Glyph name="gift" size={16} /> 1 invitada</span>
+              <span className="gift-qty"><Glyph name="gift" size={16} /> 1 · invitación</span>
             ) : (
               <div className="qty" role="group" aria-label="Cantidad">
                 <button type="button" onClick={() => setQty((v) => Math.max(1, v - 1))} aria-label="Menos"><Glyph name="minus" size={18} /></button>

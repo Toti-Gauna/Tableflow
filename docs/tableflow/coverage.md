@@ -90,9 +90,18 @@ Cada una probada en dominio con éxito, error/sin cupo, reintento, pausa y conse
 - `tests/contrast.test.ts`: 61 pares de los tokens P2 (antes 23). `tests/engage.test.ts`: uso del pasaporte solo desde el pasaporte, revalidación por sede, sello solo por personal y pausa.
 - Regresión P1 completa (S03, S06, S11–S13, S19, S23–S25, S34, S35 y el resto) en la misma corrida.
 
+## P3 · pruebas agregadas
+- `tests/gifts.test.ts`: crear (código legible, hilo simulado sin cliente ni contacto, idempotencia), validación (vacíos, 280 caracteres, teléfonos y correos), abrir → canjear (cubre el plato base, extras pagos, una unidad, sin mezclar con líneas iguales), envío → canjeada, rechazo/cancelación → disponible otra vez, cuenta con línea cubierta y pago por ítems, cancelación con motivo que quita la línea y vencimiento a los 30 días simulados.
+- `tests/season.test.ts`: estaciones, tercer domingo de octubre/junio, 20/7, 14/2, platos sugeridos existentes, temporada forzada y vuelta a automática (auditada, idempotente, inválida sin cambios).
+- `tests/persistence.test.ts`: migración v1 → v2 sin pérdida (regalos y temporada agregados; el guardado original no se pisa al leer) y versión futura = 3.
+- `e2e/p3.spec.ts` (8): invitar a comer de punta a punta (errores junto al campo, doble envío = una invitación, mensaje simulado en el simulador, sobre, canje con extra, total y "A pagar", no se reutiliza, Regalos); cancelar con motivo; temporada automática y forzada; memotest con teclado hasta ganar + "Armá tu plato"; barra inferior móvil, hoja de secciones y pedido flotante sin solaparse; carga diferida y foco en el título; sonidos apagados por defecto (0 `AudioContext`) y opcionales; migración v1 → v2 en el navegador.
+- `e2e/quality.spec.ts`: axe ahora también en Regalar, Para chicos, Regalos y la galería (25 pantallas), esperando a que la sección diferida esté montada.
+- Robustez de pruebas existentes: la espera de la hoja del configurador (S43) y el cambio de perfil antes del KDS (movimiento reducido) esperan el estado real en lugar de suponer tiempos.
+
 ## No ejecutado / pendiente
 - Lector de pantalla real (NVDA/VoiceOver), revisión manual con usuarios, dispositivos móviles físicos (las pruebas emulan 320/390/768 y zoom 200 % por ancho CSS).
 - Contraste: medido sobre tokens (61 pares) y por axe en 21 pantallas renderizadas; no se midió cada combinación renderizada de forma exhaustiva. Esto **no certifica** accesibilidad.
 - Navegación del KDS solo con teclado de punta a punta (las acciones son botones; no se grabó un recorrido completo).
 - Varias pestañas reales y evento `storage`.
-- Rendimiento (bundle sin dividir: aviso de chunk > 500 KB).
+- Rendimiento medido solo por tamaño de bundle (dividido en P3); sin métricas de campo.
+- Juegos y regalos probados con teclado y emulación móvil; no con lector de pantalla ni con chicos reales.

@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
+
+/** Estado corto para el equipo (el texto largo es para el cliente). */
+const ADMIN_UNAVAILABLE: Record<string, string> = { agotado: 'Agotado · manual', 'sin-insumos': 'Agotado · sin insumos', 'otra-sede': 'No se sirve en esta sede', 'fuera-de-franja': 'Fuera de franja' }
+import { Plate } from '../../ui/glyphs'
 import { act, Badge, Callout, ConfirmDialog, ErrorText } from '../../ui/kit'
 import { categoriesOf, itemUnavailable, menuFor, UNAVAILABLE_TEXT } from '../../domain/menu'
 import { fmtARS, parseARSInput } from '../../domain/money'
@@ -79,9 +83,9 @@ export function AdminCarta() {
                   const un = itemUnavailable(state, m)
                   return (
                     <tr key={m.id} data-testid={`menu-row-${m.id}`}>
-                      <td><strong>{m.name}</strong><div className="small muted">{m.id}</div></td>
+                      <td><span className="cell-dish"><Plate item={m} size={40} decorative /><span><strong>{m.name}</strong><span className="small muted"> · {m.id}</span></span></span></td>
                       <td className="money">{fmtARS(m.priceCents)}</td>
-                      <td>{un ? <Badge tone="err" icon="✕" label={un === 'agotado' ? 'Agotado (manual)' : UNAVAILABLE_TEXT[un]} /> : <Badge tone="ok" icon="✓" label="Disponible" />}</td>
+                      <td>{un ? <Badge tone={un === 'fuera-de-franja' || un === 'otra-sede' ? 'neutral' : 'err'} icon={un === 'fuera-de-franja' ? '◷' : '✕'} label={ADMIN_UNAVAILABLE[un]} /> : <Badge tone="ok" icon="✓" label="Disponible" />}</td>
                       <td>{m.foodNote.status === 'completa' ? <span className="small">{m.foodNote.allergens.join(', ') || 'sin alérgenos declarados'}</span> : <Badge tone="warn" icon="⚑" label="Nota incompleta" />}</td>
                       <td className="num">v{m.version}</td>
                       <td className="row">

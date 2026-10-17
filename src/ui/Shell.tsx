@@ -191,7 +191,7 @@ export function DemoBar() {
             <span className="wide-only">Reducir movimiento</span>
           </button>
           <button className="cbtn" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
-            <Glyph name="restart" size={16} /> Reiniciar<span className="sr-only"> demo</span>
+            <Glyph name="restart" size={16} /> <span className="xl-only">Reiniciar</span><span className="sr-only"> demo</span>
           </button>
         </div>
         </div>
