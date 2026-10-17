@@ -176,7 +176,7 @@ test('capturas P4', async ({ page }) => {
   await page.goto('/#/mesa-clara/reservar'); await shot('13-movil-reservar-390', true)
 })
 
-test('capturas P5-L2 (propuestas visuales)', async ({ page }) => {
+test('capturas P5-L2b (identidades por negocio)', async ({ page }) => {
   test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
   test.setTimeout(240_000)
   const OUT = process.env.OUT5 ?? 'docs/tableflow/screens/p5-l2'
@@ -184,13 +184,14 @@ test('capturas P5-L2 (propuestas visuales)', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/propuestas'); await settle(page)
   await page.screenshot({ path: `${OUT}/00-indice-1440.png`, fullPage: true })
-  const ids = ['cafe', 'resto', 'hela', 'bar', 'rapida'].flatMap((b) => [1, 2, 3].map((n) => `${b}-${n}`))
-  for (const id of ids) {
+  for (const b of ['cafe', 'hela', 'resto', 'bar', 'rapida']) {
     for (const modo of ['claro', 'oscuro']) {
-      await page.goto(`/#/propuestas/${id}?modo=${modo}`); await settle(page)
-      await page.locator('.pz-fig').screenshot({ path: `${OUT}/${id}-publica-${modo}.png` })
+      await page.goto(`/#/propuestas/${b}?modo=${modo}`); await settle(page)
+      await page.locator('.pzx-fig').screenshot({ path: `${OUT}/${b}-publica-${modo}.png` })
     }
-    await page.goto(`/#/propuestas/${id}`); await settle(page)
-    await page.locator('.pz-phone').screenshot({ path: `${OUT}/${id}-movil.png` })
+    await page.goto(`/#/propuestas/${b}`); await settle(page)
+    await page.locator('.pzx-phone').screenshot({ path: `${OUT}/${b}-movil.png` })
+    await page.locator('.pzx-two .pzx-frame').first().screenshot({ path: `${OUT}/${b}-comercio.png` })
+    await page.locator('.pzx-motion').screenshot({ path: `${OUT}/${b}-confirmacion.png` })
   }
 })

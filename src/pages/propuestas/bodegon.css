@@ -1,0 +1,108 @@
+/* Mesa Clara · bodegón de pizarra y pingüino */
+.bd { background: var(--bg); color: var(--ink); font-family: var(--text); font-size: 17px; line-height: 1.5; position: relative; overflow: hidden; }
+.bd *, .bd *::before { box-sizing: border-box; }
+.bd[data-mode='light'] { background: var(--bg) repeating-linear-gradient(0deg, rgb(120 80 40 / .035) 0 2px, transparent 2px 6px); }
+.bd[data-mode='dark'] { background: radial-gradient(90% 60% at 30% 10%, #263129 0%, var(--bg) 60%); }
+
+.bd-head { display: flex; align-items: center; gap: 26px; padding: 22px 52px 16px; }
+.bd-cartel { display: grid; justify-items: center; padding: 10px 22px 8px; border-radius: 10px; background: linear-gradient(180deg, #c22d23, #9d1f18); color: #fff7e8; box-shadow: inset 0 0 0 3px #9d1f18, inset 0 0 0 5px #fff1d6, inset 0 0 0 7px #9d1f18, 0 10px 20px -12px rgb(0 0 0 / .6); }
+.bd-cartel-n { font-family: var(--display); font-size: 40px; line-height: 1; letter-spacing: .04em; text-shadow: 0 2px 0 #6e130e; }
+.bd-cartel-s { font-size: 12.5px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; margin-top: 4px; }
+.bd-cartel[data-sm] { padding: 6px 12px; }
+.bd-cartel[data-sm] .bd-cartel-n { font-size: 22px; }
+.bd-nav { display: flex; gap: 24px; margin-left: auto; font-weight: 700; font-size: 16px; color: var(--muted); }
+.bd-nav [data-on] { color: var(--ink); text-decoration: underline wavy var(--accent); text-underline-offset: 6px; }
+.bd-demo { font-family: system-ui, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .1em; padding: 2px 7px; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--muted); color: var(--muted); }
+
+.bd-hero { display: grid; grid-template-columns: .92fr 1.08fr; gap: 34px; padding: 10px 52px 26px; align-items: start; }
+.bd-pizarra { padding: 16px; border-radius: 8px; background: linear-gradient(135deg, #8a5a33, #5a3519 60%, #7b4c2a); box-shadow: inset 0 2px 0 #b07a4c, inset 0 -3px 0 #3e2210, 0 24px 40px -26px rgb(0 0 0 / .7); }
+.bd-board { position: relative; padding: 26px 30px 30px; border-radius: 3px; background: radial-gradient(60% 50% at 30% 30%, rgb(255 255 255 / .07), transparent 70%), radial-gradient(40% 40% at 80% 70%, rgb(255 255 255 / .05), transparent 70%), #1e2a24; color: #f1ede2; box-shadow: inset 0 0 40px rgb(0 0 0 / .45); }
+.bd-chalk { font-family: var(--script); margin: 0; color: #f4f0e6; }
+.bd-chalk-k { font-size: 34px; color: #f6d27a; }
+.bd-chalk-t { font-size: 58px; line-height: .98; margin-top: 2px; text-wrap: balance; }
+.bd-chalk-p { font-size: 48px; color: #ffb3a1; margin-top: 6px; }
+.bd-chalk-list { list-style: none; margin: 16px 0 0; padding: 0; font-family: var(--script); font-size: 27px; display: grid; gap: 2px; }
+.bd-chalk-list li { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px dashed rgb(241 237 226 / .25); }
+.bd-chalk-list b { font-weight: 400; color: #f6d27a; }
+.bd-chalk-line { width: 60%; height: 18px; margin-top: 10px; }
+.bd-chalk-stick { position: absolute; right: 26px; bottom: -8px; width: 54px; height: 12px; border-radius: 3px; background: #fbf7ec; box-shadow: 0 2px 0 rgb(0 0 0 / .3); transform: rotate(-6deg); }
+.bd-pizarra[data-compact] .bd-chalk-t { font-size: 44px; }
+.bd-pizarra[data-compact] .bd-chalk-p { font-size: 38px; }
+.bd-ctas { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.bd-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 54px; padding: 0 26px; border-radius: 8px; font-weight: 800; font-size: 17px; background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 60%, #000), 0 10px 20px -12px rgb(0 0 0 / .6); }
+.bd-btn.ghost { background: var(--surface); color: var(--ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 25%, transparent), inset 0 0 0 2px color-mix(in srgb, var(--ink) 25%, transparent); }
+.bd-btn.block { width: 100%; }
+.bd-hero-r .bd-art { width: 100%; height: auto; display: block; border-radius: 14px; box-shadow: 0 26px 50px -30px rgb(0 0 0 / .7); }
+
+.bd-guarda { height: 46px; margin: 4px 0 0; }
+.bd-guarda svg { width: 100%; height: 46px; display: block; }
+
+.bd-body { padding: 10px 52px 44px; }
+.bd-hero-r .bd-libreta { width: 60%; margin: -26px auto 0 -10px; transform: rotate(-2deg); z-index: 1; }
+.bd-carta { background: var(--surface); padding: 26px 30px; border-radius: 4px; box-shadow: 0 1px 0 rgb(0 0 0 / .08), 0 18px 34px -26px rgb(0 0 0 / .5); position: relative; }
+.bd-carta::before { content: ''; position: absolute; inset: 8px; border: 1.5px solid color-mix(in srgb, var(--accent) 50%, transparent); pointer-events: none; }
+.bd-carta-h { margin: 0 0 12px; text-align: center; font-family: var(--display); font-size: 40px; color: var(--accent); letter-spacing: .02em; }
+.bd-carta-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 40px; }
+.bd-cat { margin: 0 0 6px; font-family: var(--display); font-size: 20px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); border-bottom: 3px double color-mix(in srgb, var(--accent) 60%, transparent); padding-bottom: 4px; }
+.bd-carta ul { list-style: none; margin: 0; padding: 0; }
+.bd-carta li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: baseline; padding: 6px 0; font-size: 16.5px; }
+.bd-carta li i { border-bottom: 2px dotted color-mix(in srgb, var(--muted) 60%, transparent); transform: translateY(-4px); }
+.bd-carta li b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.bd-carta-f { margin: 14px 0 0; text-align: center; font-style: italic; color: var(--muted); font-size: 15px; }
+
+.bd-libreta { position: relative; padding: 26px 22px 18px 22px; background: var(--paper) repeating-linear-gradient(180deg, transparent 0 33px, rgb(44 110 142 / .28) 33px 34px); background-position: 0 14px; color: #2a1a12; border-radius: 4px; box-shadow: 0 18px 30px -22px rgb(0 0 0 / .6); transform: rotate(1.2deg); }
+.bd-libreta::before { content: ''; position: absolute; top: 0; bottom: 0; left: 46px; width: 2px; background: rgb(196 43 34 / .45); }
+.bd-espiral { position: absolute; top: -10px; left: 16px; right: 16px; display: flex; justify-content: space-between; }
+.bd-espiral i { width: 12px; height: 20px; border-radius: 6px; border: 2px solid #8b8f94; background: transparent; }
+.bd-lib-t { margin: 0 0 6px 34px; font-weight: 800; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: #6b4b37; }
+.bd-hand { margin: 0 0 0 34px; font-family: var(--script); font-size: 27px; line-height: 34px; color: #23314a; }
+.bd-hand.sm { margin-left: 0; font-size: 22px; line-height: 28px; }
+.bd-lib-f { margin: 10px 0 0 34px; font-size: 14px; font-weight: 700; color: #a3241d; }
+
+/* Móvil propio */
+.bd-m { min-height: 100%; padding-bottom: 80px; font-size: 16px; }
+.bd-mhead { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; }
+.bd-m-art .bd-art { width: 100%; height: auto; display: block; }
+.bd-m-board { padding: 0 14px; margin-top: -40px; position: relative; }
+.bd-m-board .bd-chalk-t { font-size: 38px; }
+.bd-m-ctas { padding: 16px; }
+.bd-tabs { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-around; padding: 12px 6px 20px; background: var(--surface); border-top: 3px double var(--accent); font-weight: 800; font-size: 13px; color: var(--muted); }
+.bd-tabs [data-on] { color: var(--accent); }
+
+/* Comercio: comandas colgadas del riel */
+.bd-ops { padding: 18px 22px 26px; }
+.bd-ops-t { margin: 0 0 14px; font-family: var(--display); font-size: 26px; color: var(--accent); }
+.bd-rail { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding-top: 18px; }
+.bd-rail::before { content: ''; position: absolute; left: -10px; right: -10px; top: 6px; height: 10px; border-radius: 5px; background: linear-gradient(180deg, #f3f6f8, #8f979e); box-shadow: 0 2px 4px rgb(0 0 0 / .3); }
+.bd-comanda { position: relative; padding: 22px 16px 14px; background: #fffaf0 repeating-linear-gradient(180deg, transparent 0 27px, rgb(44 110 142 / .22) 27px 28px); background-position: 0 50px; color: #23314a; box-shadow: 0 14px 24px -18px rgb(0 0 0 / .6); }
+.bd-comanda:nth-child(2) { transform: rotate(-1.5deg); }
+.bd-comanda:nth-child(3) { transform: rotate(1.2deg); }
+.bd-clip { position: absolute; top: -14px; left: 50%; width: 30px; height: 18px; margin-left: -15px; border-radius: 4px; background: linear-gradient(180deg, #d9dee2, #7f878d); }
+.bd-com-t { margin: 0 0 4px; font-weight: 800; color: #6b4b37; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
+.bd-com-s { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: #a3241d; color: #fff; }
+
+/* Galería */
+.bd-gallery { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; padding: 22px; }
+.bd-g { display: grid; place-items: center; gap: 8px; padding: 14px; border-radius: 10px; background: var(--surface); }
+.bd-g.big { grid-row: span 2; }
+.bd-g .bd-art { width: 100%; height: auto; border-radius: 8px; }
+.bd-g .bd-pizarra { width: 100%; }
+.bd-g-svg { width: 150px; height: 240px; }
+.bd-g span { font-weight: 800; color: var(--muted); font-size: 14px; }
+
+/* Animación: el mozo anota, llega el plato, chorro de sifón */
+.bd-sig-stage { display: grid; grid-template-columns: .7fr 1.3fr; gap: 26px; padding: 26px 34px; align-items: center; }
+.bd-sig-svg { width: 100%; height: auto; display: block; border-radius: 12px; }
+.bd-sig-stage[data-play] .bd-hand { clip-path: inset(0 100% 0 0); animation: bd-write 700ms steps(14, end) both; }
+.bd-sig-stage[data-play] .bd-hand:nth-of-type(2) { animation-delay: 0ms; }
+.bd-sig-stage[data-play] .bd-hand:nth-of-type(3) { animation-delay: 650ms; }
+.bd-sig-stage[data-play] .bd-hand:nth-of-type(4) { animation-delay: 1300ms; }
+.bd-sig-stage[data-play] .bd-lib-f { animation: bd-fade 400ms ease 2000ms both; }
+.bd-sig-stage[data-play] .bd-sig-plate { animation: bd-plate 900ms cubic-bezier(.2,.8,.2,1) 1700ms both; }
+.bd-sig-stage[data-play] .bd-jet { stroke-dasharray: 140; animation: bd-jet 700ms ease-out 2500ms both; }
+.bd-sig-stage[data-play] .bd-soda { transform-box: fill-box; transform-origin: 50% 100%; animation: bd-fill 700ms ease-out 2700ms both; }
+@keyframes bd-write { to { clip-path: inset(0 0 0 0); } }
+@keyframes bd-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bd-plate { from { transform: translate(-60px, 140px); opacity: 0; } 30% { opacity: 1; } to { transform: none; } }
+@keyframes bd-jet { from { stroke-dashoffset: 140; opacity: 1; } 70% { stroke-dashoffset: 0; opacity: 1; } to { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes bd-fill { from { transform: scaleY(.1); } to { transform: none; } }
