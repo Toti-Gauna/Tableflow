@@ -4,7 +4,8 @@ import { dispatch, useApp } from '../store'
 import { cartTotal } from '../domain/cmd-commerce'
 import type { AppState, BusinessId, BusinessProfile, Cart } from '../domain/types'
 
-export const isBiz = (v: string | undefined): v is BusinessId => v === 'mesa-clara' || v === 'ritual-cafe'
+import { isBizId } from '../domain/business'
+export const isBiz = isBizId
 
 /** Perfil del cliente según la ruta (:biz). */
 export function useBiz(): { state: AppState; biz: BusinessProfile; locationId: string } {

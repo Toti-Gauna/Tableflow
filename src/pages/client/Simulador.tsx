@@ -6,7 +6,7 @@ import { act, Badge, Callout, ConfirmDialog, DemoTag, Empty } from '../../ui/kit
 import { callOptions } from '../../domain/call'
 import { dispatch, setPrefs, useSnapshot } from '../../store'
 import { audioSupported, playMotif, stopAudio } from '../../ui/audio'
-import type { AppState, BusinessId, CallSession, Conversation, Message } from '../../domain/types'
+import type { AppState, BusinessId, BusinessProfile, CallSession, Conversation, Message } from '../../domain/types'
 import { CHANNEL_LABEL } from '../../ui/format'
 import { Glyph } from '../../ui/glyphs'
 import { fmtDateTime } from '../../domain/time'
@@ -85,7 +85,7 @@ export function SimPanel({ biz, guided }: { biz: BusinessId; guided: boolean }) 
   )
 }
 
-function ChatPanel({ state, conv, guided, kind }: { state: AppState; conv: Conversation; guided: boolean; kind: 'bodegon' | 'cafe' }) {
+function ChatPanel({ state, conv, guided, kind }: { state: AppState; conv: Conversation; guided: boolean; kind: BusinessProfile['kind'] }) {
   const [text, setText] = useState('')
   const [resetOpen, setResetOpen] = useState(false)
   const [resetMsg, setResetMsg] = useState('')

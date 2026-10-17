@@ -99,25 +99,26 @@ test('temporada: automática por el reloj simulado (Día de la Madre) y forzada 
   expect(s.audit.some((a: { type: string }) => a.type === 'config.season')).toBe(true)
 })
 
-test('para chicos: memotest con teclado hasta ganar y "Armá tu plato"', async ({ page }) => {
-  await fresh(page, '/#/mesa-clara/chicos')
-  const card = (i: number) => page.getByTestId(`memo-${i}`)
-  const names: string[] = []
-  // primera pasada de a dos (con teclado): aprende cada carta
-  for (let i = 0; i < 12; i += 2) {
-    await card(i).focus(); await page.keyboard.press('Enter')
-    await card(i + 1).focus(); await page.keyboard.press('Enter')
-    for (const j of [i, i + 1]) names[j] = ((await card(j).getAttribute('aria-label')) ?? '').replace(/^Carta \d+: /, '').replace(', encontrada', '')
+// P5-L5: el memotest genérico de P3 se reemplazó por un juego distinto por negocio (la memoria quedó en Ritual Café,
+// con sus propias piezas; Mesa Clara pone la mesa). Este test conserva lo que probaba: teclado hasta ganar y "Armá tu plato".
+test('para chicos: memoria de Ritual Café con teclado hasta ganar y "Armá tu plato" en Mesa Clara', async ({ page }) => {
+  await fresh(page, '/#/ritual-cafe/chicos')
+  await page.getByTestId('memoria-start').click()
+  const card = (i: number) => page.getByTestId(`memoria-${i}`)
+  const n = await page.locator('[data-testid^="memoria-"][data-card]').count()
+  expect(n).toBe(6)
+  // la pieza de cada carta está en el DOM (data-card) pero tapada: se juega dando vuelta de a dos con el teclado
+  const keys = await Promise.all(Array.from({ length: n }, (_, i) => card(i).getAttribute('data-card')))
+  const done = new Set<number>()
+  for (let a = 0; a < n; a++) {
+    if (done.has(a)) continue
+    const b = keys.findIndex((k, j) => j !== a && k === keys[a])
+    await card(a).focus(); await page.keyboard.press('Enter')
+    await card(b).focus(); await page.keyboard.press('Enter')
+    done.add(a); done.add(b)
   }
-  await expect(page.getByTestId('memo-moves')).toHaveText('6')
-  // segunda pasada: completa las parejas que falten
-  for (let a = 0; a < 12; a++) {
-    if (await page.getByTestId('memo-win').isVisible()) break
-    if ((await card(a).getAttribute('aria-label'))?.includes('encontrada')) continue
-    const b = names.findIndex((n, j) => j !== a && n === names[a])
-    await card(a).click(); await card(b).click()
-  }
-  await expect(page.getByTestId('memo-win')).toContainText('Encontraste todas las parejas')
+  await expect(page.getByTestId('memoria-win')).toContainText('Encontraste las 3 parejas en 3 jugadas')
+  await page.goto('/#/mesa-clara/chicos')
   // armá tu plato: cada elección cambia el nombre del plato (juego, no pedido)
   await page.locator('label', { hasText: 'Huevo frito' }).click()
   await page.locator('label', { hasText: 'Choclo' }).click()
@@ -178,7 +179,8 @@ test('sonidos de interfaz: apagados por defecto (sin AudioContext) y opcionales 
   await ctx.close()
 })
 
-test('migración: un guardado v1 (P2) se abre en v2 sin pantalla de recuperación ni pérdida de datos', async ({ page }) => {
+// P5-L5: la cadena de migraciones llega ahora a la versión vigente (3)
+test('migración: un guardado v1 (P2) se abre en la versión vigente sin pantalla de recuperación ni pérdida de datos', async ({ page }) => {
   await fresh(page, '/#/ritual-cafe/carta')
   await page.getByTestId('open-RC-11').click()
   await page.getByTestId('add-to-cart').click()
@@ -193,7 +195,8 @@ test('migración: un guardado v1 (P2) se abre en v2 sin pantalla de recuperació
   await page.reload()
   await expect(page.getByRole('link', { name: 'Mi pedido (1)' }).first()).toBeAttached()
   const s = await state(page)
-  expect(s.schemaVersion).toBe(2)
+  expect(s.schemaVersion).toBe(3)
   expect(s.gifts).toEqual([])
   expect(s.carts[0].lines).toHaveLength(1)
+  expect(s.businesses).toHaveLength(5)
 })

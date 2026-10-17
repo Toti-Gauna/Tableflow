@@ -19,7 +19,7 @@ test('S07/S08 por la UI: agotado y precio cambiado desde admin bloquean el enví
   await page.getByTestId('send-order').click()
   await expect(page.getByTestId('order-error')).toContainText('El precio cambió')
   await expect(page.getByTestId('order-error')).toContainText('$ 14.000,00')
-  expect((await state(page)).orders).toHaveLength(12)
+  expect((await state(page)).orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
   await page.getByTestId('ack-prices').click()
   // ahora lo agotan
   await setRole(page, /Encargado/)
@@ -29,7 +29,7 @@ test('S07/S08 por la UI: agotado y precio cambiado desde admin bloquean el enví
   await page.goto('/#/mesa-clara/pedido')
   await page.getByTestId('send-order').click()
   await expect(page.getByTestId('order-error')).toContainText('Este plato se agotó')
-  expect((await state(page)).orders).toHaveLength(12)
+  expect((await state(page)).orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
 })
 
 test('M08: precio negativo se explica antes de guardar', async ({ page }) => {
@@ -80,7 +80,7 @@ test('S20/S26/S25 por la UI: incidencia de cancelación, arqueo con diferencia y
   await page.getByTestId('close-exception').click()
   await page.locator('#reason-input').fill('Cliente habitual, paga mañana')
   await page.getByTestId('dialog-confirm').click()
-  expect((await state(page)).payments).toHaveLength(4) // no se simuló ningún cobro
+  expect((await state(page)).payments).toHaveLength(5) // no se simuló ningún cobro; P5-L5: más actividad sembrada (negocios nuevos)
   // arqueo con diferencia exige motivo
   await page.getByTestId('close-cash-open').click()
   await page.getByTestId('counted').fill('1')
@@ -116,7 +116,7 @@ test('S38/S40 por la UI: pasaporte sin comprar y cata con cupo 1', async ({ page
   await expect(page.getByTestId('passport-progress')).toContainText('3 de 3')
   await page.getByRole('button', { name: 'V60 filtrado' }).click()
   await expect(page.getByText('Selección guardada.')).toBeVisible()
-  expect((await state(page)).orders).toHaveLength(12)
+  expect((await state(page)).orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
   await page.goto('/#/mesa-clara/catas')
   await page.getByLabel('Tu nombre (alias de muestra)').fill('Valeria')
   await page.getByTestId('enroll-E-001').click()

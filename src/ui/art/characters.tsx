@@ -18,7 +18,8 @@ const MOOD_TEXT: Record<Mood, string> = {
   triste: 'triste',
   sorpresa: 'sorprendido',
 }
-export const houseCharacter = (bizId: string): CharacterId => (bizId === 'ritual-cafe' ? 'granito' : 'noqui')
+const HOUSE: Record<string, CharacterId> = { 'ritual-cafe': 'granito', copo: 'granito', brasa: 'tomatito', compas: 'tomatito' }
+export const houseCharacter = (bizId: string): CharacterId => HOUSE[bizId] ?? 'noqui'
 
 const INK = '#2b1a10'
 

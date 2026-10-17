@@ -2,6 +2,8 @@ import { RULE_DEFS } from '../automations'
 import { SCHEMA_VERSION, type AppState, type AutomationRule, type BusinessId, type BusinessProfile, type CustomerDemo, type FixtureId, type Location, type ServiceWindow, type Table, type TastingEvent } from '../types'
 import { SEED_CLOCK_MS } from '../time'
 import { buildIngredients, buildMenu, buildModifierGroups, buildRecipes } from './catalog'
+import { newConfig } from './nuevos'
+import { BIZ_IDS, bizRecord } from '../business'
 
 export const FIXTURE_VERSION = 'seed-v1'
 
@@ -30,6 +32,7 @@ function businesses(): BusinessProfile[] {
       rewardsEnabled: false,
       pickupPerSlot: 6,
       categoryOrder: ['Entradas', 'Pastas', 'Minutas y carnes', 'Pescados', 'Postres', 'Bebidas'],
+      paysAtCounter: false,
     },
     {
       id: 'ritual-cafe',
@@ -48,6 +51,7 @@ function businesses(): BusinessProfile[] {
       rewardsEnabled: false,
       pickupPerSlot: 6,
       categoryOrder: ['Café de barra', 'Métodos', 'Pastelería', 'Salado'],
+      paysAtCounter: true,
     },
   ]
 }
@@ -91,13 +95,7 @@ function tables(): Table[] {
 }
 
 function rules(): AutomationRule[] {
-  const out: AutomationRule[] = []
-  for (const b of ['mesa-clara', 'ritual-cafe'] as BusinessId[]) {
-    for (const d of RULE_DEFS) {
-      out.push({ id: `RULE-${d.code}-${b}`, ...e(b), ...d, config: { ...d.config }, enabled: true, failNext: false })
-    }
-  }
-  return out
+  return BIZ_IDS.flatMap(rulesFor)
 }
 
 export function customersService(): CustomerDemo[] {
@@ -121,6 +119,12 @@ export function customersService(): CustomerDemo[] {
     c('CL-006', 'ritual-cafe', 'Ana', true, true, 'Flat white con leche de avena (ficticia).'),
     c('CL-007', 'ritual-cafe', 'Lucía', false, true, ''),
     c('CL-008', 'ritual-cafe', 'Tomás', false, false, ''),
+    c('CL-009', 'copo', 'Sofía', true, true, 'Siempre frutilla y dulce de leche (ficticia).'),
+    c('CL-010', 'copo', 'Mateo', false, false, ''),
+    c('CL-011', 'brasa', 'Julián', true, false, 'Sin cebolla (ficticio).'),
+    c('CL-012', 'brasa', 'Carla', false, true, ''),
+    c('CL-013', 'compas', 'Grupo del taller', true, false, 'Mesa grande para la noche de jazz.'),
+    c('CL-014', 'compas', 'Inés', false, true, ''),
   ]
 }
 
@@ -153,8 +157,17 @@ export function tastingEvents(): TastingEvent[] {
   ]
 }
 
+/** Reglas de automatización de un negocio (las mismas definiciones para los cinco). */
+export function rulesFor(b: BusinessId): AutomationRule[] {
+  return RULE_DEFS.map((d) => ({ id: `RULE-${d.code}-${b}`, ...e(b), ...d, config: { ...d.config }, enabled: true, failNext: false }))
+}
+
+/** Sede inicial de cada negocio. */
+export const DEFAULT_LOCATION: Record<BusinessId, string> = { 'mesa-clara': 'L-MC-salon', 'ritual-cafe': 'L-RC-centro', copo: 'L-CO-mostrador', compas: 'L-TC-salon', brasa: 'L-BR-centro' }
+
 /** Estado base: configuración + catálogo + reglas, sin datos transaccionales. */
 export function baseState(fixtureId: FixtureId): AppState {
+  const nc = newConfig(T0)
   return {
     schemaVersion: SCHEMA_VERSION,
     fixtureId,
@@ -163,25 +176,25 @@ export function baseState(fixtureId: FixtureId): AppState {
     session: {
       role: 'cliente-invitado',
       businessId: 'mesa-clara',
-      locationByBusiness: { 'mesa-clara': 'L-MC-salon', 'ritual-cafe': 'L-RC-centro' },
-      customerByBusiness: { 'mesa-clara': null, 'ritual-cafe': null },
+      locationByBusiness: { ...DEFAULT_LOCATION },
+      customerByBusiness: bizRecord(() => null),
     },
-    businesses: businesses(),
-    locations: locations(),
-    serviceWindows: windows(),
-    tables: tables(),
+    businesses: [...businesses(), ...nc.businesses],
+    locations: [...locations(), ...nc.locations],
+    serviceWindows: [...windows(), ...nc.serviceWindows],
+    tables: [...tables(), ...nc.tables],
     reservations: [],
     waitlist: [],
-    menuItems: buildMenu().map((m) => ({ ...m, createdAt: T0 })),
-    modifierGroups: buildModifierGroups(),
+    menuItems: [...buildMenu().map((m) => ({ ...m, createdAt: T0 })), ...nc.menuItems],
+    modifierGroups: [...buildModifierGroups(), ...nc.modifierGroups],
     carts: [],
     orders: [],
     tickets: [],
     tableSessions: [],
     payments: [],
     cashSessions: [],
-    ingredients: buildIngredients().map((i) => ({ ...i, createdAt: T0 })),
-    recipes: buildRecipes().map((r) => ({ ...r, createdAt: T0 })),
+    ingredients: [...buildIngredients().map((i) => ({ ...i, createdAt: T0 })), ...nc.ingredients],
+    recipes: [...buildRecipes().map((r) => ({ ...r, createdAt: T0 })), ...nc.recipes],
     stockMovements: [],
     customers: [],
     conversations: [],
@@ -198,14 +211,14 @@ export function baseState(fixtureId: FixtureId): AppState {
     audit: [],
     campaignPreviews: [],
     gifts: [],
-    settings: { seasonByBusiness: { 'mesa-clara': 'auto', 'ritual-cafe': 'auto' } },
+    settings: { seasonByBusiness: bizRecord(() => 'auto' as const) },
   }
 }
 
 /** Seed vacío: perfiles, carta, stock y reglas; nada de actividad. */
 export function emptySeed(): AppState {
   const s = baseState('vacio')
-  s.tastingEvents = tastingEvents()
+  s.tastingEvents = [...tastingEvents(), ...newConfig(T0).tastingEvents]
   s.counters = { E: 2 }
   return s
 }

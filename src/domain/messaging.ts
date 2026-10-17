@@ -21,7 +21,7 @@ export function addMessage(
   }
   const status = p.status ?? (p.from === 'cliente' ? 'entregado' : 'enviado')
   const m: Message = {
-    id: nextId(s, 'MSG', 4),
+    id: nextId(s, 'MSG', 4, conv.businessId),
     ...base(s, conv.businessId),
     conversationId: conv.id,
     from: p.from,

@@ -284,6 +284,41 @@ function AguaGas() {
   )
 }
 
+/** Bebidas con alcohol (+18): solo en la carta del bar, nunca en la zona familiar ni en regalos. */
+function Vermut() {
+  const id = useArtId()
+  return (
+    <g>
+      <Defs />
+      <path d="M48 52H112L106 132C106 140 98 144 80 144S54 140 54 132Z" style={{ ...PAPER, ...L(2.2) }} />
+      <path d="M51 70H109L106 132C106 140 98 144 80 144S54 140 54 132Z" fill="#8a2a1c" />
+      <rect x="52" y="70" width="56" height="74" fill={url(id('ht'))} opacity=".25" />
+      {[[70, 84], [90, 92], [78, 108]].map(([x, y]) => <rect key={y} x={x - 7} y={y - 7} width="14" height="14" rx="3" fill="#f6efe4" opacity=".55" style={L(1)} />)}
+      <circle cx="104" cy="58" r="16" fill={MUSTARD} style={L(2)} />
+      <circle cx="104" cy="58" r="10" fill="#f6c45a" />
+      <path d="M104 48V68M94 58H114M97 51L111 65M111 51L97 65" stroke={MUSTARD} strokeWidth="1.4" />
+      <path d="M60 76V132" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" opacity=".45" />
+      <path d="M86 40L98 120" style={L(2.4)} />
+      <circle cx="86" cy="38" r="5" fill="#2f6a2a" style={L(1.4)} />
+    </g>
+  )
+}
+
+function Cerveza() {
+  const id = useArtId()
+  return (
+    <g>
+      <Defs />
+      <path d="M50 40H110L104 142H56Z" style={{ ...PAPER, ...L(2.2) }} />
+      <path d="M52 58H108L104 142H56Z" fill="#e7a52a" />
+      <rect x="54" y="58" width="52" height="84" fill={url(id('ht'))} opacity=".22" />
+      <path d="M46 46C46 30 62 28 68 34C72 24 90 24 94 34C100 26 116 30 114 46C112 56 50 58 46 46Z" fill="#fffaf0" style={L(2)} />
+      {[[68, 120], [86, 100], [76, 86], [94, 128]].map(([x, y]) => <circle key={y} cx={x} cy={y} r="2.2" fill="none" stroke="#fff3c2" strokeWidth="1.2" />)}
+      <path d="M62 64L64 136" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".45" />
+    </g>
+  )
+}
+
 function Saxo() {
   return (
     <g>
@@ -382,18 +417,20 @@ function Disco() {
 }
 
 export const COMPAS_FAMILY: FamilyPiece[] = [
-  { key: 'T-bravas', name: 'Patatas bravas', group: 'carta', Comp: Bravas },
-  { key: 'T-croquetas', name: 'Croquetas de jamón', group: 'carta', Comp: Croquetas },
-  { key: 'T-pincho', name: 'Pincho de tortilla', group: 'carta', Comp: Pincho },
-  { key: 'T-pan-tomate', name: 'Pan con tomate', group: 'carta', Comp: PanTomate },
-  { key: 'T-rabas', name: 'Rabas', group: 'carta', Comp: Rabas },
-  { key: 'T-tabla', name: 'Tabla de quesos y fiambres', group: 'carta', Comp: TablaQuesos },
-  { key: 'T-aceitunas', name: 'Aceitunas', group: 'carta', Comp: Aceitunas },
-  { key: 'T-montadito', name: 'Montaditos de jamón', group: 'carta', Comp: Montadito },
-  { key: 'T-limonada', name: 'Limonada con menta (sin alcohol)', group: 'carta', Comp: Limonada },
-  { key: 'T-jarra', name: 'Jarra de limonada para la mesa (sin alcohol)', group: 'carta', Comp: Jarra },
-  { key: 'T-pomelo', name: 'Soda de pomelo (sin alcohol)', group: 'carta', Comp: Pomelo },
-  { key: 'T-agua-gas', name: 'Agua con gas (sin alcohol)', group: 'carta', Comp: AguaGas },
+  { key: 'TC-01', name: 'Patatas bravas', group: 'carta', Comp: Bravas },
+  { key: 'TC-02', name: 'Croquetas de jamón', group: 'carta', Comp: Croquetas },
+  { key: 'TC-03', name: 'Pincho de tortilla', group: 'carta', Comp: Pincho },
+  { key: 'TC-04', name: 'Pan con tomate', group: 'carta', Comp: PanTomate },
+  { key: 'TC-05', name: 'Rabas', group: 'carta', Comp: Rabas },
+  { key: 'TC-06', name: 'Tabla de quesos y fiambres', group: 'carta', Comp: TablaQuesos },
+  { key: 'TC-07', name: 'Aceitunas', group: 'carta', Comp: Aceitunas },
+  { key: 'TC-08', name: 'Montaditos de jamón', group: 'carta', Comp: Montadito },
+  { key: 'TC-09', name: 'Limonada con menta (sin alcohol)', group: 'carta', Comp: Limonada },
+  { key: 'TC-10', name: 'Jarra de limonada para la mesa (sin alcohol)', group: 'carta', Comp: Jarra },
+  { key: 'TC-11', name: 'Soda de pomelo (sin alcohol)', group: 'carta', Comp: Pomelo },
+  { key: 'TC-13', name: 'Vermut de la casa (+18)', group: 'carta', Comp: Vermut },
+  { key: 'TC-14', name: 'Cerveza tirada (+18)', group: 'carta', Comp: Cerveza },
+  { key: 'TC-12', name: 'Agua con gas (sin alcohol)', group: 'carta', Comp: AguaGas },
   { key: 'jg-bar-saxo', name: 'Saxo (¿dónde está?)', group: 'juego', Comp: Saxo },
   { key: 'jg-bar-trompeta', name: 'Trompeta (¿dónde está?)', group: 'juego', Comp: Trompeta },
   { key: 'jg-bar-contrabajo', name: 'Contrabajo (¿dónde está?)', group: 'juego', Comp: Contrabajo },

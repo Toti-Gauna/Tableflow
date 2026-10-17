@@ -148,11 +148,11 @@ export function PhoneFrame({ children, time = '10:00', label, className = '' }: 
 }
 
 const SCREEN: Record<IdentityKey, { title: string; items: [string, string, string][] }> = {
-  cafe: { title: 'La merienda', items: [['RC-x-conleche', 'Café con leche', '$ 5.900'], ['RC-11', 'Medialuna de manteca', '$ 2.200'], ['RC-14', 'Budín de limón', '$ 4.800']] },
+  cafe: { title: 'La merienda', items: [['RC-15', 'Café con leche', '$ 5.900'], ['RC-11', 'Medialuna de manteca', '$ 2.200'], ['RC-14', 'Budín de limón', '$ 4.800']] },
   resto: { title: 'Hoy en la pizarra', items: [['MC-13', 'Milanesa napolitana', '$ 20.200'], ['MC-06', 'Sorrentinos con fileto', '$ 16.500'], ['MC-22', 'Flan con dulce de leche', '$ 7.900']] },
-  hela: { title: 'Elegí el formato', items: [['H-cucurucho-2', 'Cucurucho · 2 gustos', '$ 5.400'], ['H-vasito', 'Vasito · 2 gustos', '$ 5.200'], ['H-medio', 'Pote de ½ kg · 3 gustos', '$ 12.800']] },
-  bar: { title: 'Lado A · para compartir', items: [['T-bravas', 'Patatas bravas', '$ 7.900'], ['T-croquetas', 'Croquetas de jamón', '$ 8.400'], ['T-jarra', 'Jarra de limonada (sin alcohol)', '$ 9.000']] },
-  rapida: { title: 'Armá tu combo', items: [['B-doble', 'Doble con cheddar', '$ 11.900'], ['B-papas-md', 'Papas medianas', '$ 3.900'], ['B-vaso-md', 'Gaseosa mediana', '$ 3.200']] },
+  hela: { title: 'Elegí el formato', items: [['CO-02', 'Cucurucho · 2 gustos', '$ 5.400'], ['CO-03', 'Vasito · 2 gustos', '$ 5.200'], ['CO-05', 'Pote de ½ kg · 3 gustos', '$ 12.800']] },
+  bar: { title: 'Lado A · para compartir', items: [['TC-01', 'Patatas bravas', '$ 7.900'], ['TC-02', 'Croquetas de jamón', '$ 8.400'], ['TC-10', 'Jarra de limonada (sin alcohol)', '$ 9.000']] },
+  rapida: { title: 'Armá tu combo', items: [['BR-04', 'Doble con cheddar', '$ 11.900'], ['BR-06', 'Papas medianas', '$ 3.900'], ['BR-08', 'Gaseosa mediana', '$ 3.200']] },
 }
 
 /** Pantalla móvil de muestra de cada identidad, dentro del teléfono. */

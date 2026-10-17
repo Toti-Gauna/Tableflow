@@ -512,7 +512,7 @@ function submitOrder(s: AppState, ctx: Ctx, conv: Conversation, biz: BusinessPro
     businessId: biz.id,
     locationId: d.locationId!,
     customerId: cu?.id ?? null,
-    lines: [{ id: nextId(s, 'CLN', 4), itemId: item.id, itemVersion: item.version, selections: d.selections, qty: d.qty, note: '', unitCentsSeen: chk.unitCents }],
+    lines: [{ id: nextId(s, 'CLN', 4, biz.id), itemId: item.id, itemVersion: item.version, selections: d.selections, qty: d.qty, note: '', unitCentsSeen: chk.unitCents }],
     fulfillment: { kind: 'retiro', startMin: d.startMin! },
     alias: cu?.alias ?? d.alias ?? 'Invitado',
     version: 1,
@@ -578,7 +578,7 @@ function startOrder(s: AppState, ctx: Ctx, conv: Conversation, biz: BusinessProf
   if (!pickupAny) {
     return [{ text: `${item.name} se pide desde la carta, en la mesa. Por chat no tomo pedidos en este perfil.`, link: { label: 'Ver la carta', to: `/${biz.id}/carta` } }]
   }
-  const d: OData = { itemId: item.id, qty: parseQty(n.replace(item.name.toLowerCase(), '')), selections: {}, operationId: nextId(s, 'OP', 4) }
+  const d: OData = { itemId: item.id, qty: parseQty(n.replace(item.name.toLowerCase(), '')), selections: {}, operationId: nextId(s, 'OP', 4, biz.id) }
   matchOptions(s, item, n, d)
   conv.flow = { type: 'pedido', step: 'start', data: d as unknown as Record<string, unknown> }
   return orderStep(s, ctx, conv, biz, channel)
@@ -795,7 +795,7 @@ const chatNew: Handler = (s, c, ctx) => {
   const biz = byId(s.businesses, c.businessId)
   if (!biz) return fail('negocio-inexistente', 'Negocio inexistente.')
   const customerId = c.customerId ?? s.session.customerByBusiness[biz.id] ?? null
-  const id = nextId(s, 'C')
+  const id = nextId(s, 'C', 3, biz.id)
   const conv: Conversation = {
     id,
     ...base(s, biz.id),

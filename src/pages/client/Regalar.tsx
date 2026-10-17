@@ -18,7 +18,7 @@ export function Regalar() {
   const nav = useNavigate()
   const season = activeSeason(state, biz.id)
   const items = useMemo(() => {
-    const all = state.menuItems.filter((m) => m.businessId === biz.id)
+    const all = state.menuItems.filter((m) => m.businessId === biz.id && !m.tags?.includes('+18')) // sin alcohol (P5-L5)
     const picks = season.picks[biz.id]
     return [...all].sort((a, b) => (picks.includes(b.id) ? 1 : 0) - (picks.includes(a.id) ? 1 : 0))
   }, [state.menuItems, biz.id, season.picks])

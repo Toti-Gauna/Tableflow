@@ -59,7 +59,7 @@ function startRun(
     return null
   }
   const run: AutomationRun = {
-    id: nextId(s, 'RUN', 4),
+    id: nextId(s, 'RUN', 4, rule.businessId),
     ...base(s, rule.businessId),
     ruleId: rule.id,
     ruleCode: rule.code,

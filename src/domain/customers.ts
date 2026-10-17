@@ -17,7 +17,7 @@ export function ensureCustomer(
   const existing = findCustomerByAlias(s, businessId, alias)
   if (existing) return existing
   const c: CustomerDemo = {
-    id: nextId(s, 'CL'),
+    id: nextId(s, 'CL', 3, businessId),
     ...base(s, businessId),
     alias: alias.trim(),
     displayName: alias.trim(),

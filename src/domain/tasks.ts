@@ -17,7 +17,7 @@ export function createTask(
   const open = s.tasks.find((t) => t.kind === p.kind && t.entityId === p.entityId && t.status === 'pendiente')
   if (open) return open
   const t: HumanReviewTask = {
-    id: nextId(s, 'TASK'),
+    id: nextId(s, 'TASK', 3, p.businessId),
     ...base(s, p.businessId),
     kind: p.kind,
     status: 'pendiente',

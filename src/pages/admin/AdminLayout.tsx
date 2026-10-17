@@ -29,8 +29,11 @@ export function AdminLayout() {
     stock: state.ingredients.filter((i) => i.businessId === biz.id && i.alertState !== 'ok').length,
     regalos: state.gifts.filter((g) => g.businessId === biz.id && g.status === 'abierto' && state.clock.nowMs <= g.expiresAt).length,
   }
-  const mine = ADMIN_SECTIONS.filter((s) => s.roles.includes(role))
-  const others = ADMIN_SECTIONS.filter((s) => !s.roles.includes(role))
+  // P5-L5: un negocio solo de mostrador (Copo, Brasa) no tiene salón ni reservas que atender
+  const hasTables = state.tables.some((t) => t.businessId === biz.id)
+  const sections = ADMIN_SECTIONS.filter((s) => hasTables || (s.key !== 'salon' && s.key !== 'reservas'))
+  const mine = sections.filter((s) => s.roles.includes(role))
+  const others = sections.filter((s) => !s.roles.includes(role))
   const link = (s: (typeof ADMIN_SECTIONS)[number]) => (
     <NavLink key={s.key} to={`/admin/${s.key}`} data-testid={`nav-${s.key}`}>
       <Glyph name={ICON[s.key] ?? 'grid'} size={18} />
@@ -40,7 +43,7 @@ export function AdminLayout() {
   )
   const toTab = (s: (typeof ADMIN_SECTIONS)[number]) => ({ to: `/admin/${s.key}`, label: s.short ?? s.label, icon: ICON[s.key] ?? 'grid', badge: counts[s.key] || undefined })
   const toLink = (s: (typeof ADMIN_SECTIONS)[number]) => ({ to: `/admin/${s.key}`, label: s.label, icon: ICON[s.key] ?? 'grid', badge: counts[s.key] || undefined })
-  const quick = (mine.length ? mine : ADMIN_SECTIONS).slice(0, 4)
+  const quick = (mine.length ? mine : sections).slice(0, 4)
   return (
     <div className="admin">
       <div className="admin-layout">

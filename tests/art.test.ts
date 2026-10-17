@@ -13,14 +13,13 @@ const render = (key: string, label?: string) => {
 }
 
 describe('P5-L4 · familias de arte', () => {
-  it('cada ítem de Mesa Clara y Ritual Café tiene su pieza en la familia de su identidad', () => {
+  // P5-L5: los cinco negocios tienen carta; la cobertura se extiende a los cinco.
+  it('cada ítem de los cinco negocios tiene su pieza en la familia de su identidad', () => {
     const s = makeSeed('servicio')
     const missing = s.menuItems.filter((m) => !pieceFor(m.id)).map((m) => m.id)
     expect(missing).toEqual([])
-    for (const m of s.menuItems) {
-      const fam = m.businessId === 'mesa-clara' ? FAMILIES.resto : FAMILIES.cafe
-      expect(fam.pieces.some((p) => p.key === m.id), m.id).toBe(true)
-    }
+    const FAM: Record<string, IdentityKey> = { 'mesa-clara': 'resto', 'ritual-cafe': 'cafe', copo: 'hela', compas: 'bar', brasa: 'rapida' }
+    for (const m of s.menuItems) expect(FAMILIES[FAM[m.businessId]].pieces.some((p) => p.key === m.id), m.id).toBe(true)
   })
 
   it('las cinco identidades tienen carta y piezas de juego propias; las claves no se repiten', () => {

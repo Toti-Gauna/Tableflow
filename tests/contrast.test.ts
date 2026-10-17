@@ -70,7 +70,7 @@ const themes: [string, Record<string, string>][] = [
   ['TableFlow claro', base],
   ['TableFlow oscuro', { ...base, ...baseDark }],
 ]
-for (const [b, label] of [['mesa-clara', 'Mesa Clara'], ['ritual-cafe', 'Ritual Café']] as const) {
+for (const [b, label] of [['mesa-clara', 'Mesa Clara'], ['ritual-cafe', 'Ritual Café'], ['copo', 'Copo'], ['compas', 'Taberna Compás'], ['brasa', 'Brasa Rápida']] as const) {
   const t = biz(b)
   themes.push([`${label} claro`, { ...base, ...t.light }])
   themes.push([`${label} oscuro`, { ...base, ...baseDark, ...t.light, ...t.dark }])
@@ -105,7 +105,7 @@ describe('P5-L3 · contraste de cada identidad en claro y oscuro (tokens de styl
     }
   }
   it('el oscuro de cada negocio redefine todos los colores que redefine su claro', () => {
-    for (const b of ['mesa-clara', 'ritual-cafe']) {
+    for (const b of ['mesa-clara', 'ritual-cafe', 'copo', 'compas', 'brasa']) {
       const t = biz(b)
       const missing = Object.keys(t.light).filter((k) => !(k in t.dark))
       expect(missing, b).toEqual([])

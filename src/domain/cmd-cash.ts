@@ -22,7 +22,7 @@ const cashOpen: Handler = (s, c, ctx) => {
   if (openCashFor(s, c.locationId)) return fail('caja-abierta', 'Ya hay una caja abierta en esta sede.')
   if (!Number.isInteger(c.openingFloatCents) || c.openingFloatCents < 0) return fail('importe-invalido', 'El fondo inicial debe ser un importe en centavos mayor o igual a cero.')
   const cs: CashSession = {
-    id: nextId(s, 'CS'),
+    id: nextId(s, 'CS', 3, c.businessId),
     ...base(s, c.businessId),
     locationId: c.locationId,
     status: 'abierta',
@@ -47,7 +47,7 @@ const cashMovement: Handler = (s, c, ctx) => {
   const reason = (c.reason ?? '').trim()
   if (!reason) return fail('motivo-requerido', 'Indicá el motivo del movimiento.')
   if (c.kind === 'egreso' && expectedCash(s, cs) - c.amountCents < 0) return fail('efectivo-insuficiente', 'El egreso supera el efectivo esperado en caja.')
-  cs.movements.push({ id: nextId(s, 'CM'), kind: c.kind, amountCents: c.amountCents, reason, at: ctx.now })
+  cs.movements.push({ id: nextId(s, 'CM', 3, cs.businessId), kind: c.kind, amountCents: c.amountCents, reason, at: ctx.now })
   cs.version++
   audit(s, ctx, cs.businessId, 'cash.movement', 'CashSession', cs.id, `${c.kind} ${c.amountCents / 100}: ${reason}`)
   return ok()
@@ -105,9 +105,10 @@ const payRegister: Handler = (s, c, ctx) => {
     adjustment = plan.shares[c.shareIndex] - Math.floor(sessionTotal(s, ses.id) / plan.n)
   }
   if (c.amountCents > balance) return fail('sobrepago', `El importe supera el saldo (${(balance / 100).toFixed(2)}). No se acepta un sobrepago silencioso.`)
-  const n = nextNum(s, 'P')
+  const payId = nextId(s, 'P', 3, ses.businessId)
+  const n = Number(payId.slice(-3))
   const pay: PaymentSimulation = {
-    id: `P-${String(n).padStart(3, '0')}`,
+    id: payId,
     ...base(s, ses.businessId),
     sessionId: ses.id,
     cashSessionId: cash.id,
@@ -117,7 +118,7 @@ const payRegister: Handler = (s, c, ctx) => {
     lineIds,
     shareIndex,
     status: 'registrado',
-    receiptNo: `DEMO-${String(n).padStart(4, '0')}`,
+    receiptNo: `DEMO-${payId.length > 5 ? payId.slice(2, 5) : ''}${String(n).padStart(4, '0')}`,
     adjustmentCents: adjustment,
   }
   s.payments.push(pay)

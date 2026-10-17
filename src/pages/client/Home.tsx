@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
+import { RouteLoader } from '../../ui/Loader'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
 import { act } from '../../ui/kit'
@@ -15,13 +17,17 @@ import { BodegonArt } from '../../ui/art/scenes/bodegon'
 import { SalonArt } from '../../ui/art/scenes/salon'
 import type { AppState, BusinessProfile, ServiceWindow } from '../../domain/types'
 
+// P5-L5: los negocios nuevos tienen su propio inicio (y sus ilustraciones firma), en un chunk aparte.
+const HomeNuevo = lazy(() => import('./HomeNuevo').then((m) => ({ default: m.HomeNuevo })))
+const LEGACY = new Set(['mesa-clara', 'ritual-cafe'])
+
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 const DAY_FROM = 8 * 60
 const DAY_TO = 24 * 60
 const pct = (m: number) => `${((Math.min(DAY_TO, Math.max(DAY_FROM, m)) - DAY_FROM) / (DAY_TO - DAY_FROM)) * 100}%`
 
 /** Línea del día con las franjas de servicio y la hora simulada. */
-function Rhythm({ wins, nowMin }: { wins: ServiceWindow[]; nowMin: number }) {
+export function Rhythm({ wins, nowMin }: { wins: ServiceWindow[]; nowMin: number }) {
   return (
     <div>
       <div className="rhythm" role="img" aria-label={`Servicio de hoy: ${wins.map((w) => `${w.label} de ${hhmm(w.startMin)} a ${hhmm(w.endMin)}`).join('; ')}. Hora simulada ${hhmm(nowMin)}.`}>
@@ -105,6 +111,7 @@ function BarRhythm({ state, biz, locationId }: { state: AppState; biz: BusinessP
 
 export function Home() {
   const { state, biz, locationId } = useBiz()
+  if (!LEGACY.has(biz.id)) return <Suspense fallback={<RouteLoader />}><HomeNuevo state={state} biz={biz} locationId={locationId} /></Suspense>
   const today = dateKeyOf(state.clock.nowMs)
   const wins = windowsFor(state, locationId, today).sort((a, b) => a.startMin - b.startMin)
   const open = locationOpenNow(state, locationId)

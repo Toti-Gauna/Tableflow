@@ -10,6 +10,11 @@ export function makeSeed(id: FixtureId): AppState {
       i.onHand = qty
       i.alertState = 'ok'
     }
+    // P5-L5: los negocios nuevos traen bachas o insumos bajos a propósito en el servicio; en el vacío, sanos
+    for (const i of s.ingredients.filter((x) => x.alertState !== 'ok')) {
+      i.onHand = i.lowThreshold * 4
+      i.alertState = 'ok'
+    }
     return s
   }
   return serviceSeed()

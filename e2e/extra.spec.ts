@@ -6,7 +6,7 @@ test('S05/S09 por la UI: pedido vacío sin folio; búsqueda sin resultados y lim
   await page.getByTestId('send-empty').click()
   await expect(page.getByTestId('order-error')).toContainText('Tu pedido está vacío')
   await expect(page.getByText(/Pedido O-013/)).toHaveCount(0)
-  expect((await state(page)).orders).toHaveLength(12)
+  expect((await state(page)).orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
   await page.goto('/#/mesa-clara/carta')
   await page.getByTestId('menu-search').fill('zzz123')
   await expect(page.getByText('No encontramos platos con esos filtros')).toBeVisible()
@@ -27,7 +27,7 @@ test('S10 por la UI: retiro 03:00 → fuera de horario con próximas franjas vá
   await page.getByTestId('send-order').click()
   await expect(page.getByTestId('order-error')).toContainText('Fuera de horario')
   await expect(page.getByTestId('order-error')).toContainText('10:15')
-  expect((await state(page)).orders).toHaveLength(12)
+  expect((await state(page)).orders).toHaveLength(17) // P5-L5: la semilla suma la actividad de los negocios nuevos
 })
 
 test('S24 por la UI: el pago reintentado con el mismo comprobante no se duplica', async ({ page }) => {

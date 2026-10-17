@@ -1,3 +1,4 @@
+import { BIZ_PREFIX } from './business'
 import { audit, base, byId, dup, fail, nextId, nextNum, ok, type Ctx, type Outcome } from './core'
 import { addMessage } from './messaging'
 import { seasonForDate } from './season'
@@ -12,7 +13,7 @@ export const GIFT_DAYS = 30
 export const GIFT_MESSAGE_MAX = 280
 export const ALIAS_MAX = 30
 const SEASONS: SeasonId[] = ['primavera', 'verano', 'otono', 'invierno', 'madre', 'padre', 'amigo', 'fiestas', 'enamorados']
-const PREFIX: Record<BusinessId, string> = { 'mesa-clara': 'MC', 'ritual-cafe': 'RC' }
+const PREFIX: Record<BusinessId, string> = BIZ_PREFIX
 // sin 0/O ni 1/I/L: el código se dicta y se tipea sin confusiones
 const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'
 
@@ -38,7 +39,7 @@ export function giftCart(s: AppState, giftId: string) {
 /** Código determinista y legible (p. ej. MC-7KQ4) a partir de un contador persistente. */
 function codeFor(s: AppState, biz: BusinessId): string {
   for (;;) {
-    let n = nextNum(s, 'GIFTCODE') * 2654435761
+    let n = nextNum(s, 'GIFTCODE', biz) * 2654435761
     let out = ''
     for (let i = 0; i < 4; i++) {
       n = (n ^ (n >>> 13)) >>> 0
@@ -59,6 +60,8 @@ const giftCreate: Handler = (s, c, ctx) => {
   const item = byId(s.menuItems, c.itemId)
   const errors: Record<string, string> = {}
   if (!item || item.businessId !== biz.id) errors.item = 'Elegí un plato de la carta de este negocio.'
+  // P5-L5: no se regalan bebidas con alcohol (quien recibe puede ser menor y la demo no verifica edad)
+  else if (item.tags?.includes('+18')) errors.item = 'Las bebidas con alcohol no se pueden regalar. Elegí una tapa o algo sin alcohol.'
   const from = String(c.fromAlias ?? '').trim()
   const to = String(c.toAlias ?? '').trim()
   const message = String(c.message ?? '').trim()
@@ -77,7 +80,7 @@ const giftCreate: Handler = (s, c, ctx) => {
   if (Object.keys(errors).length) return fail('validacion', 'Revisá los datos de la invitación.', { errors })
 
   const g: GiftInvite = {
-    id: nextId(s, 'GFT'),
+    id: nextId(s, 'GFT', 3, biz.id),
     ...base(s, biz.id),
     code: codeFor(s, biz.id),
     fromAlias: from,
@@ -100,7 +103,7 @@ const giftCreate: Handler = (s, c, ctx) => {
   if (delivery === 'whatsapp-simulado') {
     // hilo del canal simulado hacia quien recibe: sin teléfono, sin cliente creado, sin envío real
     const conv: Conversation = {
-      id: nextId(s, 'C'),
+      id: nextId(s, 'C', 3, biz.id),
       ...base(s, biz.id),
       customerId: null,
       channel: 'whatsapp',

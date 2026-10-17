@@ -137,11 +137,10 @@ function SimpleBody() {
   )
 }
 
-function Pollo() {
+function PolloBody() {
   const id = useArtId()
   return (
     <g>
-      <Defs />
       <ellipse cx="80" cy="140" rx="60" ry="8" fill={url(id('shadow'))} />
       <PanAbajo y={122} />
       {/* pechuga crocante, de borde irregular y más ancha que el pan */}
@@ -156,6 +155,7 @@ function Pollo() {
 }
 
 const Simple = () => <g><Defs /><SimpleBody /></g>
+const Pollo = () => <g><Defs /><PolloBody /></g>
 
 /** Cartón de papas en tres tamaños. */
 function PapasBody({ h }: { h: number }) {
@@ -254,6 +254,18 @@ function Combo() {
   )
 }
 
+/** El mismo cartón y vaso, con el sándwich de pollo al frente. */
+function ComboPollo() {
+  return (
+    <g>
+      <Defs />
+      <g transform="translate(-10 34) scale(.58)"><PapasBody h={80} /></g>
+      <g transform="translate(76 24) scale(.62)"><VasoBody h={92} /></g>
+      <g transform="translate(22 56) scale(.72)"><PolloBody /></g>
+    </g>
+  )
+}
+
 function Agua() {
   const id = useArtId()
   return (
@@ -296,19 +308,20 @@ const IngPepino = () => (
 )
 
 export const BRASA_FAMILY: FamilyPiece[] = [
-  { key: 'B-simple', name: 'Hamburguesa clásica', group: 'carta', Comp: Simple },
-  { key: 'B-doble', name: 'Hamburguesa doble con cheddar', group: 'carta', Comp: Doble },
-  { key: 'B-pollo', name: 'Sándwich de pollo crocante', group: 'carta', Comp: Pollo },
+  { key: 'BR-03', name: 'Hamburguesa clásica', group: 'carta', Comp: Simple },
+  { key: 'BR-04', name: 'Hamburguesa doble con cheddar', group: 'carta', Comp: Doble },
+  { key: 'BR-05', name: 'Sándwich de pollo crocante', group: 'carta', Comp: Pollo },
   { key: 'B-papas-ch', name: 'Papas chicas', group: 'carta', Comp: PapasCh },
-  { key: 'B-papas-md', name: 'Papas medianas', group: 'carta', Comp: PapasMd },
+  { key: 'BR-06', name: 'Papas medianas', group: 'carta', Comp: PapasMd },
   { key: 'B-papas-gr', name: 'Papas grandes', group: 'carta', Comp: PapasGr },
-  { key: 'B-nuggets', name: 'Nuggets de pollo', group: 'carta', Comp: Nuggets },
+  { key: 'BR-07', name: 'Nuggets de pollo', group: 'carta', Comp: Nuggets },
   { key: 'B-vaso-ch', name: 'Gaseosa chica (sin alcohol)', group: 'carta', Comp: VasoCh },
-  { key: 'B-vaso-md', name: 'Gaseosa mediana (sin alcohol)', group: 'carta', Comp: VasoMd },
+  { key: 'BR-08', name: 'Gaseosa mediana (sin alcohol)', group: 'carta', Comp: VasoMd },
   { key: 'B-vaso-gr', name: 'Gaseosa grande (sin alcohol)', group: 'carta', Comp: VasoGr },
-  { key: 'B-agua', name: 'Agua mineral', group: 'carta', Comp: Agua },
-  { key: 'B-cono', name: 'Cono de helado', group: 'carta', Comp: Cono },
-  { key: 'B-combo', name: 'Combo: hamburguesa, papas y bebida', group: 'carta', Comp: Combo },
+  { key: 'BR-09', name: 'Agua mineral', group: 'carta', Comp: Agua },
+  { key: 'BR-10', name: 'Cono de helado', group: 'carta', Comp: Cono },
+  { key: 'BR-02', name: 'Combo Pollo crocante', group: 'carta', Comp: ComboPollo },
+  { key: 'BR-01', name: 'Combo Doble con cheddar: hamburguesa, papas y bebida', group: 'carta', Comp: Combo },
   { key: 'jg-rapida-pan-arriba', name: 'Pan de arriba (armá la hamburguesa)', group: 'juego', Comp: IngPanArriba },
   { key: 'jg-rapida-pan-abajo', name: 'Pan de abajo (armá la hamburguesa)', group: 'juego', Comp: IngPanAbajo },
   { key: 'jg-rapida-carne', name: 'Medallón de carne (armá la hamburguesa)', group: 'juego', Comp: IngCarne },

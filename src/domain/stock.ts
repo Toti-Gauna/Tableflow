@@ -91,7 +91,7 @@ export function applyMovement(
   ing.reserved += p.dReserved
   ing.version++
   const mv: StockMovement = {
-    id: nextId(s, 'MOV', 4),
+    id: nextId(s, 'MOV', 4, p.businessId),
     businessId: p.businessId,
     createdAt: ctx.now,
     version: 1,

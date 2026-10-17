@@ -73,7 +73,7 @@ const cartAdd: Handler = (s, c, ctx) => {
     same.unitCentsSeen = chk.unitCents
   } else {
     const line: CartLine = {
-      id: nextId(s, 'CLN', 4),
+      id: nextId(s, 'CLN', 4, cart.businessId),
       itemId: item.id,
       itemVersion: item.version,
       selections,
@@ -148,7 +148,7 @@ const cartSetFulfillment: Handler = (s, c, ctx) => {
 const cartBegin: Handler = (s, c, ctx) => {
   const cart = byId(s.carts, c.cartId)
   if (!cart) return fail('carrito-inexistente', 'Carrito inexistente.')
-  if (!cart.pendingOperationId) cart.pendingOperationId = nextId(s, 'OP', 4)
+  if (!cart.pendingOperationId) cart.pendingOperationId = nextId(s, 'OP', 4, cart.businessId)
   cart.updatedAt = ctx.now
   return ok({ operationId: cart.pendingOperationId })
 }
@@ -200,7 +200,7 @@ export function buildOrderLines(s: AppState, cart: Cart): Outcome<{ lines: Order
       if (!g || !giftUsable(g, s.clock.nowMs)) return fail('regalo-invalido', `La invitación de ${item.name} ya no es válida (cancelada o vencida). Quitá esa línea para enviar.`, { lineId: l.id })
     }
     lines.push({
-      id: nextId(s, 'OL', 4),
+      id: nextId(s, 'OL', 4, cart.businessId),
       itemId: item.id,
       name: item.name,
       qty: l.qty,
@@ -284,10 +284,11 @@ const orderSubmit: Handler = (s, c, ctx) => {
     session = r.data!
   }
 
-  const n = nextNum(s, 'O')
-  const orderId = `O-${String(n).padStart(3, '0')}`
-  const ticketId = `K-${String(n).padStart(3, '0')}`
-  s.counters.K = n
+  // Pedido y comanda comparten número (el de retiro); los negocios nuevos numeran aparte (O-BR-001 / K-BR-001).
+  const orderId = nextId(s, 'O', 3, cart.businessId)
+  const ticketId = orderId.replace(/^O/, 'K')
+  const n = Number(orderId.slice(-3))
+  if (/^O-\d+$/.test(orderId)) s.counters.K = n
   const channel: Channel = c.channel ?? 'web'
   const order: Order = {
     id: orderId,
@@ -358,7 +359,7 @@ const orderAccept: Handler = (s, c, ctx) => {
       const exists = s.tasks.find((t) => t.kind === 'receta-unidad' && t.entityId === o.id && t.status === 'pendiente')
       if (!exists) {
         s.tasks.push({
-          id: nextId(s, 'TASK'),
+          id: nextId(s, 'TASK', 3, o.businessId),
           ...base(s, o.businessId),
           kind: 'receta-unidad',
           status: 'pendiente',
@@ -466,7 +467,7 @@ const orderCancel: Handler = (s, c, ctx) => {
     const t = byId(s.tickets, o.ticketId)
     if (t) t.incident = `Cancelación solicitada: ${reason}`
     s.tasks.push({
-      id: nextId(s, 'TASK'),
+      id: nextId(s, 'TASK', 3, o.businessId),
       ...base(s, o.businessId),
       kind: 'cancelacion-preparacion',
       status: 'pendiente',
@@ -537,7 +538,7 @@ const orderIncident: Handler = (s, c, ctx) => {
   const t = byId(s.tickets, o.ticketId)
   if (t) t.incident = note
   s.tasks.push({
-    id: nextId(s, 'TASK'),
+    id: nextId(s, 'TASK', 3, o.businessId),
     ...base(s, o.businessId),
     kind: 'incidencia-cocina',
     status: 'pendiente',
@@ -605,7 +606,7 @@ const orderDuplicate: Handler = (s, c, ctx) => {
     const selections: Record<string, string[]> = {}
     for (const sel of l.selections) (selections[sel.groupId] ??= []).push(sel.optionId)
     const chk = checkLine(s, item, selections, l.qty)
-    cart.lines.push({ id: nextId(s, 'CLN', 4), itemId: item.id, itemVersion: item.version, selections, qty: l.qty, note: l.note, unitCentsSeen: chk.unitCents })
+    cart.lines.push({ id: nextId(s, 'CLN', 4, o.businessId), itemId: item.id, itemVersion: item.version, selections, qty: l.qty, note: l.note, unitCentsSeen: chk.unitCents })
   }
   touchCart(cart, ctx)
   audit(s, ctx, o.businessId, 'order.duplicated', 'Cart', cart.id, `Pedido ${o.id} copiado al carrito para revisión (no se crea otro pedido hasta enviar)`)
@@ -664,7 +665,7 @@ const stockRestock: Handler = (s, c, ctx) => {
   const ing = byId(s.ingredients, c.ingredientId)
   if (!ing) return fail('insumo-inexistente', 'Insumo inexistente.')
   if (!Number.isInteger(c.qty) || c.qty <= 0) return fail('valor-invalido', 'La reposición debe ser un entero positivo en unidades base.')
-  const key = c.eventKey ?? `REP-${ing.id}-${nextNum(s, 'REP')}`
+  const key = c.eventKey ?? `REP-${ing.id}-${nextNum(s, 'REP', ing.businessId)}`
   const mv = applyMovement(s, ctx, {
     ingredientId: ing.id,
     businessId: ing.businessId,
@@ -691,7 +692,7 @@ const stockAdjust: Handler = (s, c, ctx) => {
     dOnHand: c.delta,
     dReserved: 0,
     orderId: null,
-    eventKey: c.eventKey ?? `ADJ-${ing.id}-${nextNum(s, 'ADJ')}`,
+    eventKey: c.eventKey ?? `ADJ-${ing.id}-${nextNum(s, 'ADJ', ing.businessId)}`,
     note: c.note ?? 'Ajuste manual',
   })
   if (!mv) return dup()

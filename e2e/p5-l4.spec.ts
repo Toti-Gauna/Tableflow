@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { fresh } from './helpers'
 
 // P5-L4 · arte por identidad, mockups y galería.
-const COUNTS: Record<string, number> = { cafe: 23, resto: 38, hela: 26, bar: 19, rapida: 21 }
+const COUNTS: Record<string, number> = { cafe: 23, resto: 38, hela: 26, bar: 21, rapida: 22 } // P5-L5: +vermut y cerveza (+18) en el bar, +combo de pollo
 
 test('AR-01/02: galería con cinco identidades; cada una muestra su familia completa, la muestra a tamaño real y los mockups', async ({ page }) => {
   const external: string[] = []

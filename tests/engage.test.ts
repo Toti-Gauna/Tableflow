@@ -27,7 +27,7 @@ describe('Pasaporte, fidelización, catas y reportes (M10, M13, M14, M15)', () =
     t.fail({ type: 'pass/save', businessId: biz, itemId: 'XX' }, 'seleccion-invalida')
     t.ok({ type: 'pass/save', businessId: biz, itemId: 'RC-07' })
     expect(pass()).toMatchObject({ badge: 'guardada', savedPreference: 'RC-07' })
-    expect(t.s.orders.length).toBe(12) // logro sin comprar
+    expect(t.s.orders.length).toBe(17) // logro sin comprar
     // agregar el mismo plato desde la carta no cuenta como "uso" del pasaporte; desde el pasaporte sí (métrica local, no venta)
     t.ok({ type: 'cart/add', businessId: biz, locationId: 'L-RC-centro', itemId: 'RC-07', qty: 1, selections: { 'MG-origen': ['or-huila'] } })
     expect(pass().metrics.usedInCart).toBe(0)

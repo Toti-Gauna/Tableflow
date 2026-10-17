@@ -12,7 +12,7 @@ describe('Reservas y capacidad (M03)', () => {
     const r = t.fail(req({ dateKey: MON, startMin: 21 * 60 + 30, party: 4, operationId: 'op-a' }), 'sin-cupo') as any
     expect(r.data.alternatives[0]).toBe(21 * 60 + 45)
     expect(r.data.alternatives).not.toContain(21 * 60 + 30)
-    expect(t.count('reservations')).toBe(18) // borrador: no se creó reserva
+    expect(t.count('reservations')).toBe(21) // borrador: no se creó reserva
     const q = { businessId: 'mesa-clara', locationId: 'L-MC-salon', dateKey: MON, party: 4, sectorPref: 'cualquiera' as const }
     expect(slotAvailable(t.s, { ...q, startMin: 20 * 60 })).toBe(false)
     expect(slotAvailable(t.s, { ...q, startMin: 21 * 60 + 30 })).toBe(false)
@@ -41,7 +41,7 @@ describe('Reservas y capacidad (M03)', () => {
     t.ok(req({ dateKey: MON, startMin: 21 * 60 + 45, party: 4, operationId: 'op-dd' }))
     const again = t.ok(req({ dateKey: MON, startMin: 21 * 60 + 45, party: 4, operationId: 'op-dd' })) as any
     expect(again.duplicate).toBe(true)
-    expect(t.count('reservations')).toBe(19)
+    expect(t.count('reservations')).toBe(22)
   })
   it('S12: recepción acepta R-019 y asigna mesa; versión y audit', () => {
     const t = T.seed()
@@ -118,7 +118,7 @@ describe('Reservas y capacidad (M03)', () => {
     const t = T.seed()
     const r = t.fail({ type: 'res/request', businessId: 'ritual-cafe', locationId: 'L-RC-centro', dateKey: MON, startMin: 11 * 60, party: 2, alias: 'Ana', channel: 'web', operationId: 'op-j' }, 'sin-reservas')
     expect(r.ok === false && r.message).toMatch(/orden de llegada/)
-    expect(t.count('reservations')).toBe(18)
+    expect(t.count('reservations')).toBe(21)
     t.fail({ type: 'wait/add', businessId: 'ritual-cafe', locationId: 'L-RC-centro', dateKey: MON, startMin: 11 * 60, party: 2, alias: 'Ana', operationId: 'op-k' }, 'sin-reservas')
   })
   it('S16: grupo de 16 → revisión humana, sin mesa de 8 asignada', () => {
@@ -194,7 +194,7 @@ describe('Salón (M04)', () => {
     expect(t.get('waitlist', 'W-001').status).toBe('esperando')
     t.ok({ type: 'res/cancel', id: 'R-001', reason: 'Se cae la reunión' })
     expect(t.get('waitlist', 'W-001')).toMatchObject({ status: 'ofrecida', offerStartMin: 1200 })
-    expect(t.count('reservations')).toBe(18) // no se confirma sola
+    expect(t.count('reservations')).toBe(21) // no se confirma sola
     t.ok({ type: 'clock/advance', minutes: 31 })
     expect(t.get('waitlist', 'W-001').status).toBe('vencida')
     // otra vez: nueva espera + cancelación + validación del equipo

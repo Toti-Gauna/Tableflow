@@ -128,14 +128,14 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 
 | Requisito | Café | Restaurante | Heladería | Bar | Rápida |
 |---|---|---|---|---|---|
-| Recorridos RP/RO | C P (base existente) | C P (existente) | E | E | E |
-| Retiro con pago en local | E (hoy: pago DEMO en caja) | n/a | E | n/a | E |
+| Recorridos RP/RO | C P (base existente) | C P (existente) | C P (L5) | C P (L5) | C P (L5) |
+| Retiro con pago en local | C P (L5) | n/a | C P (L5) | n/a | C P (L5) |
 | Propuestas visuales (L2, 1.ª ronda) | rechazada por genérica | rechazada | rechazada | rechazada | rechazada |
 | Identidad propia (L2b) | C P · confitería notable | C P · bodegón de pizarra | C P · la vitrina es el menú | C P · club de jazz | C P · brasa a la vista |
 | Aprobación de la identidad | aprobada | aprobada | aprobada | aprobada | aprobada |
-| Shell, header, modo oscuro (L3) | C P | C P | E (tokens en L5) | E (tokens en L5) | E (tokens en L5) |
+| Shell, header, modo oscuro (L3) | C P | C P | C P (tokens en L5) | C P (tokens en L5) | C P (tokens en L5) |
 | Arte propio (L4) | C P · 23 piezas | C P · 38 piezas | C P · 26 piezas (negocio en L5) | C P · 19 piezas (negocio en L5) | C P · 21 piezas (negocio en L5) |
-| Juego infantil propio (L5) | C compartido → E | C compartido → E | E | E | E |
+| Juego infantil propio (L5) | C P · memoria | C P · poner la mesa | C P · copiá el helado | C P · ¿dónde está? | C P · armá la hamburguesa |
 | Growth y asistentes (L6) | E | E | E | E | E |
 | QR y códigos (L7) | parcial (códigos) | parcial | E | E | E |
 | Animación transaccional (L8) | E | E | E | E | E |
@@ -235,3 +235,36 @@ En la familia, después de revisar cada pieza, se rehicieron:
 - **QR:** se genera en L7. Los mockups no muestran un QR falso.
 - **Contenido provisional:** Copo, Taberna Compás y Brasa Rápida tienen claves de arte, pero sus negocios, fixtures y juegos se arman en L5.
 - **Revisión:** sin lector de pantalla ni dispositivo físico. La revisión visual fue por capturas a tamaño real.
+
+## L5 · Producto completo y juegos infantiles (SDD)
+Construido el 17/10/2026 sobre `main` (con L3 y L4 ya integrados). La versión de esquema detectada al entrar era **2** (`SCHEMA_VERSION` en `src/domain/types.ts` y los migradores de `persistence.ts`); L5 la sube a **3**.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| NEG-01 | Cinco negocios con fixtures estables | semilla determinista con actividad en curso | `fixtures/nuevos.ts`, `base.ts`, `seed.ts`, `domain/business.ts` | Copo (8 ítems, 8 gustos con bacha), Taberna Compás (14 ítems, 8 mesas, agenda) y Brasa Rápida (10 ítems, combos); Ritual suma café con leche, lágrima, submarino y medialuna de grasa. Semilla válida y determinista | `tests/l5.test.ts` NEG-01 |
+| NEG-01b | Catálogo → selección → pedido/reserva → recepción → preparación → entrega | enviado → aceptado → en preparación → listo → retirado/servido → cerrado | carta, `MiPedido`, `PedidoDetalle`, `AdminPedidos`, `AdminCocina` (estaciones de cada negocio: plancha, freidora, armado, mostrador…), `Numeros` | lo que pide el cliente aparece en el comercio de su negocio y en ningún otro | `e2e/p5-l5.spec.ts` NEG-BR, NEG-02 |
+| NEG-02 | Café + medialunas para retirar y pagar en el local | aceptado con pago pendiente → pagado solo al registrar el cobro en caja | `orderPayment` (`sessions.ts`), `PayAtCounter`, `PayRow`, chip en la comanda, `Caja?cuenta=` | el estado de pago sale del saldo de la cuenta; aceptar, preparar o marcar listo no lo cambia; un rechazado no queda como deuda | `l5.test.ts` NEG-02; e2e NEG-02 |
+| NEG-03 | Reglas de cada negocio | cupo de gustos por formato, bacha agotada, combos con tamaño/acompañamiento/bebida obligatorios, mesa grande a revisión humana | grupos de modificadores; la carta desactiva opciones sin stock o con el cupo completo | no se puede elegir un gusto agotado ni pasar el cupo; el combo incompleto no entra | `l5.test.ts` NEG-03; e2e NEG-CO |
+| NEG-04 | Aislamiento por `businessId` | — | `validateState`, numeración propia de los negocios nuevos (`O-BR-001`, `R-TC-001`…) | cada pedido, comanda, pago y movimiento de stock referencia solo entidades de su negocio; los folios de Mesa Clara y Ritual Café no se corrieron (R-019 y O-013 siguen siendo los próximos) | `l5.test.ts` NEG-04; e2e NEG-BR |
+| NEG-05 | Migración explícita desde la versión detectada | v1 → v2 → v3 en cadena | `MIGRATIONS[2]`, `migrate()` | v2 → v3 solo agrega (negocios, sedes, franjas, mesas, carta, insumos, recetas, agenda, reglas, claves de sesión y temporada) y es idempotente; lo guardado no cambia | `l5.test.ts` NEG-05; `persistence.test.ts` |
+| NEG-06 | Alcohol fuera de regalos y de la zona familiar | — | `gift/create` rechaza ítems `+18`; `Regalar` y `Chicos` los filtran | ninguna temporada sugiere alcohol; la escena del bar no tiene bebidas con alcohol | `l5.test.ts` NEG-06; `games.test.ts`; e2e JG-06 |
+| NEG-UI | Cada negocio se ve y navega como el suyo | claro/oscuro, 1280 y 390 px | tokens `[data-biz]` de Copo, Compás y Brasa (Fraunces+Nunito, Archivo+Instrument Serif, Fredoka); `HomeNuevo` con vitrina, agenda o tablero; portada con cinco tapas; secciones según el tipo de negocio (`ui/features.ts`) | contraste AA medido en los seis tokens de texto de cada modo; axe sin violaciones serias; sin scroll lateral; lo que un negocio no usa responde como página inexistente | `contrast.test.ts`; e2e NEG-UI, NEG-TC |
+| JG-FRAME | Marco común de juego | inicio (instrucciones y nivel) → jugando (progreso) ⇄ pausa (botón o Escape) → éxito → siguiente nivel / otra vez; salir en cualquier momento | `games/GameFrame.tsx` | sin tiempo límite, sin puntajes públicos, sin premios ni campos de datos; foco al título de cada fase; "Sin animaciones" además de la preferencia del sistema | e2e JG-01…05 |
+| JG-CAF | Ritual Café · memoria de la merienda | 3 / 4 / 6 parejas | `MemoriaBoard` | dos cartas distintas quedan a la vista hasta el próximo toque | `games.test.ts` JG-CAF; e2e |
+| JG-RES | Mesa Clara · poner la mesa | 3 / 5 / 6 piezas | `MesaBoard` (elegir y tocar el lugar) | un lugar equivocado explica dónde va y no cambia nada | `games.test.ts` JG-RES; e2e |
+| JG-HEL | Copo · copiá el helado | 2 / 3 / 4 bochas | `HeladoBoard` | el modelo está siempre a la vista (alternativa sin memoria); esconderlo es opcional; se marcan las bochas distintas | `games.test.ts` JG-HEL; e2e |
+| JG-FR | Brasa · armá la hamburguesa | 4 / 6 / 8 capas | `HamburguesaBoard` | solo entra la capa que sigue en la comanda; si no, dice cuál va | `games.test.ts` JG-FR; e2e |
+| JG-BAR | Taberna Compás · ¿dónde está? | 3 / 5 / 7 cosas entre 6 / 9 / 11 | `DondeBoard` (patio con música en familia) | cada objeto es un botón con nombre (Tab + Enter); tocar otra cosa no penaliza; sin alcohol | `games.test.ts` JG-BAR; e2e |
+
+### Qué cambió en lo que ya existía (con motivo)
+- **Numeración:** los negocios nuevos numeran con prefijo propio para no correr los folios del bodegón y el café. Los conteos globales de la semilla subieron (21 reservas, 17 pedidos, 14 clientes); los tests que contaban colecciones completas se actualizaron a esos valores o pasaron a medir los dos negocios originales, con el motivo anotado en cada uno.
+- **Pago en el local en Ritual Café:** sus retiros ahora muestran "pago en el local pendiente" hasta el cobro en caja, en lugar de "pago simulado: no se cobró nada".
+- **Juego infantil:** el memotest genérico de P3 (el mismo para los dos negocios) se reemplazó por un juego por negocio. El test de P3 que lo jugaba ahora juega la memoria de Ritual Café con teclado hasta ganar; "Armá tu plato" sigue en Mesa Clara como juego libre y cubre "componer un plato".
+- **Selección con cupo:** con el cupo de un grupo completo (p. ej. dos gustos), la carta desactiva el resto en vez de dejar marcar de más y fallar al agregar.
+
+### Límites declarados de L5
+- **Fidelización:** el pasaporte, explorar sabores y el simulador de canales siguen siendo de Mesa Clara y Ritual Café; los negocios nuevos los suman en L6. Esas rutas responden "no encontramos esa sección en este perfil".
+- **Arrastre:** los juegos se juegan tocando o con teclado (elegir y después el lugar); no hay arrastrar y soltar.
+- **Ilustraciones firma:** el inicio de los negocios nuevos importa las de L2b desde el estudio de propuestas (`pages/propuestas/*`, estilos con prefijo propio) en un chunk diferido; no se duplicaron.
+- **Revisión:** sin lector de pantalla ni dispositivo físico; teclado y axe probados con Playwright.
