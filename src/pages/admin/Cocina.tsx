@@ -47,7 +47,7 @@ export function AdminCocina() {
       : `Retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''}`
   return (
     <>
-      <PageHead title="Cocina / barra" sub="Cola por estación · temporizador con el reloj simulado de la demo" />
+      <PageHead title="Cocina / barra" sub="Cola por estación · tiempos según el reloj simulado" />
       {msg && <Callout tone="err" role="alert">{msg.text}</Callout>}
       <div className="kds-board">
         <div className="kds-bar">

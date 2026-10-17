@@ -52,7 +52,7 @@ export function Chicos() {
             )
           })}
         </ul>
-        <p className="hint">Precios de la carta de muestra. Ante una alergia o intolerancia, consultá al equipo: la demo no garantiza ausencia de alérgenos.</p>
+        <p className="hint">Precios de la carta. Ante una alergia o intolerancia, consultá al equipo: la demo no garantiza ausencia de alérgenos.</p>
       </section>
 
       <Memotest items={MEMO_ITEMS[biz.id].map((id) => state.menuItems.find((m) => m.id === id)!).filter(Boolean)} biz={biz.id} />

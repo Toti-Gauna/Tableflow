@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../store'
 import { PageHead } from '../../ui/Shell'
-import { Callout, Empty } from '../../ui/kit'
+import { Callout, Empty, DemoHint } from '../../ui/kit'
 import { buildReport } from '../../domain/reports'
 import { dateKeyOf, fmtDateShort } from '../../domain/time'
 import { fmtARS } from '../../domain/money'
@@ -22,7 +22,7 @@ export function AdminReportes() {
   const maxOrders = Math.max(1, ...Object.values(rep.orders.byStatus).map((n) => n ?? 0))
   return (
     <>
-      <PageHead title="Reportes" sub="Indicadores derivados de pedidos, caja, stock y eventos. Sin datos inventados." />
+      <PageHead title="Reportes" sub="Pedidos, reservas, caja, stock y eventos del período elegido." />
       <form className="filters" aria-label="Filtros del tablero" onSubmit={(e) => e.preventDefault()}>
         <div className="field" style={{ margin: 0 }}><label htmlFor="from">Desde</label><input id="from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} data-testid="rep-from" /></div>
         <div className="field" style={{ margin: 0 }}><label htmlFor="to">Hasta</label><input id="to" type="date" value={to} onChange={(e) => setTo(e.target.value)} data-testid="rep-to" /></div>
@@ -68,7 +68,7 @@ export function AdminReportes() {
           </section>
         </div>
       )}
-      <Callout>Cambiá un pedido en Pedidos o Cocina y volvé: estos indicadores se recalculan desde el mismo estado.</Callout>
+      <DemoHint>Cambiá un pedido en Pedidos o Cocina y volvé: los indicadores se recalculan desde el mismo estado.</DemoHint>
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
-import { act, Callout } from '../../ui/kit'
+import { act } from '../../ui/kit'
 import { Glyph, Plate } from '../../ui/glyphs'
 import { fmtMenu } from '../../ui/food'
 import { windowsFor, locationOpenNow } from '../../domain/availability'
@@ -56,7 +56,7 @@ function DayBoard({ state, biz, locationId }: { state: AppState; biz: BusinessPr
           )
         })}
       </ul>
-      <p className="foot">Precios ficticios de muestra · <Link to={`/${biz.id}/carta`}>carta completa</Link></p>
+      <p className="foot"><Link to={`/${biz.id}/carta`}>Carta completa</Link></p>
     </aside>
   )
 }
@@ -95,7 +95,7 @@ function BarRhythm({ state, biz, locationId }: { state: AppState; biz: BusinessP
           </ul>
         </>
       )}
-      <p className="foot">Datos del estado local de la demo · <Link to={`/${biz.id}/pedido`}>pedir para retirar</Link></p>
+      <p className="foot"><Link to={`/${biz.id}/pedido`}>Pedir para retirar</Link></p>
     </aside>
   )
 }
@@ -116,7 +116,7 @@ export function Home() {
         <div className="fx-scene">
           <PageHead
             title={biz.name}
-            eyebrow={isRest ? 'Bodegón contemporáneo · negocio ficticio' : 'Café de especialidad · negocio ficticio'}
+            eyebrow={isRest ? 'Bodegón contemporáneo' : 'Café de especialidad · barra y vitrina'}
             heading={isRest ? <>Comida de casa, <em>mesa larga.</em></> : <>Café de origen, <em>mañanas lentas.</em></>}
           />
           <p className="lead">{biz.story}</p>
@@ -130,9 +130,9 @@ export function Home() {
           </div>
           {!biz.reservationsEnabled && (
             <div style={{ marginTop: 16 }}>
-              <Callout>
-                En este perfil atendemos por orden de llegada: no tomamos reservas. La carta está disponible y podés {biz.kind === 'cafe' ? 'pedir para retirar por franja' : 'pedir en tu mesa'}.
-              </Callout>
+              <p className="policy-note">
+                <Glyph name="clock" size={16} /> En este perfil atendemos por orden de llegada: no tomamos reservas. Podés {biz.kind === 'cafe' ? 'pedir para retirar por franja' : 'pedir en tu mesa'}.
+              </p>
             </div>
           )}
         </div>
@@ -176,7 +176,7 @@ export function Home() {
             </div>
           </section>
           <section aria-labelledby="origenes" className="home-sec">
-            <p className="eyebrow">Notas de cata de muestra</p>
+            <p className="eyebrow">Notas de cata</p>
             <h2 id="origenes">Orígenes de la semana</h2>
             <ol className="origins">
               {ORIGINS.map((o, i) => (
@@ -211,31 +211,6 @@ export function Home() {
                 )
               })}
             </ul>
-          )}
-        </section>
-        <section className="card" aria-labelledby="tour">
-          <p className="eyebrow">60–90 segundos</p>
-          <h2 id="tour">Recorrido guiado</h2>
-          {isRest ? (
-            <ol className="steps">
-              <li>
-                <span>
-                  Pasá el reloj a las 12:00 (el salón abre al mediodía).{' '}
-                  <button className="linklike" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button>
-                </span>
-              </li>
-              <li><span><Link to={`/${biz.id}/carta`}>Elegí una milanesa</Link> con guarnición y agregala.</span></li>
-              <li><span><Link to={`/${biz.id}/pedido`}>Mi pedido</Link>: indicá tu mesa y enviá. Verás el folio.</span></li>
-              <li><span>Como <Link to="/admin/pedidos">recepción</Link>, aceptá el pedido; en <Link to="/admin/cocina">cocina</Link> prepará y marcá listo; el <Link to="/admin/salon">mozo</Link> lo sirve.</span></li>
-              <li><span>En <Link to="/admin/caja">caja</Link> abrí la caja, dividí la cuenta, registrá los pagos DEMO y cerrá la mesa.</span></li>
-            </ol>
-          ) : (
-            <ol className="steps">
-              <li><span>Elegí la sede en los controles de la demo (Centro o Norte).</span></li>
-              <li><span><Link to={`/${biz.id}/explorar`}>Explorá sabores</Link> o andá a la <Link to={`/${biz.id}/carta`}>carta</Link>.</span></li>
-              <li><span>Configurá un flat white (tamaño y leche) y pedilo para <Link to={`/${biz.id}/pedido`}>retirar</Link>.</span></li>
-              <li><span>Como <Link to="/admin/cocina">barra</Link>, aceptá, prepará y marcá listo; después marcá retirado.</span></li>
-            </ol>
           )}
         </section>
       </div>

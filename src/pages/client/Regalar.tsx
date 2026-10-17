@@ -54,7 +54,7 @@ export function Regalar() {
       <PageHead
         title="Invitar a alguien a comer"
         eyebrow={<><Glyph name="gift" size={14} /> Regalo con mensaje · {season.name}</>}
-        sub="Elegí un plato, escribí unas palabras y elegí la tarjeta. Quien la recibe la canjea en su pedido. En la demo no se cobra ni se envía nada real."
+        sub="Elegí un plato, escribí unas palabras y elegí la tarjeta. Quien la recibe la canjea en su pedido."
       />
       <div className="gift-layout">
         <form className="gift-form" noValidate onSubmit={(e) => { e.preventDefault(); submit() }}>
@@ -88,7 +88,7 @@ export function Regalar() {
             <legend><span className="n">2</span> ¿De parte de quién y para quién?</legend>
             <div className="grid cols-2">
               <div className="field">
-                <label htmlFor="g-fromAlias">Tu nombre (alias de muestra)</label>
+                <label htmlFor="g-fromAlias">Tu nombre</label>
                 <input id="g-fromAlias" value={fromAlias} onChange={(e) => setFrom(e.target.value)} maxLength={30} autoComplete="off" data-testid="gift-from" {...field('fromAlias')} />
                 <ErrorText id="g-fromAlias-err">{errs.fromAlias}</ErrorText>
               </div>

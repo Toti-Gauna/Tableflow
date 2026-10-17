@@ -31,7 +31,7 @@ export function AdminClientes() {
     const pass = state.passports.find((p) => p.customerId === c.id)
     return (
       <>
-        <PageHead title={`${c.displayName}`} sub={`${c.id} · ficha de cliente ficticio`} />
+        <PageHead title={`${c.displayName}`} sub={`${c.id} · ficha de cliente`} />
         <p><Link to="/admin/clientes">← Todos los clientes</Link></p>
         {msg && <Callout tone={msg.tone === 'ok' ? 'ok' : 'err'} role="alert">{msg.text}</Callout>}
         {dupOf && (

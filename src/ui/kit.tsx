@@ -80,6 +80,15 @@ export function Empty({ title, children, action, art }: { title: string; childre
     </div>
   )
 }
+/** Nota de la capa de demo (no del producto): sello DEMO y borde punteado, siempre distinguible del contenido. */
+export function DemoHint({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`demo-hint ${className ?? ''}`}>
+      <span className="seal" aria-hidden="true">DEMO</span>
+      <span>{children}</span>
+    </p>
+  )
+}
 export function Callout({ tone = 'info', children, role }: { tone?: 'info' | 'warn' | 'err' | 'ok' | 'review'; children: ReactNode; role?: string }) {
   return (
     <div className={`callout ${tone === 'info' ? '' : tone}`} role={role ?? (tone === 'err' ? 'alert' : undefined)}>

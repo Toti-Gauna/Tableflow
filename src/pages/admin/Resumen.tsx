@@ -36,7 +36,7 @@ export function AdminResumen() {
       <div className="kpis" role="group" aria-label="Indicadores del día">
         <div><p className="k">Reservas de hoy</p><p className="kpi" data-testid="kpi-res">{resToday.length}</p><p className="s">{resToday.filter((r) => r.status === 'solicitada').length} solicitadas · {resToday.filter((r) => r.status === 'confirmada').length} confirmadas</p></div>
         <div><p className="k">Pedidos de hoy</p><p className="kpi" data-testid="kpi-orders">{rep.orders.count}</p><p className="s">{rep.orders.delivered} entregados</p></div>
-        <div><p className="k">Ventas (pedidos entregados)</p><p className="kpi money">{fmtARS(rep.orders.salesCents)}</p><p className="s">Derivado de pedidos; no es caja ni beneficio.</p></div>
+        <div><p className="k">Ventas (pedidos entregados)</p><p className="kpi money">{fmtARS(rep.orders.salesCents)}</p><p className="s">pedidos entregados · no incluye caja</p></div>
         <div><p className="k">Caja de la sede</p><p className="kpi">{cash ? 'Abierta' : 'Cerrada'}</p><p className="s"><Link to="/admin/caja">Ir a caja</Link></p></div>
       </div>
       <div className="admin-grid">

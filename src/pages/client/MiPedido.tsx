@@ -77,7 +77,7 @@ export function MiPedido() {
 
   return (
     <main>
-      <PageHead title="Mi pedido" sub={`${sedeShort(loc.name)} · no se cobra nada en la demo`} />
+      <PageHead title="Mi pedido" sub={sedeShort(loc.name)} />
       {!cart || cart.lines.length === 0 ? (
         <Empty
           title="Tu pedido está vacío"
@@ -186,7 +186,7 @@ export function MiPedido() {
                   )}
                 </div>
                 <div className="field">
-                  <label htmlFor="alias">Nombre para el retiro (alias de muestra)</label>
+                  <label htmlFor="alias">Nombre para el retiro</label>
                   <input id="alias" type="text" value={cart.alias} onChange={(e) => setFulfillment({ alias: e.target.value })} aria-invalid={code === 'alias-requerido'} aria-describedby={code === 'alias-requerido' ? 'alias-err' : undefined} />
                   <ErrorText id="alias-err">{code === 'alias-requerido' && !err!.ok ? err!.message : ''}</ErrorText>
                 </div>
@@ -258,8 +258,8 @@ export function MiPedido() {
       )}
 
       <section className="home-sec" style={{ marginTop: 40 }} aria-labelledby="recientes">
-        <p className="eyebrow">Historial local de la demo</p>
-        <h2 id="recientes">Pedidos recientes de este perfil</h2>
+        <p className="eyebrow">Tus pedidos</p>
+        <h2 id="recientes">Pedidos recientes</h2>
         {myOrders.length === 0 ? (
           <p className="muted">Todavía no hay pedidos.</p>
         ) : (

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
-import { act, Badge, Callout } from '../../ui/kit'
+import { act, Badge, Callout, DemoHint } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
 import { BADGE_LABEL, PassportSteps, SavedPick } from '../../ui/passport'
 import { getPassport, stampsOf } from '../../domain/cmd-engage'
@@ -18,7 +18,7 @@ export function Pasaporte() {
   const done = pass ? Object.values(pass.cards).filter((c) => c.done).length : 0
   return (
     <main>
-      <PageHead title="Mi pasaporte" eyebrow={customer ? `Pasaporte de ${customer.alias} · ficticio` : 'Pasaporte de invitado'} sub="Exploración de sabores + sellos de visita (de muestra, sin premios reales)" />
+      <PageHead title="Mi pasaporte" eyebrow={customer ? `Pasaporte de ${customer.alias}` : 'Pasaporte de invitado'} sub="Descubrí sabores en tres tarjetas y sumá sellos con cada visita." />
       {biz.passportPaused && <Callout tone="warn" role="alert">El encargado pausó la mecánica: no se suman tarjetas ni sellos por ahora. Lo que ya tenés se conserva.</Callout>}
       <div className="passport-grid">
         <section className="card" aria-labelledby="expl">
@@ -37,7 +37,7 @@ export function Pasaporte() {
               <div><dt>Uso en el pedido</dt><dd>{pass.metrics.usedInCart}</dd></div>
             </dl>
           )}
-          {pass && <p className="small muted">Métricas locales de esta demo: no se cuentan como ventas ni se envían a ningún lado.</p>}
+
         </section>
         <section className="card" aria-labelledby="sellos">
           <p className="eyebrow">Fidelidad</p>
@@ -68,17 +68,21 @@ export function Pasaporte() {
               </ul>
             </>
           ) : (
-            <Callout>
-              Los sellos se asocian a una persona. <button className="linklike" type="button" onClick={() => act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)')}>Verme como Ana (cliente recurrente)</button> para ver un pasaporte con visitas.
-            </Callout>
+            <>
+              <p className="muted">Los sellos son personales: los acredita el equipo en cada visita.</p>
+              <DemoHint>
+                <button className="linklike" type="button" onClick={() => act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)')}>Verme como Ana (cliente recurrente)</button> para ver un pasaporte con visitas.
+              </DemoHint>
+            </>
           )}
-          <h3 style={{ marginTop: 16 }}>Reglas visibles</h3>
+          <details className="how">
+          <summary>Cómo funcionan los sellos</summary>
           <ul className="small rules">
             <li>Un sello por persona y fecha en todo el negocio, acreditado por el personal (no por consumo ni por gasto). Desde la vista cliente no se pueden sumar.</li>
             <li>La insignia llega a la quinta visita. No hay premios reales: la configuración de premios está deshabilitada hasta que el negocio la apruebe.</li>
             <li>Un sello acreditado por error se revierte con motivo y queda en el historial.</li>
-            <li>La demo no es antifraude: alguien podría editar su navegador.</li>
           </ul>
+          </details>
         </section>
       </div>
     </main>

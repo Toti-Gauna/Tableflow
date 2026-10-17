@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useActiveInView } from '../../ui/hooks'
 import { useApp } from '../../store'
 import { ADMIN_SECTIONS, isClientRole, ROLE_LABEL } from '../../ui/format'
-import { Callout } from '../../ui/kit'
+import { DemoHint } from '../../ui/kit'
 import { Glyph } from '../../ui/glyphs'
 import { RouteLoader } from '../../ui/Loader'
 import { TabBar } from '../../ui/TabBar'
@@ -57,16 +57,14 @@ export function AdminLayout() {
           </nav>
         </aside>
         <div className="admin-main">
-          <p className="role-hint" style={{ margin: '0 0 12px' }}>
-            Administración de <strong>{biz.name}</strong> · vista de <strong>{ROLE_LABEL[role]}</strong> (didáctica: no hay permisos ni seguridad real).{' '}
-            {isClientRole(role) && <>Estás con un rol de cliente viendo pantallas de personal. <Link to={`/${biz.id}`}>Volver a la vista cliente</Link>.</>}
-          </p>
+          {isClientRole(role) && (
+            <DemoHint className="role-hint">
+              Estás mirando pantallas del equipo con un rol de cliente (las vistas no son permisos). <Link to={`/${biz.id}`}>Volver a la vista cliente</Link>
+            </DemoHint>
+          )}
           <Suspense fallback={<RouteLoader variant="admin" />}>
             <Outlet />
           </Suspense>
-          <div className="admin-note">
-            <Callout>Todo lo que ves acá se deriva del mismo estado local que la vista cliente: un cambio en un pedido o una reserva se refleja en ambas.</Callout>
-          </div>
         </div>
       </div>
       <TabBar

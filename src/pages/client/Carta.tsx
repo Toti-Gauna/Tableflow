@@ -104,7 +104,7 @@ export function Carta() {
 
   return (
     <main>
-      <PageHead title="Carta" sub={`${sedeShort(loc.name)} · precios en ARS ficticios`}>
+      <PageHead title="Carta" sub={`${sedeShort(loc.name)} · precios en ARS`}>
         <span className="muted small">{serviceHours(state, locationId)}</span>
       </PageHead>
       {hiddenElsewhere > 0 && <Callout>En esta sede no se sirven {hiddenElsewhere} plato(s) que sí están en otra. Cambiá la sede en los controles de la demo para verlos.</Callout>}
@@ -160,7 +160,7 @@ export function Carta() {
                 <section key={c} aria-labelledby={`cat-${c}`}>
                   <div className="vitrina-head">
                     <h2 id={`cat-${c}`}><Glyph name={glyphForCategory(c)} size={18} /> {c}</h2>
-                    <span className="small muted">Ilustraciones de muestra, no fotos del producto</span>
+                    <span className="small muted">Ilustraciones de la casa · no son fotos</span>
                   </div>
                   <div className="vitrina">
                     {list.map((i) => <Pastry key={i.id} item={i} {...row} />)}

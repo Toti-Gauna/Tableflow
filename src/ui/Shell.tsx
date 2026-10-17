@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { act, ConfirmDialog, DemoTag } from './kit'
+import { act, ConfirmDialog, DemoTag, Dialog } from './kit'
 import { Glyph } from './glyphs'
 import { DEFAULT_ADMIN, isClientRole, ROLE_LABEL, sedeShort } from './format'
 import { dismissNotice, dispatch, resetDemo, setPrefs, useSnapshot } from '../store'
@@ -67,6 +67,7 @@ export function DemoBar() {
   const nav = useNavigate()
   const loc = useLocation()
   const [resetOpen, setResetOpen] = useState(false)
+  const [guide, setGuide] = useState(false)
   const [open, setOpen] = useState(false)
   const [fx, setFx] = useState<FixtureId>('servicio')
   const biz = state.session.businessId
@@ -190,12 +191,18 @@ export function DemoBar() {
             <Glyph name={prefs.reducedMotion === 'on' ? 'check' : 'sliders'} size={16} />
             <span className="wide-only">Reducir movimiento</span>
           </button>
+          <button className="cbtn" type="button" onClick={() => setGuide(true)} data-testid="guide-open" aria-haspopup="dialog">
+            <Glyph name="book" size={16} /> <span className="wide-only">Guía de la demo</span>
+          </button>
           <button className="cbtn" type="button" onClick={() => setResetOpen(true)} data-testid="reset-open">
             <Glyph name="restart" size={16} /> <span className="xl-only">Reiniciar</span><span className="sr-only"> demo</span>
           </button>
         </div>
         </div>
       </div>
+      <Dialog open={guide} onClose={() => setGuide(false)} title="Guía de la demo" className="guide" testId="guide">
+        <DemoGuide biz={biz} onDone={() => setGuide(false)} />
+      </Dialog>
       <ConfirmDialog
         open={resetOpen}
         title="Reiniciar la demo"
@@ -228,12 +235,48 @@ export function DemoBar() {
   )
 }
 
+/** Recorridos sugeridos para quien muestra la demo (capa de demo, fuera del producto). */
+function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
+  const nav = useNavigate()
+  const go = (to: string) => { onDone(); nav(to) }
+  const rest = biz === 'mesa-clara'
+  return (
+    <div className="guide-body">
+      <p className="muted">Recorridos de 60–90 segundos. Todo es local y simulado; el reloj solo avanza con los controles.</p>
+      <h3>{rest ? 'Mesa Clara · del pedido al cierre' : 'Ritual Café · del pedido al retiro'}</h3>
+      {rest ? (
+        <ol className="steps">
+          <li><span>Pasá el reloj a las 12:00 (el salón abre al mediodía). <button className="linklike" type="button" onClick={() => act({ type: 'clock/jump', minutes: 12 * 60 }, 'Reloj en 12:00')}>Ir a las 12:00</button></span></li>
+          <li><span><button className="linklike" type="button" onClick={() => go('/mesa-clara/carta')}>Elegí una milanesa</button> con guarnición y agregala.</span></li>
+          <li><span>En Mi pedido indicá tu mesa y enviá: vas a ver el folio.</span></li>
+          <li><span>Como recepción aceptá; en cocina prepará y marcá listo; el mozo lo sirve.</span></li>
+          <li><span>En caja abrí la caja, dividí la cuenta, registrá los pagos DEMO y cerrá la mesa.</span></li>
+        </ol>
+      ) : (
+        <ol className="steps">
+          <li><span>Elegí la sede (Centro o Norte) en los controles.</span></li>
+          <li><span><button className="linklike" type="button" onClick={() => go('/ritual-cafe/carta')}>Configurá un flat white</button> (tamaño y leche) y pedilo para retirar.</span></li>
+          <li><span>Como barra aceptá, prepará y marcá listo; después marcá retirado.</span></li>
+        </ol>
+      )}
+      <h3>Más para mostrar</h3>
+      <ul className="guide-links">
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/regalar`)}>Invitar a alguien a comer</button> · tarjeta, mensaje simulado y canje en el pedido</li>
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/chicos`)}>Para chicos</button> · memotest y “Armá tu plato”</li>
+        <li><button className="linklike" type="button" onClick={() => go(`/${biz}/simulador`)}>Simulador de canales</button> · reserva por WhatsApp o llamada</li>
+        <li><button className="linklike" type="button" onClick={() => { act({ type: 'session/setRole', role: 'cliente-recurrente' }, 'Ahora sos Ana (cliente recurrente)'); go(`/${biz}/pasaporte`) }}>Verme como Ana</button> · pasaporte con sellos e historial</li>
+        <li><button className="linklike" type="button" onClick={() => go('/arte')}>Ilustraciones y personajes</button> · el sistema visual completo</li>
+      </ul>
+    </div>
+  )
+}
+
 export function Footer() {
   return (
     <footer className="site">
       <div className="wrap">
         <p>
-          <DemoTag /> TableFlow es una demo frontend local con datos ficticios (Mesa Clara y Ritual Café). Los canales de WhatsApp y llamada son simulaciones: no se envían mensajes, no se usa el micrófono ni se realizan cobros. <Link to="/comercial">Alcance y cobertura de la demo</Link>
+          <DemoTag /> TableFlow · demo local con datos ficticios. WhatsApp, llamada, pagos y regalos son simulaciones. <Link to="/comercial">Alcance de la demo</Link>
         </p>
       </div>
     </footer>

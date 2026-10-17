@@ -144,11 +144,11 @@ export function Reservar() {
                 </div>
               ))}
             </div>
-            <p className="hint muted small" id="slots-hint">Los horarios tachados no tienen mesa libre para {numberWord(Math.min(party || 1, biz.maxPartyAuto))} {party === 1 ? 'persona' : 'personas'}. Cupos según los datos de muestra.</p>
+            <p className="hint muted small" id="slots-hint">Los horarios tachados no tienen mesa libre para {numberWord(Math.min(party || 1, biz.maxPartyAuto))} {party === 1 ? 'persona' : 'personas'}.</p>
             <ErrorText id="slots-err">{fieldErr.slot}</ErrorText>
           </fieldset>
           <p className="step-title"><span className="step-n">4</span> Tus datos</p>
-          <Field label="Nombre para la reserva (alias de muestra)" htmlFor="alias" error={fieldErr.alias}>
+          <Field label="Nombre para la reserva" htmlFor="alias" error={fieldErr.alias}>
             <input id="alias" type="text" value={alias} onChange={(e) => setAlias(e.target.value)} aria-invalid={!!fieldErr.alias} aria-describedby={fieldErr.alias ? 'alias-err' : undefined} data-testid="res-alias" />
           </Field>
           <Field label="Sector preferido" htmlFor="sector" hint="Preferencia de terraza, sujeta a confirmación: no garantiza sector.">
@@ -186,10 +186,10 @@ export function Reservar() {
             </div>
           )}
           <section className="card" aria-labelledby="mias">
-            <p className="eyebrow">Historial local de la demo</p>
+            <p className="eyebrow">Tus reservas</p>
             <h2 id="mias">Mis reservas</h2>
             {myReservations.length === 0 ? (
-              <p className="muted">Todavía no tenés reservas en esta demo. Si te identificás como cliente recurrente (Ana) vas a ver las tuyas.</p>
+              <p className="muted">Todavía no tenés reservas.</p>
             ) : (
               <ul className="order-list">
                 {myReservations.map((r) => (

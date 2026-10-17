@@ -63,7 +63,7 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
     { to: `${root}/catas`, label: 'Catas', icon: 'wine', hint: 'Con cupo y lista de espera' },
     { to: `${root}/chicos`, label: 'Para chicos', icon: 'smile', hint: 'Menú infantil y juegos' },
     { to: `${root}/ayuda`, label: 'Ayuda', icon: 'help', hint: 'Cómo funciona la demo' },
-    { to: `${root}/simulador`, label: 'Simulador de canales', icon: 'chat', hint: 'Chat y llamada de muestra (simulados)' },
+    { to: `${root}/simulador`, label: 'Simulador de canales', icon: 'chat', hint: 'Chat y llamada simulados' },
   ]
   return (
     <div className={`client biz-${b.kind}`} data-biz={biz} data-season={activeSeason(state, biz).id}>

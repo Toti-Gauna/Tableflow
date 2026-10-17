@@ -32,13 +32,13 @@ export function Landing() {
         title="TableFlow · demo de gestión gastronómica"
         eyebrow="TableFlow · demo local"
         heading={<>Del salón a la barra, <em>una sola mesa de trabajo.</em></>}
-        sub="Dos negocios ficticios, todos los módulos y un estado que vive en este navegador: sin backend, pagos, mensajes ni llamadas reales."
+        sub="Carta, reservas, salón, cocina, caja, regalos y fidelización de un bodegón y una cafetería, conectados en una sola experiencia para el comensal y para el equipo."
       />
       <div className="covers">
         {state.businesses.map((b) => (
           <section key={b.id} className="cover fx-scene" data-biz={b.id} aria-labelledby={`b-${b.id}`}>
             <Glyph name={COVER[b.id].mark} size={44} className="mark" />
-            <p className="eyebrow">{b.kind === 'bodegon' ? 'Bodegón' : 'Café de especialidad'} · ficticio</p>
+            <p className="eyebrow">{b.kind === 'bodegon' ? 'Bodegón' : 'Café de especialidad'}</p>
             <h2 id={`b-${b.id}`}>{b.name}</h2>
             <p className="tag">{b.tagline}</p>
             <ul>
@@ -52,7 +52,7 @@ export function Landing() {
         ))}
       </div>
       <section aria-labelledby="staff" className="home-sec">
-        <p className="eyebrow">Vistas didácticas: muestran pantallas, no permisos</p>
+        <p className="eyebrow">Para el equipo · cada rol muestra sus pantallas</p>
         <h2 id="staff">Entrar como personal</h2>
         <div className="staff">
           {STAFF.map((s) => (

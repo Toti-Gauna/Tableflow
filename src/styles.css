@@ -1383,3 +1383,20 @@ details.tech[open] { display: grid; gap: 6px; justify-items: start; }
 .mv-kind.reposicion { background: #e3f1e6; color: #1f5a33; }
 .mv-kind.reserva { background: #fdf1d8; color: #6b4a05; }
 @media (max-width: 480px) { .mv-log li { grid-template-columns: minmax(0, 1fr); } .mv-log li > details { grid-column: 1; } }
+
+/* ==========================================================================
+   P4-B · capa de demo separada del producto
+   ========================================================================== */
+.demo-hint { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; padding: 10px 14px; border: 1.5px dashed color-mix(in srgb, var(--ink) 28%, transparent); border-radius: 12px; font-size: .88rem; color: var(--ink-soft); background: transparent; }
+.demo-hint .seal { flex: none; font-size: .62rem; font-weight: 800; letter-spacing: .14em; background: #a44431; color: #fff; padding: 3px 7px; border-radius: 5px; margin-top: 1px; }
+.demo-hint .linklike { font-weight: 750; }
+.admin .demo-hint.role-hint { margin: 0 0 14px; }
+.policy-note { display: flex; gap: 8px; align-items: flex-start; margin: 16px 0 0; font-size: .92rem; color: var(--ink-soft); max-width: 52ch; }
+.policy-note .glyph { flex: none; margin-top: 3px; color: var(--accent); }
+.lede-note { color: var(--ink-soft); max-width: 70ch; margin: 4px 0 18px; }
+details.how { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+details.how summary { cursor: pointer; font-weight: 750; min-height: 32px; display: flex; align-items: center; }
+dialog.guide { max-width: min(560px, calc(100vw - 24px)); }
+.guide-body h3 { margin: 18px 0 6px; font-size: 1.05rem; }
+.guide-links { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; font-size: .92rem; color: var(--muted); }
+.guide-links .linklike { font-weight: 750; }

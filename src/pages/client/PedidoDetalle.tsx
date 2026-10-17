@@ -5,7 +5,7 @@ import { PageHead } from '../../ui/Shell'
 import { Glyph } from '../../ui/glyphs'
 import { orderCovered, orderDue } from '../../domain/sessions'
 import { HouseChar } from '../../ui/art/characters'
-import { act, Callout, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
+import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { ORDER_LABEL, sedeShort } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
@@ -83,13 +83,13 @@ export function PedidoDetalle() {
         <Callout tone="ok" role="status">
           <strong>¡Listo!</strong> {o.kind === 'retiro' ? `Retiralo en barra con el código ${o.pickupCode}.` : 'Tu mozo lo lleva a la mesa.'}{' '}
           {notice ? (
-            notice.status === 'fallida' ? <span>El aviso local falló y puede reintentarse desde administración; el pedido sigue listo.</span> : <span>{notice.detail}</span>
+            notice.status === 'fallida' ? null : <span>{notice.detail}</span>
           ) : null}
         </Callout>
       )}
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}
       {o.cancelRequested && <Callout tone="warn">Pediste cancelar con el pedido ya en marcha. El encargado debe decidir; la comanda no se borra.</Callout>}
-      {noticeMsg && <p className="small muted">Aviso local ({noticeMsg.status}): “{noticeMsg.text}”</p>}
+      {notice?.status === 'fallida' && <DemoHint>El aviso por WhatsApp de este pedido falló (simulado): el equipo lo reintenta desde Automatizaciones. El pedido sigue listo.</DemoHint>}
       <section className="ticket-paper receipt" style={{ marginTop: 20, maxWidth: 640 }} aria-labelledby="det">
         <p className="eyebrow">Comanda {o.ticketId}</p>
         <h2 id="det">Detalle</h2>
@@ -111,7 +111,8 @@ export function PedidoDetalle() {
             <div className="total-row"><span>A pagar</span><span className="money" data-testid="order-due">{fmtARS(orderDue(o))}</span></div>
           </>
         )}
-        <p className="small muted">Canal: {o.channel} · operación {o.operationId} · hilo {o.correlationId}. Importe informativo: no se cobró nada.</p>
+        <p className="small muted">Pago simulado: no se cobró nada.</p>
+        <details className="tech"><summary>Detalle técnico</summary><span className="small muted">Canal {o.channel} · operación {o.operationId} · hilo {o.correlationId}</span></details>
       </section>
       <div className="row" style={{ marginTop: 14 }}>
         {cancellable && !o.cancelRequested && <button className="btn danger" type="button" onClick={() => setCancel(true)} data-testid="cancel-order">Cancelar pedido</button>}

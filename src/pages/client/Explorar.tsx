@@ -27,9 +27,7 @@ export function Explorar() {
       <p className="pp-status" aria-live="polite">
         <strong data-testid="passport-progress">{done} de {cards.length}</strong> tarjetas completadas · <Badge tone={pass?.badge === 'guardada' ? 'ok' : pass?.badge === 'disponible' ? 'info' : 'neutral'} label={BADGE_LABEL[pass?.badge ?? 'sin-empezar']} />
       </p>
-      <Callout>
-        Cada tarjeta trae una pregunta opcional: podés equivocarte y reintentar sin penalización, o seguir sin responder. <strong>El logro no se compra ni da descuentos</strong>: sirve para descubrir y recordar lo que te gusta. También podés pedir sin jugar.
-      </Callout>
+      <p className="lede-note">Cada tarjeta trae una pregunta opcional: podés reintentar sin penalización o seguir sin responder. La insignia no se compra ni da descuentos: sirve para recordar lo que te gusta.</p>
       {biz.passportPaused && <Callout tone="warn" role="alert">La mecánica de pasaporte está pausada por el encargado. Podés leer las tarjetas pero no suman; tu progreso guardado se conserva.</Callout>}
       <div className="pcards">
         {cards.map((c, idx) => {
