@@ -346,7 +346,7 @@ export function AdminCampanas() {
   if (id) {
     const c = camps.find((x) => x.id === id)
     if (!c) return (<><PageHead title="Campañas" /><Empty title={`No existe la campaña ${id} en este perfil`} action={<Link className="btn" to="/admin/campanas">Volver al listado</Link>}>Puede ser de otro negocio.</Empty></>)
-    return <Editor key={`${c.id}-${c.status}`} base={c} />
+    return <Editor key={c.id} base={c} />
   }
   const tab = params.get('vista') === 'calendario' ? 'calendario' : 'lista'
   return (

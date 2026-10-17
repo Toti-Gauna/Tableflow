@@ -308,3 +308,42 @@ test('capturas P5-L5 (cinco negocios, pago en el local y juegos)', async ({ page
     await page.getByTestId(`game-${g}`).screenshot({ path: `${OUT}/6${i}-${g}-b-jugando.png` })
   }
 })
+
+test('capturas P5-L6 (fidelización, campañas, costos y asistentes)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT9 ?? 'docs/tableflow/screens/p5-l6'
+  const role = (r: string) => page.evaluate((x) => (window as any).__tableflow.dispatch({ type: 'session/setRole', role: x }), r)
+  await fresh(page, '/#/mesa-clara')
+  for (const mode of ['light', 'dark'] as const) {
+    const m = mode === 'light' ? 'claro' : 'oscuro'
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/#/mesa-clara'); await role('encargado')
+    await page.goto('/#/admin/campanas'); await settle(page); await page.screenshot({ path: `${OUT}/1-campanas-listado-${m}.png` })
+    await page.goto('/#/admin/campanas/CMP-002'); await settle(page); await page.screenshot({ path: `${OUT}/2-campana-proyeccion-simulacion-${m}.png`, fullPage: true })
+    await page.goto('/#/admin/campanas?vista=calendario'); await settle(page); await page.screenshot({ path: `${OUT}/3-calendario-mes-${m}.png` })
+    await page.goto('/#/admin/costos'); await settle(page); await page.screenshot({ path: `${OUT}/4-costos-${m}.png` })
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+  await page.goto('/#/copo'); await role('encargado')
+  await page.goto('/#/admin/campanas/CMP-CO-001'); await settle(page); await page.screenshot({ path: `${OUT}/5-copo-borrador-nd.png` })
+  await page.goto('/#/compas'); await role('encargado')
+  await page.goto('/#/admin/costos'); await settle(page); await page.screenshot({ path: `${OUT}/5-compas-costos-nd.png` })
+  await page.goto('/#/mesa-clara'); await role('encargado')
+  await page.goto('/#/admin/asistente'); await settle(page)
+  for (const q of ['Armá una campaña para clientes a reactivar', '$ 3.000', 'con la milanesa de ternera', 'costo fijo 15.000', 'presupuesto 90.000']) {
+    await page.getByTestId('biz-assist-input').fill(q); await page.getByTestId('biz-assist-send').click(); await page.waitForTimeout(200)
+  }
+  await settle(page); await page.screenshot({ path: `${OUT}/6-asistente-comercio.png`, fullPage: true })
+  await page.goto('/#/admin/clientes/CL-001'); await settle(page); await page.screenshot({ path: `${OUT}/7-cliente-historial.png` })
+  await page.goto('/#/ritual-cafe'); await role('cliente-recurrente')
+  await page.goto('/#/ritual-cafe/beneficios'); await settle(page); await page.screenshot({ path: `${OUT}/8-mis-beneficios.png` })
+  await page.goto('/#/ritual-cafe/carta/RC-15'); await page.getByLabel('Entera').check(); await page.getByTestId('add-to-cart').click()
+  await page.goto('/#/ritual-cafe/pedido'); await page.locator('[data-testid^="pick-RC-"]').first().click(); await settle(page); await page.screenshot({ path: `${OUT}/9-beneficio-en-el-pedido.png` })
+  await page.goto('/#/ritual-cafe/asistente'); await settle(page)
+  for (const q of ['¿Tengo beneficios?', '¿Qué pidió Lucía?']) { await page.getByTestId('client-assist-input').fill(q); await page.getByTestId('client-assist-send').click(); await page.waitForTimeout(200) }
+  await settle(page); await page.screenshot({ path: `${OUT}/10-asistente-cliente.png` })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/copo/beneficios'); await settle(page); await page.screenshot({ path: `${OUT}/11-copo-beneficios-sellos-390.png`, fullPage: true })
+})

@@ -74,9 +74,9 @@ export function Beneficios() {
         </ul>
       )}
       {stats.stamps !== null && (
-        <section className="card stamps" aria-labelledby="st-h">
+        <section className="card stamp-card" aria-labelledby="st-h" style={{ marginTop: 16 }}>
           <h2 id="st-h">Tus sellos <DemoTag>de muestra</DemoTag></h2>
-          <p className="stamp-row" aria-label={`${stats.stamps} de ${STAMP_GOAL} sellos`}>{Array.from({ length: STAMP_GOAL }, (_, i) => <span key={i} className={i < stats.stamps! ? 'on' : ''} aria-hidden="true" />)}</p>
+          <p className="stamp-row" role="img" aria-label={`${stats.stamps} de ${STAMP_GOAL} sellos`}>{Array.from({ length: STAMP_GOAL }, (_, i) => <span key={i} className={i < stats.stamps! ? 'on' : ''} aria-hidden="true" />)}</p>
           <p className="small muted">{stats.stamps} de {STAMP_GOAL}. El premio por completar la tarjeta lo define el local y requiere su aprobación: la demo no entrega premios.</p>
         </section>
       )}

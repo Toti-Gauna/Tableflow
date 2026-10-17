@@ -759,7 +759,7 @@ dialog[open] { animation: tf-rise var(--dur-state) var(--ease); }
 table { border-collapse: collapse; width: 100%; font-size: .9375rem; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); white-space: nowrap; font-weight: 800; }
-.table-wrap { overflow-x: auto; max-width: 100%; }
+.table-wrap { overflow-x: auto; max-width: 100%; position: relative; } /* relative: los rótulos sr-only de las celdas no escapan del scroll */
 .cards-m { display: none; }
 @media (max-width: 720px) {
   .table-wrap.responsive table { display: none; }

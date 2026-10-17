@@ -52,6 +52,14 @@ const setBusiness: Handler = (s, c) => {
   s.session.businessId = c.businessId
   return ok()
 }
+/** P5-L6: ver la demo como un cliente ficticio puntual (vista, no autenticación). */
+const setCustomer: Handler = (s, c) => {
+  const cu = c.customerId === null ? null : s.customers.find((x) => x.id === c.customerId && x.businessId === c.businessId && !x.mergedInto)
+  if (c.customerId !== null && !cu) return fail('cliente-inexistente', 'Ese cliente no es de este negocio.')
+  s.session.customerByBusiness[c.businessId as keyof typeof s.session.customerByBusiness] = cu ? cu.id : null
+  if (cu) s.session.role = 'cliente-recurrente'
+  return ok()
+}
 const setLocation: Handler = (s, c) => {
   const loc = byId(s.locations, c.locationId)
   if (!loc) return fail('sede-inexistente', 'Sede inexistente.')
@@ -117,6 +125,7 @@ export const systemHandlers: Record<string, Handler> = {
   'session/setRole': setRole,
   'session/setBusiness': setBusiness,
   'session/setLocation': setLocation,
+  'session/setCustomer': setCustomer,
   'config/set': configSet,
   'config/window': windowSet,
   'config/season': seasonSet,

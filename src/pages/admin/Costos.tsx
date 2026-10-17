@@ -81,7 +81,7 @@ export function AdminCostos() {
         </table>
       </div>
       <h2 style={{ marginTop: 24 }}>Extras y variantes</h2>
-      <div className="table-wrap">
+      <div className="table-wrap" tabIndex={0} role="region" aria-label="Costos de extras y variantes (se desplaza)">
         <table>
           <caption className="sr-only">Costos de extras y variantes</caption>
           <thead><tr><th scope="col">Grupo</th><th scope="col">Opción</th><th scope="col">Recargo</th><th scope="col">Costo propio</th></tr></thead>
