@@ -56,7 +56,10 @@ function FocusOnNav() {
       first.current = false // la carga inicial no roba el foco
       return
     }
+    // si la persona ya movió el foco (eligió algo en la pantalla nueva), no se lo quitamos
+    const before = document.activeElement
     const t = setTimeout(() => {
+      if (document.activeElement !== before && document.activeElement !== document.body) return
       const h = document.getElementById('page-h1')
       if (h) h.focus({ preventScroll: false })
     }, 30)

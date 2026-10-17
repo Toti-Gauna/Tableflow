@@ -229,7 +229,7 @@ main { display: block; padding: var(--s5) 0 140px; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 44px; max-width: 100%; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--brand);
   background: var(--brand); color: var(--brand-ink); font-weight: 750; cursor: pointer; text-decoration: none; line-height: 1.2;
-  transition: background-color var(--dur-cart) var(--ease), transform var(--dur-cart) var(--ease);
+  transition: transform var(--dur-cart) var(--ease);
 }
 .btn:hover { background: var(--brand-hover); color: var(--brand-ink); }
 .btn:active { transform: translateY(1px); }
@@ -265,7 +265,6 @@ main { display: block; padding: var(--s5) 0 140px; }
 .field .hint { color: var(--muted); font-size: .8125rem; }
 input[type='text'], input[type='number'], input[type='time'], input[type='date'], input[type='search'], select, textarea {
   min-height: 46px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; width: 100%; max-width: 100%;
-  transition: border-color var(--dur-cart) var(--ease);
 }
 input:hover, select:hover, textarea:hover { border-color: var(--ink-soft); }
 textarea { min-height: 88px; resize: vertical; }
@@ -396,7 +395,7 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: v
 .dish.is-off h3, .dish.is-off .price { color: var(--muted); }
 .dish.is-off h3 { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: var(--err); }
 .stamp-off { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--err); border: 1.5px solid currentColor; border-radius: 4px; padding: 1px 6px; transform: rotate(-2deg); white-space: nowrap; }
-.choose { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 750; font-size: .875rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: border-color var(--dur-cart) var(--ease), background-color var(--dur-cart) var(--ease); }
+.choose { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 750; font-size: .875rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .choose:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-tint); }
 .choose .glyph { color: var(--accent); }
 
@@ -513,7 +512,7 @@ dialog.item .item-scroll { flex: 1 1 auto; min-height: 0; }
 .req.done { background: var(--ok-bg); color: var(--ok); }
 .opt-group.invalid { box-shadow: 0 0 0 2px var(--err); padding: 10px; background: #fff8f6; }
 .opt-group.invalid > legend { border-color: var(--err); }
-.opt { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; transition: background-color var(--dur-cart) var(--ease), border-color var(--dur-cart) var(--ease); }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
 .opt:hover { background: var(--paper-2); }
 .opt input { width: 22px; height: 22px; accent-color: var(--brand); flex: none; margin: 0; }
 .opt .grow { flex: 1; min-width: 0; }
@@ -684,7 +683,7 @@ dialog.item .item-scroll { flex: 1 1 auto; min-height: 0; }
 .cover .btn.secondary:hover { background: rgba(246, 238, 223, 0.12); color: var(--chalk); }
 .cover :focus-visible { outline-color: var(--focus-dark); }
 .staff { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
-.staff-card { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; text-align: left; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; align-items: start; min-height: 44px; transition: border-color var(--dur-cart) var(--ease); }
+.staff-card { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; text-align: left; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; align-items: start; min-height: 44px; }
 .staff-card:hover { border-color: var(--ink); }
 .staff-card .glyph { color: var(--accent); }
 .staff-card strong { display: block; font-size: 1rem; }
@@ -902,7 +901,7 @@ fieldset.plain > legend, .step-title, .res-form .field > label:has(.step-n) { fo
 .zone { border: 1.5px dashed var(--line-strong); border-radius: 16px; padding: 30px 16px 16px; position: relative; background-color: #fff; background-image: radial-gradient(circle, rgba(31, 39, 30, 0.09) 1px, transparent 1.2px); background-size: 20px 20px; }
 .zone > .zlabel { position: absolute; top: 8px; left: 16px; font-size: .66rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 .zone .tables { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
-.table-chip { border: 2px solid var(--line-strong); background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 6px; text-align: center; font-size: .8rem; line-height: 1.25; transition: transform var(--dur-cart) var(--ease), box-shadow var(--dur-cart) var(--ease); }
+.table-chip { border: 2px solid var(--line-strong); background: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding: 6px; text-align: center; font-size: .8rem; line-height: 1.25; transition: transform var(--dur-cart) var(--ease); }
 .table-chip:hover { transform: translateY(-1px); }
 .table-chip strong { font-size: 1.05rem; }
 .table-chip .seats { color: var(--muted); font-size: .72rem; }
@@ -1028,6 +1027,9 @@ fieldset.plain > legend, .step-title, .res-form .field > label:has(.step-n) { fo
 .fx { animation: tf-state var(--dur-state) var(--ease); }
 .fx-cart { animation: tf-pop var(--dur-cart) var(--ease); }
 .fx-scene { animation: tf-rise var(--dur-scene) var(--ease) both; }
+/* sin desplazamientos al pasar el cursor o presionar cuando se pide menos movimiento */
+@media (prefers-reduced-motion: reduce) { .btn:active, .table-chip:hover { transform: none; } }
+:root[data-motion='reduced'] .btn:active, :root[data-motion='reduced'] .table-chip:hover { transform: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 }
