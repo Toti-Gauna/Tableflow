@@ -175,3 +175,22 @@ test('capturas P4', async ({ page }) => {
   await page.goto('/#/mesa-clara'); await shot('12-movil-inicio-390')
   await page.goto('/#/mesa-clara/reservar'); await shot('13-movil-reservar-390', true)
 })
+
+test('capturas P5-L2 (propuestas visuales)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(240_000)
+  const OUT = process.env.OUT5 ?? 'docs/tableflow/screens/p5-l2'
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/#/propuestas'); await settle(page)
+  await page.screenshot({ path: `${OUT}/00-indice-1440.png`, fullPage: true })
+  const ids = ['cafe', 'resto', 'hela', 'bar', 'rapida'].flatMap((b) => [1, 2, 3].map((n) => `${b}-${n}`))
+  for (const id of ids) {
+    for (const modo of ['claro', 'oscuro']) {
+      await page.goto(`/#/propuestas/${id}?modo=${modo}`); await settle(page)
+      await page.locator('.pz-fig').screenshot({ path: `${OUT}/${id}-publica-${modo}.png` })
+    }
+    await page.goto(`/#/propuestas/${id}`); await settle(page)
+    await page.locator('.pz-phone').screenshot({ path: `${OUT}/${id}-movil.png` })
+  }
+})
