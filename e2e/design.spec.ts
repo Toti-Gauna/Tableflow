@@ -91,6 +91,14 @@ for (const w of [320, 390]) {
     const eb = await err.boundingBox()
     expect(eb!.y + eb!.height).toBeLessThanOrEqual(700)
     await noOverflow(page, 'pedido con error')
+    // ningún importe se parte en dos líneas ni se sale del ancho
+    const broken = await page.evaluate(() =>
+      [...document.querySelectorAll('.money')]
+        .filter((el) => (el as HTMLElement).offsetParent !== null)
+        .filter((el) => el.getClientRects().length > 1 || el.getBoundingClientRect().right > window.innerWidth + 0.5)
+        .map((el) => el.textContent),
+    )
+    expect(broken).toEqual([])
   })
 }
 

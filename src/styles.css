@@ -478,6 +478,11 @@ th { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: v
 @media (max-width: 999px) { .side-cart-desktop { display: none; } }
 .line { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--line); }
 .line .opts { color: var(--muted); font-size: .85rem; }
+.line > div { min-width: 0; }
+/* un importe nunca se parte ni se corta */
+.money { white-space: nowrap; overflow-wrap: normal; }
+.line > .money { flex: none; }
+@media (max-width: 400px) { .receipt { padding: 16px 14px 30px; } }
 .qty { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px; background: #fff; }
 .qty button { width: 44px; height: 44px; border-radius: 999px; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--ink); }
 .qty button:hover { background: var(--paper-2); }
@@ -697,6 +702,7 @@ dialog.item .item-scroll { flex: 1 1 auto; min-height: 0; }
 .segmented label:has(input:checked) { background: var(--brand); color: var(--brand-ink); }
 .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 .segmented label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 480px) { .segmented { display: grid; width: 100%; border-radius: 14px; } .segmented label { border-radius: 11px; } }
 .slot-grid button small { display: block; font-size: .68rem; font-weight: 650; color: var(--muted); }
 .slot-grid button[aria-pressed='true'] small { color: inherit; }
 .order-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--rule); }

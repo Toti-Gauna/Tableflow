@@ -56,6 +56,8 @@ function FocusOnNav() {
       first.current = false // la carga inicial no roba el foco
       return
     }
+    // una pantalla nueva empieza arriba (la SPA no hereda la posición de la anterior)
+    window.scrollTo(0, 0)
     // si la persona ya movió el foco (eligió algo en la pantalla nueva), no se lo quitamos
     const before = document.activeElement
     const t = setTimeout(() => {

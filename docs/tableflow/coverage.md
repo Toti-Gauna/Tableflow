@@ -31,13 +31,13 @@ Cada módulo tiene acción, consecuencia local persistida, excepción y recupera
 |---|---|---|---|
 | S01 | seed: 42 ítems, 28+14 | smoke, recorridos | imagen ausente = placeholder con texto |
 | S02 | persistence | quality: recarga conserva carrito y sede; almacenamiento denegado → memoria + aviso | |
-| S03 | commerce | recorrido restaurante (error de guarnición) | |
+| S03 | commerce | recorrido restaurante (error de guarnición); P2: design S43 (error de tamaño en la hoja móvil) | |
 | S04 | commerce (máx. 1 salsa; incompatibilidad) | — | solo dominio |
 | S05 | commerce | extra | |
 | S06 | commerce (1 orden y 1 comanda) | recorrido restaurante (doble clic) | |
 | S07 | commerce | admin | |
 | S08 | commerce | admin | |
-| S09 | commerce | extra | |
+| S09 | commerce | extra; P2: design a 390 y 768 px (filtro + búsqueda sin resultados → limpiar → lista original intacta) | |
 | S10 | commerce (retiro 03:00) | extra | |
 | S11 | booking | quality (franja 20:00 deshabilitada; 21:45 habilitada) | |
 | S12 | booking, comms | quality, chat | |
@@ -59,20 +59,20 @@ Cada módulo tiene acción, consecuencia local persistida, excepción y recupera
 | S28 | comms | chat (botón deshabilitado) | |
 | S29 | comms | — | solo dominio |
 | S30 | comms | — | solo dominio |
-| S31 | comms | quality (sin autoplay ni micrófono) | |
+| S31 | comms | quality (sin autoplay ni micrófono); P2: motion (contexto de audio solo tras gesto) | |
 | S32 | comms | quality | |
-| S33 | comms | quality | |
-| S34 | comms | — | solo dominio |
+| S33 | comms | quality; P2: motion (callback tardío con token viejo ignorado; salir en pleno procesamiento no responde fuera de pantalla) | |
+| S34 | comms | P2: motion (reserva web → WhatsApp → llamada: un folio, una conversación) | antes solo dominio |
 | S35 | comms, booking | quality (formulario web) | |
 | S36 | automations | — | solo dominio |
-| S37 | automations (AU10) | admin (vista previa) | |
-| S38 | engage | admin | |
-| S39 | engage | — | solo dominio |
-| S40 | engage | admin | |
-| S41 | engage (reports) | admin | |
+| S37 | automations (AU10) | admin (vista previa); P2: passport (baja promocional persistente, servicio intacto, omitido en la vista previa) | |
+| S38 | engage | admin; P2: passport (estados completos, recarga, reintento sin penalizar, guardar, usar con revalidación, sede sin el plato, reinicio con confirmación) | |
+| S39 | engage (+ solo personal, pausa) | P2: passport (sello por personal, duplicado no suma, insignia a la quinta, reversión con motivo auditada, pausa) | antes solo dominio |
+| S40 | engage | admin; P2: passport (recarga, cupo 0 → espera, cancelar una sola vez) | |
+| S41 | engage (reports) | admin; P2: design en móvil (vacío explicativo sin cifras y restablecer) | |
 | S42 | — | quality | |
-| S43 | — | quality (320 y 390 px: sin scroll horizontal) | foco oculto no verificado formalmente |
-| S44 | — | quality (reduced motion emulado + audio apagado: llamada completa) | parcial: no se repitieron los demás recorridos con reduced motion |
+| S43 | — | quality (320/390 sin scroll horizontal); P2: design (pie del configurador visible, último plato sobre el carrito fijo, foco con teclado no tapado por banner/categorías/carrito, error de Mi pedido a la vista; zoom 200 % y 768 px en todos los módulos) | dispositivos reales: no |
+| S44 | — | quality (llamada); P2: motion (café hasta el retiro) + proyecto `movimiento-reducido` (restaurante hasta el cierre y café hasta el retiro) | |
 | S45 | persistence | quality | |
 | S46 | persistence | quality | |
 
@@ -82,9 +82,17 @@ Cada una probada en dominio con éxito, error/sin cupo, reintento, pausa y conse
 ## Pruebas de invariantes
 4 semillas × 250 comandos aleatorios reproducibles + idempotencia: `validateState` válido, stock ≥ 0 y reservas ≤ existencias, comanda coherente con el estado del pedido, sin solapes de reservas por mesa, fallos transaccionales (estado idéntico).
 
+## P2 · pruebas agregadas
+- `e2e/design.spec.ts` (P2-L2): S09 a 390/768, S41 en móvil, S43 a 320/390 con foco no tapado y carrito fijo, zoom 200 % (640 px) y 768 px sin scroll horizontal en 26 rutas, estados diferenciados (revisión, cancelación pendiente, tarde, espera de retiro, agotado), política sin reservas en navegación/ruta/chat, foco en diálogos y panel de mesa.
+- `e2e/passport.spec.ts` (P2-L3): S37–S40 con recarga, repetición, cancelación y reversión.
+- `e2e/motion.spec.ts` (P2-L4): tokens de movimiento y propiedades animadas, totales instantáneos, movimiento reducido por sistema y consola, S33 callback tardío, S34, sonido con limpieza, S44.
+- Proyecto Playwright `movimiento-reducido`: repite `journeys.spec.ts` con `reducedMotion: 'reduce'`.
+- `tests/contrast.test.ts`: 61 pares de los tokens P2 (antes 23). `tests/engage.test.ts`: uso del pasaporte solo desde el pasaporte, revalidación por sede, sello solo por personal y pausa.
+- Regresión P1 completa (S03, S06, S11–S13, S19, S23–S25, S34, S35 y el resto) en la misma corrida.
+
 ## No ejecutado / pendiente
-- Lectura a 200 % de zoom, lector de pantalla real, verificación manual de foco en todos los diálogos, navegación KDS solo con teclado de punta a punta.
-- Contraste: medido sobre los tokens de `styles.css` (23 pares, todos ≥ umbral); no se midió cada combinación renderizada. axe-core (reglas WCAG 2.0/2.1/2.2 A/AA) sin violaciones serias/críticas en 21 pantallas; esto **no certifica** accesibilidad.
+- Lector de pantalla real (NVDA/VoiceOver), revisión manual con usuarios, dispositivos móviles físicos (las pruebas emulan 320/390/768 y zoom 200 % por ancho CSS).
+- Contraste: medido sobre tokens (61 pares) y por axe en 21 pantallas renderizadas; no se midió cada combinación renderizada de forma exhaustiva. Esto **no certifica** accesibilidad.
+- Navegación del KDS solo con teclado de punta a punta (las acciones son botones; no se grabó un recorrido completo).
 - Varias pestañas reales y evento `storage`.
-- Rendimiento (no se midió más que el tiempo de construcción del seed ≈150 ms).
-- E2E en CI de GitHub (job informativo, no validado todavía).
+- Rendimiento (bundle sin dividir: aviso de chunk > 500 KB).
