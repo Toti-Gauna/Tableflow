@@ -234,3 +234,40 @@ test.describe('capturas P5-L3', () => {
     await page.getByTestId('trailer-open').click(); await shot('09-trailer-estado-honesto-1440')
   })
 })
+
+test('capturas P5-L4 (arte por identidad)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT7 ?? 'docs/tableflow/screens/p5-l4'
+  const ids = ['cafe', 'resto', 'hela', 'bar', 'rapida']
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await fresh(page, '/#/arte'); await settle(page)
+  await page.screenshot({ path: `${OUT}/00-galeria-indice-1440.png` })
+  for (const [i, id] of ids.entries()) {
+    await page.goto(`/#/arte/${id}`); await settle(page)
+    await page.locator('#gx-sample').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-a-muestra-tamano-real.png` })
+    await page.locator('#gx-carta').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-b-carta.png` })
+    await page.locator('#gx-juego').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-c-juego.png` })
+    await page.locator('.gx-mocks').screenshot({ path: `${OUT}/${i + 1}${id}-d-mockups-claro.png` })
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
+  for (const [i, id] of ids.entries()) {
+    await page.goto(`/#/arte/${id}`); await settle(page)
+    await page.locator('#gx-carta').locator('..').screenshot({ path: `${OUT}/${i + 1}${id}-e-carta-oscuro.png` })
+    await page.locator('.gx-mocks').screenshot({ path: `${OUT}/${i + 1}${id}-f-mockups-oscuro.png` })
+  }
+  for (const mode of ['light', 'dark'] as const) {
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+    const m = mode === 'light' ? 'claro' : 'oscuro'
+    await page.setViewportSize({ width: 1440, height: 900 })
+    for (const b of ['mesa-clara', 'ritual-cafe']) {
+      await page.goto(`/#/${b}`); await settle(page); await page.screenshot({ path: `${OUT}/6-${b}-inicio-escena-${m}-1440.png` })
+      await page.goto(`/#/${b}/carta`); await settle(page); await page.evaluate(() => window.scrollTo(0, 360)); await page.screenshot({ path: `${OUT}/7-${b}-carta-${m}-1440.png` })
+    }
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const b of ['mesa-clara', 'ritual-cafe']) {
+      await page.goto(`/#/${b}/carta`); await settle(page); await page.evaluate(() => window.scrollTo(0, 420)); await page.screenshot({ path: `${OUT}/8-${b}-carta-${m}-390.png` })
+    }
+  }
+})

@@ -152,6 +152,7 @@ export function App() {
           <Route path="/simulador" element={<SimRedirect />} />
           <Route path="/comercial" element={<Comercial />} />
           <Route path="/arte" element={<Arte />} />
+          <Route path="/arte/:id" element={<Arte />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="resumen" replace />} />
             <Route path="resumen" element={<AdminResumen />} />

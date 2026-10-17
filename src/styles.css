@@ -78,6 +78,9 @@
   --seal-ink: #ffffff;
   --backdrop: rgba(18, 24, 18, 0.55);
   --shade: 40 24 10;
+  /* trazo y papel de las piezas de dos tintas (Taberna Compás, P5-L4) */
+  --cp-line: #121212;
+  --cp-paper: #efe7d6;
   --shimmer: rgba(255, 255, 255, .55);
 
   /* tipografía de identidad: cada negocio la redefine (ver bloques [data-biz]) */
@@ -177,6 +180,8 @@
   --review-deep: #e6d7f6;
   --backdrop: rgba(0, 0, 0, 0.66);
   --shade: 0 0 0;
+  --cp-line: #efe7d6;
+  --cp-paper: #0d1220;
   --shimmer: rgba(255, 255, 255, .06);
   --grain: none;
   color-scheme: dark;
@@ -1674,6 +1679,11 @@ dialog.guide { max-width: min(560px, calc(100vw - 24px)); }
 .hero-figure { position: relative; margin: 0; }
 .hero-figure > .art { width: 100%; height: auto; border-radius: 28px; box-shadow: 0 40px 80px -40px rgba(40, 24, 10, .55), 0 2px 0 color-mix(in srgb, var(--surface) 60%, transparent) inset; }
 .hero-board { position: absolute; left: -56px; bottom: -36px; width: min(380px, 78%); }
+/* P5-L4: la escena firma tiene su foco abajo: la pizarra va debajo y solo pisa el borde */
+@media (min-width: 960px) {
+  .hero-figure:has(.scene) .hero-board { position: relative; left: -48px; bottom: auto; margin-top: -64px; width: min(400px, 88%); }
+  .client[data-biz='ritual-cafe'] .hero-figure:has(.scene) .hero-board { left: auto; margin-left: auto; margin-right: -32px; }
+}
 .hero-board .board { box-shadow: 0 30px 60px -28px rgba(10, 16, 10, .6); }
 @media (max-width: 1180px) and (min-width: 960px) { .hero-board { left: -28px; } }
 @media (max-width: 959px) {
