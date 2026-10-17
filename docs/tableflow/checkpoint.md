@@ -37,7 +37,7 @@
 | `npx tsc --noEmit` | 0 | sin errores |
 | `npx vitest run` | 0 | 19 archivos, 910 pruebas |
 | `npm run build` | 0 | OK. JS inicial ~804 kB (L5: 763 kB): el dominio de campañas va con el store. Campañas (28 kB), asistente (16 kB), costos, beneficios y asistente del cliente van en chunks diferidos |
-| `npx playwright test` | RESULT_E2E_EXIT | RESULT_E2E |
+| `npx playwright test` | 0 | 99 pasadas (93 + 6 de L6), 9 omitidas (capturas, solo con CAPTURE=1). Una corrida anterior tuvo 1 fallo en `motion.spec.ts:52` ("locator.hover: Test ended") mientras se recompilaba `dist` en paralelo; ese archivo pasó 2 veces seguidas (7/7) y la corrida completa limpia pasó entera |
 | `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L6"` | 0 | 16 capturas en `screens/p5-l6/`, cuantizadas: 1,4 MB |
 
 ## Siguiente tarea exacta
