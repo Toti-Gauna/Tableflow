@@ -52,8 +52,11 @@ const AdminReportes = named(() => import('./pages/admin/Reportes'), 'AdminReport
 const AdminConfig = named(() => import('./pages/admin/Configuracion'), 'AdminConfig')
 const AdminCampanas = named(() => import('./pages/admin/Campanas'), 'AdminCampanas')
 const AdminCostos = named(() => import('./pages/admin/Costos'), 'AdminCostos')
+const AdminCodigos = named(() => import('./pages/admin/Codigos'), 'AdminCodigos')
 const AdminAsistente = named(() => import('./pages/admin/Asistente'), 'AdminAsistente')
 const Beneficios = named(() => import('./pages/client/Beneficios'), 'Beneficios')
+const MisCodigos = named(() => import('./pages/client/Codigos'), 'MisCodigos')
+const QrLanding = named(() => import('./pages/client/Codigos'), 'QrLanding')
 const AsistenteCliente = named(() => import('./pages/client/AsistenteCliente'), 'AsistenteCliente')
 
 function BizGuard() {
@@ -192,6 +195,7 @@ export function App() {
             <Route path="campanas" element={<AdminCampanas />} />
             <Route path="campanas/:id" element={<AdminCampanas />} />
             <Route path="costos" element={<AdminCostos />} />
+            <Route path="codigos" element={<AdminCodigos />} />
             <Route path="asistente" element={<AdminAsistente />} />
             <Route path="*" element={<NotFound what="esa sección de administración" back="/admin/resumen" backLabel="Volver al resumen" />} />
           </Route>
@@ -209,6 +213,8 @@ export function App() {
             <Route path="numeros" element={<Gate f="numeros"><Numeros /></Gate>} />
             <Route path="ayuda" element={<Ayuda />} />
             <Route path="beneficios" element={<Beneficios />} />
+            <Route path="codigos" element={<MisCodigos />} />
+            <Route path="q/:kind/:ref" element={<QrLanding />} />
             <Route path="asistente" element={<AsistenteCliente />} />
             <Route path="simulador" element={<Gate f="simulador"><Simulador /></Gate>} />
             <Route path="regalar" element={<Regalar />} />

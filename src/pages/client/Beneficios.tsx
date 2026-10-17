@@ -7,6 +7,7 @@ import { fmtARS } from '../../domain/money'
 import { customerStats, STAMP_GOAL } from '../../domain/growth'
 import { benefitDaysLeft } from '../../domain/benefits'
 import { fmtDateShort, dateKeyOf } from '../../domain/time'
+import { QrDisclosure } from '../../ui/Qr'
 import '../admin/growth.css'
 
 const STATUS: Record<string, { label: string; tone: 'ok' | 'neutral' | 'warn' | 'err' }> = { disponible: { label: 'Disponible', tone: 'ok' }, canjeado: { label: 'Usado', tone: 'neutral' }, vencido: { label: 'Vencido', tone: 'warn' }, anulado: { label: 'Anulado', tone: 'err' } }
@@ -68,6 +69,7 @@ export function Beneficios() {
                   <span className="small muted">{b.status === 'disponible' ? `Vence en ${benefitDaysLeft(state, b)} día(s) (${fmtDateShort(dateKeyOf(b.expiresAt))})` : b.status === 'canjeado' ? `Usado en ${b.orderId}` : b.reason ?? ''}</span>
                   {b.status === 'disponible' && <button className="btn small" type="button" onClick={() => use(b.code)} data-testid={`use-${b.code}`}>Usar en mi pedido</button>}
                 </div>
+                {b.status === 'disponible' && <div className="bc-qr"><QrDisclosure businessId={biz.id} kind="beneficio" reference={b.code} title={`Beneficio ${b.code}`} summary="Ver mi QR" /></div>}
               </li>
             )
           })}

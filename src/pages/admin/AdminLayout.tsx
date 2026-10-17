@@ -11,7 +11,7 @@ import { TabBar } from '../../ui/TabBar'
 const ICON: Record<string, string> = {
   resumen: 'grid', reservas: 'calendar', salon: 'floor', pedidos: 'receipt', cocina: 'flame', caja: 'register',
   carta: 'book', stock: 'box', clientes: 'people', regalos: 'gift', automatizaciones: 'bolt', reportes: 'chart', configuracion: 'sliders',
-  campanas: 'star', costos: 'register', asistente: 'chat',
+  campanas: 'star', costos: 'register', asistente: 'chat', codigos: 'stamp',
 }
 
 export function AdminLayout() {

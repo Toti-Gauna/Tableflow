@@ -1,3 +1,4 @@
+import { QrDisclosure } from '../../ui/Qr'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
@@ -51,6 +52,7 @@ export function ReservaDetalle() {
       >
         <StatusBadge s={RES_LABEL[r.status]} />
       </PageHead>
+      {r.status === 'confirmada' && <QrDisclosure businessId={r.businessId} kind="reserva" reference={r.id} title={`Reserva ${r.id}`} caption={`${r.party} ${r.party === 1 ? 'persona' : 'personas'}`} summary="Mostrar el QR de mi reserva" />}
       {r.status === 'solicitada' && <Callout>Solicitud recibida; el equipo todavía debe confirmarla.</Callout>}
       {r.status === 'confirmada' && <Callout tone="ok">Confirmada{table ? ` en mesa ${table.label} (${table.sector === 'terraza' ? 'terraza' : 'salón'})` : ''}. La preferencia de sector no está garantizada.</Callout>}
       {r.status === 'revision_humana' && <Callout tone="review">Consulta alimentaria enviada al equipo de muestra. {r.reviewReason === 'grupo-grande' ? 'Los grupos grandes se revisan caso por caso.' : 'Esta demo no puede garantizar ausencia de alérgenos.'} No se acepta automáticamente.</Callout>}

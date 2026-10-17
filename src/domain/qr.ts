@@ -179,6 +179,13 @@ const note = (status: CodeStatus, kind: CodeKind | null, ref: string, detail: st
   ...extra,
 })
 
+export const ORDER_STATUS_ES: Record<Order['status'], string> = {
+  enviado: 'enviado', aceptado: 'aceptado', en_preparacion: 'en preparación', listo: 'listo', servido: 'servido', retirado: 'retirado', cerrado: 'cerrado', rechazado: 'rechazado', cancelado: 'cancelado',
+}
+export const RES_STATUS_ES: Record<Reservation['status'], string> = {
+  borrador: 'borrador', solicitada: 'solicitada', confirmada: 'confirmada', alternativa_ofrecida: 'con alternativa ofrecida', revision_humana: 'en revisión', llegada: 'llegó', sentada: 'sentada', completada: 'completada', cancelada: 'cancelada', no_show: 'no vino',
+}
+
 const ORDER_WAIT: Partial<Record<Order['status'], string>> = {
   enviado: 'todavía no fue aceptado',
   aceptado: 'está aceptado y falta prepararlo',
@@ -223,7 +230,7 @@ export function checkCode(s: AppState, ctx: ScanContext, text: string): CodeChec
     if (!t) return unknown()
     if (commerce && wrongSede(t.locationId)) return note('sede-incorrecta', kind, p.ref, `La mesa ${t.label} es de la sede ${sedeName(t.locationId)}, y estás en ${sedeName(ctx.locationId)}.`, { title: `Mesa ${t.label}` })
     const open = s.tableSessions.find((x) => x.status === 'activa' && x.tableIds.includes(t.id))
-    return note('valido', kind, p.ref, `Mesa ${t.label} (${t.sector}, ${t.seats} lugares). Quien la escanea pide desde esa mesa.`, {
+    return note('valido', kind, p.ref, `Mesa ${t.label} (${t.sector === 'terraza' ? 'terraza' : 'salón'}, ${t.seats} lugares). Quien la escanea pide desde esa mesa.`, {
       title: `Mesa ${t.label}`,
       facts: [{ label: 'Sede', value: sedeName(t.locationId) }, { label: 'Lugares', value: String(t.seats) }, ...(commerce ? [{ label: 'Ahora', value: open ? 'con mesa abierta' : 'libre' }] : [])],
     })
@@ -266,19 +273,19 @@ export function checkCode(s: AppState, ctx: ScanContext, text: string): CodeChec
     if (commerce && wrongSede(o.locationId)) return note('sede-incorrecta', kind, p.ref, `El pedido es de la sede ${sedeName(o.locationId)}, y estás en ${sedeName(ctx.locationId)}.`, { title: `Pedido ${o.id}` })
     const facts = [
       { label: 'Tipo', value: o.kind === 'mesa' ? 'En la mesa' : `Retiro ${o.pickup ? hhmm(o.pickup.startMin) : ''}`.trim() },
-      { label: 'Estado', value: o.status.replace('_', ' ') },
+      { label: 'Estado', value: ORDER_STATUS_ES[o.status] },
       { label: 'Total', value: fmtARS(o.totalCents) },
       ...(o.kind === 'retiro' ? [{ label: 'N.º de retiro', value: o.pickupCode }] : []),
       ...(commerce ? [{ label: 'A nombre de', value: o.alias }] : []),
     ]
     const base = { title: `Pedido ${o.id}`, facts }
     const pay = 'Este código no acredita el pago: el estado de pago se mira en Caja.'
-    if (o.status === 'cancelado' || o.status === 'rechazado') return note('cancelado', kind, p.ref, `El pedido está ${o.status}.`, base)
-    if (o.status === 'retirado' || o.status === 'servido' || o.status === 'cerrado') return note('usado', kind, p.ref, `Ya se entregó (${o.status}). ${pay}`, base)
+    if (o.status === 'cancelado' || o.status === 'rechazado') return note('cancelado', kind, p.ref, `El pedido está ${ORDER_STATUS_ES[o.status]}.`, base)
+    if (o.status === 'retirado' || o.status === 'servido' || o.status === 'cerrado') return note('usado', kind, p.ref, `Ya se entregó (${ORDER_STATUS_ES[o.status]}). ${pay}`, base)
     if (o.status === 'listo') {
       return note('valido', kind, p.ref, commerce ? `Listo para entregar. ${pay}` : 'Tu pedido está listo.', commerce ? { ...base, action: { type: 'entregar', label: o.kind === 'mesa' ? 'Registrar servido' : 'Registrar retiro' } } : base)
     }
-    return note('no-elegible', kind, p.ref, `Todavía no se puede entregar: ${ORDER_WAIT[o.status] ?? o.status}.`, base)
+    return note('no-elegible', kind, p.ref, `Todavía no se puede entregar: ${ORDER_WAIT[o.status] ?? ORDER_STATUS_ES[o.status]}.`, base)
   }
   if (kind === 'reserva') {
     const r = s.reservations.find((x) => x.businessId === biz && x.id.toUpperCase() === p.ref.toUpperCase())
@@ -311,10 +318,10 @@ export function checkCode(s: AppState, ctx: ScanContext, text: string): CodeChec
 }
 
 function reservationCheck(r: Reservation, ref: string, today: string, commerce: boolean): CodeCheck {
-  const base = { title: `Reserva ${r.id}`, facts: [{ label: 'Día', value: `${fmtDateShort(r.dateKey)} ${hhmm(r.startMin)}` }, { label: 'Personas', value: String(r.party) }, { label: 'Estado', value: r.status.replace('_', ' ') }, ...(commerce ? [{ label: 'A nombre de', value: r.alias }] : [])] }
-  if (r.status === 'cancelada' || r.status === 'no_show') return note('cancelado', 'reserva', ref, `La reserva figura ${r.status.replace('_', ' ')}.`, base)
+  const base = { title: `Reserva ${r.id}`, facts: [{ label: 'Día', value: `${fmtDateShort(r.dateKey)} ${hhmm(r.startMin)}` }, { label: 'Personas', value: String(r.party) }, { label: 'Estado', value: RES_STATUS_ES[r.status] }, ...(commerce ? [{ label: 'A nombre de', value: r.alias }] : [])] }
+  if (r.status === 'cancelada' || r.status === 'no_show') return note('cancelado', 'reserva', ref, `La reserva figura ${RES_STATUS_ES[r.status]}.`, base)
   if (r.status === 'llegada' || r.status === 'sentada' || r.status === 'completada') return note('usado', 'reserva', ref, 'Ya se registró la llegada.', base)
-  if (r.status !== 'confirmada') return note('no-elegible', 'reserva', ref, `La reserva todavía no está confirmada (${r.status.replace('_', ' ')}).`, base)
+  if (r.status !== 'confirmada') return note('no-elegible', 'reserva', ref, `La reserva todavía no está confirmada (${RES_STATUS_ES[r.status]}).`, base)
   if (r.dateKey < today) return note('vencido', 'reserva', ref, 'La fecha de la reserva ya pasó.', base)
   if (r.dateKey > today) return note('no-elegible', 'reserva', ref, `Es para el ${fmtDateShort(r.dateKey)}: hoy no se registra llegada.`, base)
   return note('valido', 'reserva', ref, commerce ? 'Reserva de hoy, confirmada.' : 'Tu reserva está confirmada para hoy.', commerce ? { ...base, action: { type: 'llegada', label: 'Registrar llegada' } } : base)

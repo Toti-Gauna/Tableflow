@@ -1,3 +1,46 @@
+# Checkpoint P5-L7 · TableFlow: QR, códigos y continuidad cliente–comercio
+
+> L6 (PR #8) está en `main`. Especificación SDD, qué lleva un QR, verificación de lectura y límites: `p5-spec.md`, sección "L7".
+
+## Identificación
+- Fecha real: 17/10/2026. Rama `claude/tableflow-p5-l7`, creada desde `main` (`d935b62`).
+- **Esquema:** sin cambios (4). Los escaneos y canjes van a la auditoría existente.
+- **Dependencias nuevas (locales, sin servicios):** `qrcode-generator` 2.0.4 (generar) y `jsqr` 1.4.0 (leer, en un chunk diferido de 130 kB que solo baja al leer un QR).
+
+## Qué se hizo
+- **Generar:** QR y enlace de negocio, sede, mesa, campaña y referido, con vista previa e impresión (solo se imprime la tarjeta elegida).
+- **Cliente:** "Mis códigos" con el QR de sus pedidos, reservas y beneficios disponibles y su código de recomendación; el mismo QR a un toque en el seguimiento del pedido, la reserva y cada beneficio.
+- **Comercio:** sección "Códigos" para validar (cámara, foto del QR, a mano o simulado sin cámara) y canjear: entrega el pedido o registra la llegada de la reserva, una sola vez. Historial de lecturas y canjes.
+- **Estados:** válido, desconocido, vencido, cancelado, usado, duplicado, negocio incorrecto, sede incorrecta, cupo agotado, no elegible y revertido, todos leídos del store.
+- **Landing del QR** (`#/<negocio>/q/<tipo>/<ref>`): mesa ("Pedir desde esta mesa" la deja elegida en Mi pedido), sede, campaña (reclamar el beneficio), referido (con solo un nombre), y pedido, reserva, beneficio e invitación solo para su dueño.
+- **Privacidad y límites:** la URL no lleva personas, precios ni secretos; un código no acredita pago. Un panel explica que dos dispositivos no se sincronizan solos (localStorage) y mide cuánto ocupa la demo.
+
+## Verificación de lectura (qué se comprobó y qué no)
+- **Comprobado:** el QR generado se decodifica con `jsqr` en los tests (módulos) y en el navegador (foto del QR subida al lector, validada contra el store y canjeada una vez).
+- **Comprobado con dispositivo falso:** la cámara en Chromium con un archivo de video que muestra el QR: no se pide la cámara al abrir la pantalla, se enciende con el botón, lee y se apaga sola.
+- **No verificado:** cámara física o teléfono real. Eso queda declarado como límite.
+
+## Pruebas
+- **Nuevas:**
+  - `tests/qr.test.ts` (23): lectura real del QR, URL sin datos, estados, canje idempotente (doble operación y re-escaneo), reserva de hoy, reclamo de campaña con cupo y duplicado, referidos y privacidad entre clientes.
+  - `e2e/p5-l7.spec.ts` (8): lectura desde imagen y canje, cámara con dispositivo falso, estados simulados, generar e imprimir, Mis códigos y landings, referido, axe en 1280 y 390 px.
+- **Actualizadas:** ninguna. No se quitó ningún test.
+- Un hallazgo de las pruebas: en la semilla de Ritual Café todos los clientes que aceptan promociones ya tienen su beneficio, así que el camino feliz de "reclamar" se probó con una clienta nueva agregada en el test.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 20 archivos, 933 pruebas (23 nuevas) |
+| `npm run build` | 0 | OK. JS inicial ~820 kB (L6: ~804 kB, +16 kB del dominio de códigos). Códigos (13 kB y 6 kB) y la tarjeta de QR (24 kB) van en chunks diferidos; `jsqr` (130 kB) solo al leer |
+| `npx playwright test` | 0 | 107 pasadas (99 + 8 de L7), 10 omitidas (capturas, solo con CAPTURE=1) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L7"` | 0 | 12 capturas en `screens/p5-l7/`, cuantizadas: 1,0 MB |
+
+## Siguiente tarea exacta
+PR de L7 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L8**: motion graphics, animaciones transaccionales y temporadas (Opus·high para la coreografía y Sonnet·medium para implementarla).
+
+---
+
 # Checkpoint P5-L6 · TableFlow: fidelización, campañas, costos y asistentes
 
 > L5 (PR #7) está en `main`. Especificación SDD, fórmulas, cambios en lo existente y límites: `p5-spec.md`, sección "L6".
