@@ -347,3 +347,42 @@ test('capturas P5-L6 (fidelización, campañas, costos y asistentes)', async ({ 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/copo/beneficios'); await settle(page); await page.screenshot({ path: `${OUT}/11-copo-beneficios-sellos-390.png`, fullPage: true })
 })
+
+test('capturas P5-L7 (QR y códigos)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT10 ?? 'docs/tableflow/screens/p5-l7'
+  const role = (r: string) => page.evaluate((x) => (window as any).__tableflow.dispatch({ type: 'session/setRole', role: x }), r)
+  const sim = async (re: RegExp) => {
+    const label = (await page.getByTestId('sim-select').locator('option').filter({ hasText: re }).first().textContent())!
+    await page.getByTestId('sim-select').selectOption({ label })
+  }
+  await fresh(page, '/#/ritual-cafe')
+  for (const mode of ['light', 'dark'] as const) {
+    const m = mode === 'light' ? 'claro' : 'oscuro'
+    await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: mode })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/#/ritual-cafe'); await role('caja')
+    await page.goto('/#/admin/codigos'); await settle(page)
+    await sim(/Pedido O-008 · listo/); await settle(page); await page.screenshot({ path: `${OUT}/1-validar-valido-${m}.png` })
+    await page.goto('/#/admin/codigos'); await page.getByTestId('tab-generar').click(); await settle(page); await page.screenshot({ path: `${OUT}/2-generar-mesa-${m}.png` })
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' })
+  await page.goto('/#/admin/codigos'); await page.getByTestId('tab-validar').click(); await settle(page)
+  await sim(/Pedido O-008 · listo/); await page.getByTestId('code-action').click(); await settle(page); await page.screenshot({ path: `${OUT}/3-canjeado-usado.png` })
+  await sim(/Pedido O-011 · enviado/); await settle(page); await page.screenshot({ path: `${OUT}/4-no-elegible.png` })
+  await sim(/otro negocio/); await settle(page); await page.screenshot({ path: `${OUT}/5-otro-negocio.png` })
+  await page.goto('/#/ritual-cafe'); await role('cliente-recurrente')
+  await page.goto('/#/ritual-cafe/q/mesa/T-RC-02?s=L-RC-centro'); await settle(page); await page.screenshot({ path: `${OUT}/6-landing-mesa.png` })
+  await page.goto('/#/ritual-cafe/q/pedido/O-999'); await settle(page); await page.screenshot({ path: `${OUT}/7-landing-desconocido.png` })
+  await role('encargado'); await page.goto('/#/admin/codigos'); await page.getByTestId('tab-generar').click(); await settle(page)
+  await page.evaluate(() => { window.print = () => undefined }); await page.getByTestId('qr-print').click()
+  await page.emulateMedia({ media: 'print' })
+  await page.screenshot({ path: `${OUT}/8-vista-impresion.png` })
+  await page.emulateMedia({ media: 'screen' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/ritual-cafe'); await role('cliente-recurrente')
+  await page.goto('/#/ritual-cafe/codigos'); await settle(page); await page.screenshot({ path: `${OUT}/9-mis-codigos-390.png` })
+  await role('caja')
+  await page.goto('/#/admin/codigos'); await settle(page); await page.screenshot({ path: `${OUT}/10-validar-390.png`, fullPage: true })
+})

@@ -8,6 +8,7 @@ import { giftHandlers } from './gifts'
 import { callHandlers } from './call'
 import { chatHandlers } from './chat'
 import { growthHandlers } from './cmd-growth'
+import { codeHandlers } from './cmd-codes'
 import { fail, nextId, type Ctx, type Outcome } from './core'
 import type { AppState, Role } from './types'
 
@@ -29,6 +30,7 @@ export const HANDLERS: Record<string, Handler> = {
   ...systemHandlers,
   ...giftHandlers,
   ...growthHandlers,
+  ...codeHandlers,
 }
 
 /**

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useBiz, useCart } from '../../ui/hooks'
 import { PageHead } from '../../ui/Shell'
@@ -17,6 +17,7 @@ import { discountFor } from '../../domain/growth'
 import { findBenefit } from '../../domain/benefits'
 import { dateKeyOf, hhmm, minutesOfDay, parseHHMM } from '../../domain/time'
 import { dispatch } from '../../store'
+import { forgetMesa, recallMesa } from '../../ui/qrMesa'
 import type { Outcome } from '../../domain/core'
 
 interface PriceChange { lineId: string; name: string; oldCents: number; newCents: number }
@@ -91,6 +92,13 @@ export function MiPedido() {
     dispatch({ type: 'cart/setFulfillment', cartId: cart.id, ...patch })
     setErr(null)
   }
+  // P5-L7: la mesa que se leyó con el QR queda elegida (solo si el pedido todavía no tiene mesa y la mesa es de esta sede)
+  const qrMesa = recallMesa(biz.id)
+  useEffect(() => {
+    if (!cart || !qrMesa || f.kind !== 'mesa' || f.tableId) return
+    if (tables.some((t) => t.id === qrMesa)) dispatch({ type: 'cart/setFulfillment', cartId: cart.id, fulfillment: { kind: 'mesa', tableId: qrMesa } })
+    forgetMesa(biz.id)
+  }, [cart?.id, qrMesa, f.kind, f.kind === 'mesa' ? f.tableId : null])
   const setKind = (kind: 'mesa' | 'retiro') => setFulfillment({ fulfillment: kind === 'mesa' ? { kind, tableId: null } : { kind, startMin: null } })
 
   const send = () => {

@@ -72,6 +72,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { key: 'reservas', label: 'Reservas', roles: ['recepcion', 'encargado'] },
   { key: 'salon', label: 'Salón', roles: ['recepcion', 'mozo', 'encargado'] },
   { key: 'pedidos', label: 'Pedidos', roles: ['recepcion', 'mozo', 'caja', 'encargado'] },
+  { key: 'codigos', label: 'Códigos', roles: ['recepcion', 'mozo', 'caja', 'encargado'] },
   { key: 'cocina', label: 'Cocina / barra', short: 'Cocina', roles: ['cocina', 'encargado'] },
   { key: 'caja', label: 'Caja', roles: ['caja', 'encargado'] },
   { key: 'carta', label: 'Carta', roles: ['encargado'] },

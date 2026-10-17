@@ -137,7 +137,7 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Arte propio (L4) | C P · 23 piezas | C P · 38 piezas | C P · 26 piezas (negocio en L5) | C P · 19 piezas (negocio en L5) | C P · 21 piezas (negocio en L5) |
 | Juego infantil propio (L5) | C P · memoria | C P · poner la mesa | C P · copiá el helado | C P · ¿dónde está? | C P · armá la hamburguesa |
 | Growth y asistentes (L6) | C P | C P | C P | C P | C P |
-| QR y códigos (L7) | parcial (códigos) | parcial | E | E | E |
+| QR y códigos (L7) | C P | C P | C P (sin mesas: sede, campaña, pedido y beneficio) | C P | C P (sin mesas: igual que Copo) |
 | Animación transaccional (L8) | E | E | E | E | E |
 | Escenas y guía (L9) | E | E | E | E | E |
 | QA y kit (L10) | E | E | E | E | E |
@@ -232,7 +232,7 @@ En la familia, después de revisar cada pieza, se rehicieron:
 
 ### Límites declarados de L4
 - **Fotografía:** no hay fotos con derechos adecuados, así que no se reemplazó ninguna foto pertinente. Todo es ilustración propia.
-- **QR:** se genera en L7. Los mockups no muestran un QR falso.
+- **QR:** se genera en L7 (hecho: `qr.ts`, `Qr.tsx`). Los mockups no muestran un QR falso.
 - **Contenido provisional:** Copo, Taberna Compás y Brasa Rápida tienen claves de arte, pero sus negocios, fixtures y juegos se arman en L5.
 - **Revisión:** sin lector de pantalla ni dispositivo físico. La revisión visual fue por capturas a tamaño real.
 
@@ -302,3 +302,44 @@ Construido el 17/10/2026 sobre `main` (con L5 integrado). Esquema detectado al e
 - El historial previo a la demo es sintético (la semilla solo tiene pedidos del lunes 19) y se rotula como tal.
 - La proyección usa un pedido de referencia de un ítem; un pedido real puede tener más cosas.
 - El premio de los sellos no se entrega: requiere aprobación y cotización del negocio, como en P2.
+
+## L7 · QR, códigos y continuidad cliente–comercio (SDD)
+Construido el 17/10/2026 sobre `main` (con L6 integrado). **No cambia el esquema (sigue en 4):** los escaneos y canjes se registran en la auditoría existente y no hay colecciones nuevas.
+
+### Dependencias nuevas (justificadas)
+- `qrcode-generator` 2.0.4 (MIT, sin dependencias, ~15 kB): codifica el QR con corrección de errores. Escribir a mano un codificador Reed-Solomon es riesgo sin valor para la demo.
+- `jsqr` 1.4.0 (Apache-2.0, sin dependencias): lee el QR de la cámara o de una foto, en el navegador. Se importa de forma diferida (chunk propio de ~130 kB, 47 kB comprimido), así que no pesa en la carga inicial.
+- Ningún servicio externo: nada se envía y la imagen leída no sale del dispositivo.
+
+### Qué lleva un QR
+- Solo una ruta de la app: `#/<negocio>/q/<tipo>/<referencia>` (y `?s=<sede>` para mesas y sedes). Tipos: negocio, sede, mesa, campaña, referido, pedido, reserva, beneficio e invitación.
+- **Nunca** nombres, contactos, precios ni secretos. Todo parámetro de más (`precio`, `descuento`, `estado`…) se descarta al leer.
+- El estado, el vencimiento y los importes se leen siempre del store. Un código no acredita un pago ni es seguridad productiva: lo dice cada pantalla y el resultado de un pedido.
+- El código de recomendación se deriva del cliente (hash estable y único por negocio) y no revela su nombre.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| QR-01 | Generar QR/enlace de negocio, sede, mesa, campaña y referido; vista previa e impresión | — | `Codigos` (pestaña "Generar e imprimir"), `QrCard`, `qr-render.ts` | el QR generado se **lee** con un decodificador independiente y devuelve la URL exacta; "Imprimir" deja visible solo la tarjeta elegida | `qr.test.ts` QR-01; e2e QR-01/05/06 (vista previa en medio impreso) |
+| QR-02 | El cliente obtiene código + QR de pedido, reserva y beneficio; el comercio los consulta y canjea | pedido listo → retirado/servido · reserva confirmada de hoy → llegada | `MisCodigos`, `QrDisclosure` en pedido, reserva y beneficios, `code/redeem` | el canje reusa `order/deliver` y `res/arrive`; repetir la operación (doble clic) o volver a escanear no repite el efecto ni agrega otro registro de canje | `qr.test.ts` QR-02; e2e QR-02 |
+| QR-03 | Estados | válido, desconocido, vencido, cancelado, usado, duplicado, negocio incorrecto, sede incorrecta, cupo agotado, no elegible, revertido | `checkCode` (función pura), `CodeResultCard`, landing `/:biz/q/:tipo/:ref` | cada estado sale del store; lo de otro negocio no muestra nada; un cliente solo ve lo suyo (lo ajeno es "desconocido"); reclamar la campaña respeta audiencia, cupo y tope por cliente | `qr.test.ts` QR-03 (23 pruebas en total); e2e QR-03 |
+| QR-04 | Escaneo por acción explícita, alternativa manual y flujo sin cámara | cámara apagada → pidiendo permiso → activa → apagada al leer | `Scanner`: botón de cámara, foto del QR, texto a mano; "simular" en Códigos | abrir la pantalla no pide la cámara (`getUserMedia` = 0 llamadas hasta el clic); se apaga al leer, al detener y al salir; errores de permiso con alternativa | e2e QR-02 (foto), QR-04 (cámara falsa), QR-03 (simulado) |
+| QR-05 | Sin datos personales ni secretos en la URL | — | `qrPath`, `parseScan` | la ruta solo trae negocio, tipo y referencia pública; lo que el QR diga de precios o estados se ignora | `qr.test.ts` QR-05; e2e QR-01/05/06 |
+| QR-06 | Límite de localStorage | — | panel "Qué puede y qué no puede esta demo", `storageUsage` | se explica que dos dispositivos no se sincronizan solos, que cliente y comercio se prueban en el mismo navegador cambiando de rol y que el almacenamiento tiene tope (con el uso aproximado medido) | e2e QR-01/05/06 |
+
+### Verificación de lectura (qué se comprobó de verdad)
+- **Lectura real de la imagen:** el QR de un pedido se captura como imagen y se sube al lector, que lo decodifica y valida contra el store (e2e QR-02). Además, `qr.test.ts` decodifica con `jsqr` los módulos generados.
+- **Lectura por cámara:** se comprobó con el dispositivo de video **falso** de Chromium, alimentado con un archivo que muestra el QR. Eso prueba el camino completo (permiso, flujo de video, decodificación, apagado), pero **no** se probó con una cámara física ni con un teléfono.
+- **Simulación:** el selector de casos de ejemplo lee exactamente la URL que traería un QR, sin cámara.
+
+### Qué cambió en lo existente (con motivo)
+- `makeBenefit` se extrajo de `issueBenefits` para que el reclamo por QR emita un beneficio con el mismo código y vencimiento, sin registrar un envío que no ocurrió.
+- Mi pedido recuerda por pestaña la mesa leída con el QR (`sessionStorage`) y la elige si el pedido todavía no tiene mesa.
+- Nueva sección de administración "Códigos" (recepción, mozo, caja y encargado) y "Mis códigos" en la navegación del cliente.
+
+### Límites declarados de L7
+- **Sin sincronización entre dispositivos:** un QR leído en otro teléfono no ve los datos de este navegador. La demo lo muestra con roles en el mismo contexto local.
+- **Un código no es seguridad:** cualquiera con el enlace puede abrir la landing; por eso la landing solo muestra datos al dueño del código.
+- **Cámara física no verificada:** solo con dispositivo falso de Chromium; los errores de permiso se probaron por reglas, no con un teléfono real.
+- **Beneficios:** el comercio verifica el código pero no lo consume: se canjea al enviar el pedido (L6).
+- **Hash de rutas:** los QR apuntan a `#/…` porque la app se aloja en una ruta de GitHub Pages sin servidor de rutas.

@@ -268,3 +268,19 @@ export function buildDiagnostic(result: Extract<LoadResult, { kind: 'corrupt' | 
     nota: 'Diagnóstico sintético: datos de demostración ficticios, sin información real.',
   }
 }
+
+/**
+ * Cuánto ocupa la demo en el almacenamiento del navegador. El tope real depende del navegador (suele rondar los 5 millones
+ * de caracteres por origen), así que se informa como orden de magnitud, no como cuota exacta.
+ */
+export const STORAGE_HINT_CHARS = 5_000_000
+export function storageUsage(storage: StorageLike | null): { chars: number; available: boolean } {
+  if (!storage) return { chars: 0, available: false }
+  let chars = 0
+  try {
+    for (const k of tableflowKeys(storage)) chars += k.length + (storage.getItem(k)?.length ?? 0)
+    return { chars, available: true }
+  } catch {
+    return { chars: 0, available: false }
+  }
+}

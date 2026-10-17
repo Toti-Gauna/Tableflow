@@ -9,6 +9,7 @@ import { HouseChar, type Mood } from '../../ui/art/characters'
 import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../ui/kit'
 import { ORDER_LABEL, sedeShort, STATION_LABEL } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
+import { QrDisclosure } from '../../ui/Qr'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
 import type { AppState, Order, OrderStatus } from '../../domain/types'
 
@@ -115,6 +116,7 @@ export function PedidoDetalle() {
           </div>
         )}
       </section>
+      {!['rechazado', 'cancelado', 'cerrado'].includes(o.status) && <QrDisclosure businessId={o.businessId} kind="pedido" reference={o.id} title={`Pedido ${o.id}`} caption={o.kind === 'retiro' ? `Retiro · N.º ${o.pickupCode}` : 'En la mesa'} summary="Mostrar el QR de este pedido" />}
       <OrderTimeline o={o} />
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}
       {o.cancelRequested && <Callout tone="warn">Pediste cancelar con el pedido ya en marcha. El encargado debe decidir; la comanda no se borra.</Callout>}

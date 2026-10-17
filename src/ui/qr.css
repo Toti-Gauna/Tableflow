@@ -1,0 +1,38 @@
+/* P5-L7 · QR y códigos */
+.qr-card { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.qr-card figcaption { display: grid; gap: 4px; min-width: 0; flex: 1 1 180px; overflow-wrap: anywhere; }
+.qr-img { display: block; flex: none; max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line-strong); background: #fff; }
+.qr-title { font-size: 1.05rem; }
+.qr-code { justify-self: start; padding: 2px 8px; border-radius: 6px; font-weight: 800; letter-spacing: .06em; font-size: 1.1rem; }
+.qr-url { color: var(--ink-soft, var(--ink)); font-size: .78rem; word-break: break-all; }
+.qr-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.qr-disclosure { margin-top: 14px; }
+.qr-disclosure summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.code-result { margin-top: 14px; padding: 14px 16px; border-radius: var(--radius); border: 1.5px solid var(--line-strong); background: var(--surface); display: grid; gap: 8px; }
+.code-result[data-status="valido"], .code-result[data-status="revertido"] { border-color: var(--ok); }
+.code-result[data-status="usado"], .code-result[data-status="duplicado"], .code-result[data-status="no-elegible"], .code-result[data-status="cupo-agotado"] { border-color: var(--warn); }
+.code-result[data-status="desconocido"], .code-result[data-status="vencido"], .code-result[data-status="cancelado"], .code-result[data-status="negocio-incorrecto"], .code-result[data-status="sede-incorrecta"] { border-color: var(--err, #b3261e); }
+.code-result h3 { margin: 0; font-size: 1.1rem; }
+.code-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; margin: 0; }
+.code-facts div { min-width: 0; }
+.code-facts dt { font-size: .78rem; color: var(--ink-soft, var(--ink)); }
+.code-facts dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.scanner { display: grid; gap: 10px; }
+.scanner video { width: 100%; max-width: 360px; border-radius: var(--radius); background: #000; aspect-ratio: 4 / 3; object-fit: cover; }
+.scan-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.scan-row input[type="text"] { flex: 1 1 200px; min-width: 0; }
+.code-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 960px) { .code-grid { grid-template-columns: minmax(0, 1fr); } }
+.scan-log { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: .9rem; }
+.limit-box { margin-top: 16px; }
+.storage-meter { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; margin: 6px 0 2px; }
+.storage-meter > span { display: block; height: 100%; background: var(--accent, var(--ok)); }
+.my-codes { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 14px; }
+@media print {
+  body[data-print-qr] * { visibility: hidden !important; }
+  body[data-print-qr] .qr-card[data-printing], body[data-print-qr] .qr-card[data-printing] * { visibility: visible !important; }
+  body[data-print-qr] .qr-card[data-printing] { position: absolute; left: 0; top: 0; width: 100%; border: 0; background: #fff; color: #000; }
+  .no-print { display: none !important; }
+}
+.file-btn { cursor: pointer; display: inline-flex; align-items: center; position: relative; }
+.file-btn:focus-within { outline: 3px solid var(--focus, currentColor); outline-offset: 2px; }
