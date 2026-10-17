@@ -252,7 +252,7 @@ function ritualClasicos(T0: number): Pick<NewConfig, 'modifierGroups' | 'menuIte
 // ---------------------------------------------------------------- helpers
 type ItemSeed = Pick<MenuItem, 'id' | 'name' | 'description' | 'category' | 'priceCents' | 'modifierGroupIds' | 'foodNote'> & { tags?: string[] }
 function items(businessId: BusinessId, T0: number, station: Station, list: ItemSeed[]): MenuItem[] {
-  return list.map((i) => ({ businessId, createdAt: T0, version: 1, imageUrl: null, soldOut: false, history: [], locationIds: null, hours: null, maxQty: 6, station, tags: i.tags ?? [], ...i }))
+  return list.map((i) => ({ businessId, createdAt: T0, version: 1, imageUrl: null, soldOut: false, history: [], locationIds: null, hours: null, maxQty: 6, station, tags: i.tags ?? [], costCents: null, variableCents: null, ...i }))
 }
 function ings(businessId: BusinessId, T0: number, list: [string, string, 'g' | 'ml' | 'u', number, number][]): Ingredient[] {
   return list.map(([id, name, unit, onHand, low]) => ({ id, businessId, createdAt: T0, version: 1, name, unit, onHand, reserved: 0, lowThreshold: low, epoch: 0, alertState: onHand <= 0 ? 'agotado' : onHand <= low ? 'bajo' : 'ok' }))
