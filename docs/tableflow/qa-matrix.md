@@ -91,7 +91,15 @@ Arreglo del pie: mientras haya un cargador en pantalla, el contenedor reserva el
 - Buenas prácticas: 100 en las 14.
 
 ## 4. Suite completa
-RESULTADO_SUITE
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 23 archivos, 971 pruebas |
+| `npm run build` | 0 | OK. JS inicial ~833 kB |
+| `npx playwright test` | 0 | **140 pasadas** (130 + 10 del barrido de accesibilidad, que en CI corre en su versión reducida), 12 omitidas (capturas, solo con `CAPTURE=1`) |
+| `A11Y_FULL=1 npx playwright test e2e/p5-l10a.spec.ts` | 0 | 20 de 20 combinaciones, 660 análisis (14,7 min) |
+
+No se quitó ninguna prueba. Las 10 del barrido agregan unos 7 minutos a la corrida de e2e.
 
 ## 5. No verificado y límites
 - **Navegadores:** solo Chromium. Safari y Firefox no se probaron.

@@ -1,3 +1,51 @@
+# Checkpoint P5-L10a · TableFlow: QA técnico (matriz, accesibilidad y rendimiento)
+
+> L9 está en el PR #11 (abierto, en verde, sin mergear); este lote parte de su rama. La matriz completa, el método y los límites están en `qa-matrix.md`.
+
+## Identificación
+- Fecha real: 18/10/2026. Rama `claude/tableflow-p5-l10a`, creada desde `claude/tableflow-p5-l9`.
+- **Esquema:** sigue en 5. **Dependencias nuevas:** ninguna (Lighthouse 13.5.0 se instaló fuera del repo, en el directorio temporal de la sesión).
+
+## Qué se hizo
+- **Matriz de QA** (`qa-matrix.md`): cada requisito con su estado, su evidencia y su límite; sección "No verificado" explícita.
+- **Barrido de accesibilidad** (`e2e/p5-l10a.spec.ts`): cinco negocios, claro y oscuro, 1280 y 390 px, 15 rutas del cliente y 17 de administración, más 5 compartidas. 660 análisis con axe (WCAG A y AA).
+  - Primera corrida: **16 de 20 combinaciones fallaban** por tres causas reales; las tres se arreglaron. Final: **20 de 20 pasan**.
+- **Lighthouse local** en 7 pantallas, móvil y escritorio (14 mediciones): rendimiento, accesibilidad, buenas prácticas y SEO.
+
+## Qué se arregló (encontrado por la medición, con su motivo)
+| Hallazgo | Arreglo |
+|---|---|
+| Pestañas del simulador apuntaban a un panel inexistente (Copo, Compás, Brasa sin hilos) | `aria-controls` solo al panel que existe |
+| Catas: `.ev-date` compartía nombre con el recuadro de fecha del inicio (el "24" partido, horario ilegible a 390 px) | Las reglas del inicio se acotan a `.event-card`; la tarjeta del inicio quedó idéntica píxel por píxel |
+| Tabla de `/comercial` desplazable sin foco | Región con nombre y `tabIndex` |
+| CLS de 0,2 a 0,3 en escenas, guía y administración: el pie saltaba al llegar el contenido | El contenedor reserva el alto de la ventana mientras hay un cargador |
+| Administración sin `main` | `div` → `main` |
+| Nombre accesible sin el texto visible (dock y logo), WCAG 2.5.3 | La etiqueta incluye el texto visible |
+
+## Rendimiento medido (Lighthouse local, emulación; un solo valor por pantalla)
+- Escenas, guía y administración: **100**, CLS 0 (antes 87–99, CLS 0,07–0,26).
+- Inicio y carta de los negocios en móvil: 96–99. Escritorio: 100.
+- Accesibilidad **100** y buenas prácticas **100** en las 14. SEO 54 por diseño (`noindex`, demo ficticia).
+- **Abierto:** portada en móvil, **51** en frío (79 a 93 repetida). JS inicial de ~833 kB con 1,9 s de bloqueo y CLS de 0,297 intermitente por el cambio de tipografía. Se propone dividir el paquete inicial y declarar tipografías de reserva; toca la estructura de carga de toda la app, por eso queda para decisión.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 23 archivos, 971 pruebas |
+| `npm run build` | 0 | OK. JS inicial ~833 kB |
+| `npx playwright test` | 0 | 140 pasadas (130 + 10 del barrido), 12 omitidas (capturas) |
+| `A11Y_FULL=1 npx playwright test e2e/p5-l10a.spec.ts` | 0 | 20 de 20 combinaciones (14,7 min) |
+| Lighthouse 13.5.0 (14 mediciones) | 0 | ver `qa-matrix.md` |
+
+## No verificado
+Solo Chromium; sin lectores de pantalla ni teléfonos reales; QR sin cámara física; rendimiento en contenedor sin GPU; moderadas y menores de axe sin revisar una por una. Eclipse (link, plazos y vigencia) sigue "a confirmar".
+
+## Siguiente tarea exacta
+PR de L10a, seguimiento hasta verde y espera del ok de Ignacio. Después **L10b** (revisión visual crítica con capturas, storyboard y render del tráiler) con Opus · extra.
+
+---
+
 # Checkpoint P5-L9 · TableFlow: escenas autoguiadas, guía completa y cierre Eclipse
 
 > L8 (PR #10) está en `main`. El SDD, las variantes, los cambios y los límites están en `p5-spec.md` (sección L9).
