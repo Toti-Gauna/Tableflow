@@ -1900,9 +1900,9 @@ dialog.guide { max-width: min(560px, calc(100vw - 24px)); }
 .event-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
 .event-card { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 14px 18px 14px 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: var(--ink); }
 .event-card:hover { border-color: var(--accent); }
-.ev-date { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 14px; background: var(--brand); color: var(--brand-ink, #fff); line-height: 1; }
-.ev-date b { font-family: var(--serif); font-variation-settings: var(--display-axes); font-size: 2rem; font-weight: 600; }
-.ev-date span { font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.event-card .ev-date { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 14px; background: var(--brand); color: var(--brand-ink, #fff); line-height: 1; }
+.event-card .ev-date b { font-family: var(--serif); font-variation-settings: var(--display-axes); font-size: 2rem; font-weight: 600; }
+.event-card .ev-date span { font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .ev-main { display: grid; gap: 2px; min-width: 0; }
 .ev-main strong { font-family: var(--serif); font-variation-settings: var(--display-axes); font-size: 1.15rem; font-weight: 600; }
 .ev-cta { display: inline-flex; align-items: center; gap: 4px; font-weight: 750; color: var(--accent); }
@@ -1929,7 +1929,7 @@ dialog.guide { max-width: min(560px, calc(100vw - 24px)); }
 .staff-chip:hover { border-color: var(--accent); }
 .landing-links { font-size: .92rem; }
 /* detalles */
-.ev-date { text-align: center; align-content: center; gap: 2px; }
+.event-card .ev-date { text-align: center; align-content: center; gap: 2px; }
 @media (max-width: 480px) { .slot-meter .lbl { font-size: .58rem; letter-spacing: -.02em; white-space: nowrap; } .slot-meter .col:nth-child(even) .lbl { visibility: hidden; } }
 .cover-v2 .cover-art { position: relative; min-height: 260px; }
 .cover-v2 .cover-art .art { position: absolute; inset: 0; width: 100%; height: 100%; }

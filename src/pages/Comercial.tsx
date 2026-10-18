@@ -12,7 +12,7 @@ export function Comercial() {
       </Callout>
       <section className="card" style={{ marginTop: 14 }} aria-labelledby="cob">
         <h2 id="cob">Cobertura de módulos (M01–M15)</h2>
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0} role="region" aria-labelledby="cob">
           <table className="matrix">
             <caption className="sr-only">Matriz de cobertura</caption>
             <thead><tr><th>Módulo</th><th>Ruta real</th><th>Acción</th><th>Entidad</th><th>Admin</th><th>Escenarios</th><th>Automatización</th></tr></thead>

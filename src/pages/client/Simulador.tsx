@@ -66,8 +66,8 @@ export function SimPanel({ biz, guided }: { biz: BusinessId; guided: boolean }) 
         </label>
         <button className="btn secondary small" type="button" onClick={newThread} data-testid="new-thread">Nuevo hilo</button>
         <div role="tablist" aria-label="Canal simulado" className="tabs">
-          <button role="tab" type="button" aria-selected={tab === 'chat'} className="tab" onClick={() => setTab('chat')} id="tab-chat" aria-controls="panel-chat"><Glyph name="chat" size={16} /> WhatsApp</button>
-          <button role="tab" type="button" aria-selected={tab === 'voz'} className="tab" onClick={() => setTab('voz')} id="tab-voz" aria-controls="panel-voz" data-testid="tab-voz"><Glyph name="phone" size={16} /> Llamada</button>
+          <button role="tab" type="button" aria-selected={tab === 'chat'} className="tab" onClick={() => setTab('chat')} id="tab-chat" aria-controls={conv && tab === 'chat' ? 'panel-chat' : undefined}><Glyph name="chat" size={16} /> WhatsApp</button>
+          <button role="tab" type="button" aria-selected={tab === 'voz'} className="tab" onClick={() => setTab('voz')} id="tab-voz" aria-controls={conv && tab === 'voz' ? 'panel-voz' : undefined} data-testid="tab-voz"><Glyph name="phone" size={16} /> Llamada</button>
         </div>
       </div>
       {!conv ? (
