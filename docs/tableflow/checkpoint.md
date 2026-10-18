@@ -1,3 +1,61 @@
+# Checkpoint P5-L9 · TableFlow: escenas autoguiadas, guía completa y cierre Eclipse
+
+> L8 (PR #10) está en `main`. El SDD, las variantes, los cambios y los límites están en `p5-spec.md` (sección L9).
+
+## Identificación
+- Fecha real: 18/10/2026. Rama `claude/tableflow-p5-l9`, creada desde `main` (`fe1fb77`).
+- **Esquema:** sigue en **5**. El progreso de la guía y el rechazo del cierre van en las preferencias del navegador.
+- **Dependencias nuevas:** ninguna.
+
+## Qué se hizo
+- **Motor de escenas** (`domain/scenes.ts`, puro): cinco guiones armados con comandos reales del store, con 13 variantes según lo que tiene cada negocio.
+  - WhatsApp → pedido → recepción del comercio.
+  - Llamada → reserva. En Compás, un grupo de 16 pasa a revisión humana.
+  - QR de mesa.
+  - Retiro con pago en el local.
+  - Campaña → reactivación → canje.
+  - Cada paso corre sus comandos una sola vez y se comprueba contra el estado.
+- **Reproductor:** un teléfono en overlay, no modal, con la app visible detrás y sin oscurecer.
+  - Brief de 5 a 10 s por paso, con pausa, siguiente, repetir, velocidad y salir. Escape también sale.
+  - El foco va al título al empezar; los cambios de paso se anuncian en una región viva.
+  - En móvil, el teléfono pasa a una vista compacta y la botonera queda fija a la vista.
+  - Salir restaura negocio, rol y pantalla.
+- **Guía completa:** 13 tareas por rol y módulo (las de reservas solo donde hay reservas).
+  - Cada tarea explica por qué importa en ese negocio.
+  - Se marca hecha solo por un evento real de la auditoría.
+  - Se puede practicar, omitir, pausar, retomar y rechazar; la ayuda contextual acompaña mientras se practica.
+- **Cierre Eclipse:** pantalla completa y cerrable, con las condiciones del tarifario aprobado del 16/10/2026.
+  - Se abre por botón o una sola vez al terminar la guía.
+  - Nunca se abre solo en pedido, regalo o reserva, ni después de cerrarlo.
+  - Tiempos, link de Eclipse y vigencia dicen "a confirmar".
+- **Tráiler honesto:** no hay una pieza reproducible, así que no hay botón; un texto lo dice y ofrece las escenas.
+- **Portada:** sección "Probalo sin la consola", con escenas, guía y "Adaptarlo a mi negocio".
+
+## Pruebas
+- **Nuevas:**
+  - `tests/scenes.test.ts` (19): mapa de variantes, briefs de 5 a 10 s, las 13 escenas completas, idempotencia, tareas de la guía y `taskDone`.
+  - `e2e/p5-l9.spec.ts` (8): SC-01 de punta a punta, las 13 variantes, teclado con movimiento reducido, GU-01, dos de EC-01 (por botón y al terminar la guía, sin interrumpir un pedido ni insistir) y axe a 1280 y 390 px.
+- **Actualizadas, con el motivo anotado:** `p5-l3.spec.ts` (SH-03). Ya no hay botón de tráiler; se verifica el estado honesto y el acceso a las escenas.
+- No se quitó ningún test.
+- **Hallazgos de las pruebas:**
+  - Un clic rápido en la guía podía pisar una tarea recién hecha. Ahora todo se escribe sobre el progreso más reciente.
+  - El cierre tenía contraste insuficiente en "Cerrar".
+  - En móvil, el teléfono era ilegible y la botonera quedaba fuera de la vista.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 23 archivos, 971 pruebas (19 nuevas) |
+| `npm run build` | 0 | OK. JS inicial ~833 kB (L8: ~830 kB). Escenas, guía, reproductor y cierre van en chunks diferidos; montados siempre sumaban ~75 kB |
+| `npx playwright test` | 0 | 130 pasadas (122 + 8 de L9), 12 omitidas (capturas, solo con CAPTURE=1) |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L9"` | 0 | 13 capturas en `screens/p5-l9/`: 1,16 MB |
+
+## Siguiente tarea exacta
+PR de L9 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L10**: QA, pulido y kit comercial (matriz, Lighthouse, revisión visual, storyboard y render del tráiler, plantillas de email), sin enviar ni publicar nada.
+
+---
+
 # Checkpoint P5-L8 · TableFlow: motion graphics, animaciones transaccionales y temporadas
 
 > L7 (PR #9) está en `main`. La coreografía está en `motion.md` (sección P5-L8); el SDD, los cambios y los límites, en `p5-spec.md` (sección L8).

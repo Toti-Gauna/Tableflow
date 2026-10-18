@@ -2050,3 +2050,4 @@ dialog.role-intro { max-width: min(720px, calc(100vw - 24px)); }
 .route-loader .sk-detail .sk-ticket { flex: 0 1 200px; height: 140px; border-radius: 10px; }
 .route-loader .sk-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
 .route-loader .sk-cols span { height: 220px; border-radius: 12px; }
+.discover { margin: 0 0 18px; display: grid; gap: 6px; } .discover h2 { margin: 0; } .discover p { margin: 0; }

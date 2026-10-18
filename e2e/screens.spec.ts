@@ -231,7 +231,7 @@ test.describe('capturas P5-L3', () => {
     await page.keyboard.press('Escape')
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/#/mesa-clara'); await ensureConsole(page); await shot('08-dock-abierto-oscuro-1440')
-    await page.getByTestId('trailer-open').click(); await shot('09-trailer-estado-honesto-1440')
+    await page.getByTestId('trailer-status').scrollIntoViewIfNeeded(); await shot('09-trailer-estado-honesto-1440') // P5-L9: estado, no botón
   })
 })
 
@@ -511,4 +511,35 @@ test('capturas y clips P5-L8 (animaciones transaccionales y temporadas)', async 
   await settle(p2)
   await p2.locator('.game-head').screenshot({ path: `${OUT}/juego-con-acento-de-temporada.png` })
   await p2.close()
+})
+
+test('capturas P5-L9 (escenas, guía y cierre Eclipse)', async ({ page }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const OUT = process.env.OUT12 ?? 'docs/tableflow/screens/p5-l9'
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await fresh(page, '/')
+  await settle(page); await page.screenshot({ path: `${OUT}/1-portada-probalo-sin-consola.png` })
+  await page.goto('/#/escenas'); await settle(page); await page.screenshot({ path: `${OUT}/2-escenas-por-negocio.png`, fullPage: true })
+  const SHOTS: [string, string, number, string][] = [['ritual-cafe', 'whatsapp', 1, '3-whatsapp'], ['mesa-clara', 'llamada', 2, '4-llamada'], ['compas', 'llamada', 3, '4b-llamada-grupo-revision'], ['ritual-cafe', 'qr-mesa', 1, '5-qr-mesa'], ['brasa', 'retiro', 3, '6-retiro-pago-local'], ['mesa-clara', 'campana', 1, '7-campana-canje']]
+  for (const [biz, id, steps, name] of SHOTS) {
+    await page.goto('/#/escenas')
+    await page.getByTestId(`scene-${biz}-${id}`).click()
+    await page.getByTestId('scene-play').click()
+    for (let i = 0; i < steps; i++) await page.getByTestId('scene-next').click()
+    await settle(page); await page.screenshot({ path: `${OUT}/${name}.png` })
+    await page.getByTestId('scene-exit').click()
+  }
+  await page.goto('/#/guia'); await settle(page); await page.screenshot({ path: `${OUT}/8-guia-por-rol.png` })
+  await page.getByTestId('gpractice-recepcion-codigos').click(); await settle(page); await page.screenshot({ path: `${OUT}/9-ayuda-contextual.png` })
+  await page.getByTestId('coach-pause').click()
+  await page.goto('/#/escenas'); await page.getByTestId('adapt-open').click(); await settle(page); await page.screenshot({ path: `${OUT}/10-cierre-eclipse.png` })
+  await page.keyboard.press('Escape')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/escenas')
+  await page.getByTestId('scene-brasa-whatsapp').click(); await page.getByTestId('scene-play').click(); await page.getByTestId('scene-next').click()
+  await settle(page); await page.screenshot({ path: `${OUT}/11-escena-390.png` })
+  await page.getByTestId('scene-exit').click()
+  await page.getByTestId('adapt-open').click(); await settle(page); await page.screenshot({ path: `${OUT}/12-eclipse-390.png` })
 })

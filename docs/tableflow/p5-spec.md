@@ -140,7 +140,7 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | QR y códigos (L7) | C P | C P | C P (sin mesas: sede, campaña, pedido y beneficio) | C P | C P (sin mesas: igual que Copo) |
 | Animación transaccional (L8) | C P · bandeja: medialunas, dorado y vapor | C P · plato con cubiertos; mesa en la reserva | C P · bochas de los gustos elegidos | C P · tabla y bebida sin alcohol | C P · hamburguesa con los ingredientes reales |
 | Temporada propia (L8) | C P · merienda de invierno | C P · mesa de celebración | C P · verano en el mostrador | C P · noche de música | C P · bolsa familiar |
-| Escenas y guía (L9) | E | E | E | E | E |
+| Escenas y guía (L9) | C P · WhatsApp, QR de mesa, retiro con pago en local, campaña | C P · llamada con reserva, QR de mesa, campaña | C P · WhatsApp, retiro con pago en local | C P · llamada de grupo grande a revisión, QR de mesa | C P · WhatsApp, retiro con pago en local |
 | QA y kit (L10) | E | E | E | E | E |
 
 **Aceptación de L1**: cada requisito nuevo tiene ID y lote; ningún negocio queda reducido a una portada o a una escena (cada uno tiene al menos un RP y un RO de punta a punta).
@@ -376,3 +376,43 @@ Construido el 18/10/2026 sobre `main` (con L7 integrado). La coreografía comple
 - La regla de "se reproduce una vez" es por pestaña: otra pestaña o un recargo con almacenamiento bloqueado muestran el cierre quieto.
 - El ritmo de los clips depende de los cuadros que entrega el screencast (entre 100 y 170 en 3 s). Para llegar a 25 cuadros/s se repite el último recibido; no se interpola.
 - Las escenas de temporada fuera de la característica de cada identidad usan su composición base con el acento de la época.
+
+## L9 · Escenas autoguiadas, guía completa y cierre Eclipse (SDD)
+Construido el 18/10/2026 sobre `main` (con L8 integrado). **Sin cambio de esquema** (sigue en 5): el progreso de la guía y el rechazo del cierre viven en las preferencias del navegador, no en los datos del negocio. **Sin dependencias nuevas.**
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| SC-01 | WhatsApp → pedido → recepción del comercio (café, heladería, rápida) | mensaje → el asistente pide lo que falta → confirma y se crea el pedido → recepción lo acepta | `domain/scenes.ts` (guiones puros sobre comandos del store), `ScenePlayer`, `PhoneContent` | cada paso corre sus comandos una sola vez y se verifica contra el estado (conversación, pedido `enviado` → `aceptado`) | `scenes.test.ts`; e2e SC-01 de punta a punta |
+| SC-02 | Llamada (simulada, sin micrófono) → reserva | Mesa Clara: reserva que entra en mesa; Compás: grupo de 16 → revisión humana con tarea pendiente | `call/*` existentes, vista `call` y `reservation` del teléfono | Compás no confirma lo que no entra en ninguna mesa: termina en `revision_humana` | `scenes.test.ts`; e2e de las 13 variantes |
+| SC-03 | QR de mesa (restaurante, café, bar) | QR generado → leído → pedido en la mesa → cocina | `qr`/`codes` de L7 | el QR muestra el estado real de la lectura | ídem |
+| SC-04 | Retiro con pago en local (café, heladería, rápida) | pedido de retiro → caja abierta → pago de demostración → retiro con su código | `cash/open`, `pay/register`, `code/redeem` | el pedido figura pagado recién después de caja; el canje no se repite | ídem |
+| SC-05 | Campaña → reactivación → canje (café, restaurante) | campaña manual activada o aprobada → beneficio → pedido con beneficio | growth de L6 | solo quien aceptó promociones; envío simulado | ídem |
+| SC-UX | Teléfono en overlay sobre la app visible, sin oscurecer | reproduciendo · en pausa · error (reintentar) · terminada | `scene-player` fijo y **no modal** (no atrapa el foco ni bloquea la página) | brief de 5–10 s por paso; pausa, siguiente, repetir, velocidad (0,75/1/1,5×) y salir; Escape sale; foco al título al empezar y cambios anunciados en una región viva; en móvil el teléfono pasa a una vista compacta y la botonera queda fija a la vista | e2e teclado + movimiento reducido; axe a 1280 y 390 px |
+| SC-EXIT | Salir no deja nada bloqueado | — | `exitScene()` | restaura negocio, rol y pantalla de antes; lo creado queda en la demo; sin sonido ni animación obligatoria | e2e SC-01 (salida) y teclado |
+| GU-01 | Guía completa por rol, módulo y tarea | pendiente · practicando · hecha · omitida; pausada; rechazada | `domain/guide.ts` (13 tareas, filtradas por negocio), `Guia`, `GuideCoach` | cada tarea explica por qué importa en ESE negocio; se marca hecha solo por un evento real de la auditoría posterior al inicio de la práctica; omitir, pausar, retomar y rechazar persisten | `scenes.test.ts` (tareas y `taskDone`); e2e GU-01 |
+| EC-01 | Cierre Eclipse fullscreen | cerrado · abierto por botón · abierto al terminar la guía (una sola vez) · rechazado | `Eclipse` (`<dialog>`), `eclipseHost`, `domain/pricing.ts` | cerrable (botón y Escape); nunca se abre solo en pedido, regalo o reserva ni después de cerrarlo; paquete, incluye/no incluye, mantenimiento, integraciones/consumos y tiempos según el tarifario; lo que falta dice "a confirmar" | e2e EC-01 (dos pruebas) |
+| L9-6 | Tráiler honesto | no existe pieza reproducible | `Shell` | no hay botón de tráiler: un texto dice que todavía no existe y ofrece las escenas | e2e SH-03 actualizada |
+
+### Variantes por negocio (13)
+- **Ritual Café:** WhatsApp, QR de mesa, retiro con pago en local, campaña.
+- **Mesa Clara:** llamada con reserva, QR de mesa, campaña.
+- **Copo:** WhatsApp, retiro con pago en local.
+- **Compás:** llamada de grupo grande a revisión humana, QR de mesa.
+- **Brasa Rápida:** WhatsApp, retiro con pago en local.
+- No se fuerzan escenas que el negocio no tiene: la heladería y la rápida no tienen mesas ni reservas.
+
+### Qué cambió en lo existente (con motivo)
+- Se quitó el botón y el diálogo del tráiler de la consola: no había una pieza reproducible (L9-6). `p5-l3.spec.ts` (SH-03) se actualizó con ese motivo: ahora verifica el estado honesto y el acceso a las escenas.
+- La portada suma la sección "Probalo sin la consola" (escenas, guía y adaptarlo a tu negocio).
+- La guía rápida de la consola enlaza a la guía completa.
+- El foco al navegar no se roba mientras se usa el reproductor de escenas.
+- El reproductor, la ayuda de la guía y el cierre Eclipse se descargan recién cuando se usan: el JS inicial queda en ~833 kB (L8: ~830 kB). Montados siempre, sumaban ~75 kB.
+
+### Límites declarados de L9
+- **Tarifario:** se usan las condiciones del tarifario aprobado del 16/10/2026 (las mismas de `#/comercial`). No se revalidaron contra la fuente en esta construcción, así que la vigencia dice "a confirmar".
+- **Tiempos de implementación:** "a confirmar". El tarifario no fija plazos y no se inventan.
+- **Link de Eclipse:** "a confirmar". No hay un enlace verificado en el proyecto, así que no se muestra ninguno (ni un botón roto).
+- Las escenas crean datos reales en la demo (pedidos, reservas, beneficios); se limpian con "Reiniciar la demo".
+- El progreso de la guía es por navegador, como el resto de la demo.
+
