@@ -1,3 +1,4 @@
+import { openEclipse } from '../ui/eclipseHost'
 import { Link, useNavigate } from 'react-router-dom'
 import { PageHead } from '../ui/Shell'
 import { act } from '../ui/kit'
@@ -48,6 +49,15 @@ export function Landing() {
         heading={<>Del salón a la barra, <em>una sola mesa de trabajo.</em></>}
         sub="Carta, reservas, pedidos para retirar, cocina, caja y regalos de cinco negocios ficticios (bodegón, café, heladería, bar y comida rápida), conectados en una sola experiencia para el comensal y para el equipo."
       />
+      <section className="discover card" aria-labelledby="disc" data-testid="discover">
+        <h2 id="disc">Probalo sin la consola</h2>
+        <p className="small muted">Tres maneras de entenderlo solo: mirarlo, practicarlo o ver qué costaría en tu negocio.</p>
+        <div className="row">
+          <Link className="btn" to="/escenas" data-testid="discover-scenes">Ver escenas guiadas</Link>
+          <Link className="btn secondary" to="/guia" data-testid="discover-guide">Practicar con la guía</Link>
+          <button type="button" className="btn secondary" onClick={() => openEclipse('boton')} data-testid="discover-adapt">Adaptarlo a mi negocio</button>
+        </div>
+      </section>
       <div className="covers">
         {state.businesses.map((b) => (
           <section key={b.id} className="cover cover-v2 fx-scene" data-biz={b.id} aria-labelledby={`b-${b.id}`}>

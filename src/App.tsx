@@ -14,6 +14,9 @@ import { Landing } from './pages/Landing'
 import { Recovery } from './pages/Recovery'
 import { NotFound } from './pages/NotFound'
 import { RouteLoader } from './ui/Loader'
+import { ScenePlayer } from './ui/scenes/ScenePlayer'
+import { EclipseHost } from './ui/eclipseHost'
+import { GuideCoach } from './pages/Guia'
 import { useTheme } from './ui/theme'
 
 // Carga diferida por ruta: el recorrido principal (inicio, carta, pedido) va en el bundle inicial;
@@ -53,6 +56,8 @@ const AdminConfig = named(() => import('./pages/admin/Configuracion'), 'AdminCon
 const AdminCampanas = named(() => import('./pages/admin/Campanas'), 'AdminCampanas')
 const AdminCostos = named(() => import('./pages/admin/Costos'), 'AdminCostos')
 const AdminCodigos = named(() => import('./pages/admin/Codigos'), 'AdminCodigos')
+const Escenas = named(() => import('./pages/Escenas'), 'Escenas')
+const Guia = named(() => import('./pages/Guia'), 'Guia')
 const AdminAsistente = named(() => import('./pages/admin/Asistente'), 'AdminAsistente')
 const Beneficios = named(() => import('./pages/client/Beneficios'), 'Beneficios')
 const MisCodigos = named(() => import('./pages/client/Codigos'), 'MisCodigos')
@@ -96,6 +101,8 @@ function FocusOnNav() {
     // si la persona ya movió el foco (eligió algo en la pantalla nueva), no se lo quitamos.
     // Con carga diferida el título puede tardar en existir: se espera hasta 2 s sin bloquear nada.
     const before = document.activeElement
+    // P5-L9: durante una escena guiada el foco queda en sus controles (la escena cambia de pantalla sola)
+    if (before?.closest?.('[data-scene-player]')) return
     let tries = 0
     let t = 0
     const tick = () => {
@@ -146,6 +153,9 @@ function Chrome() {
         <>
           <DemoDock />
           <RoleIntro />
+          <ScenePlayer />
+          <EclipseHost />
+          <GuideCoach />
           <FocusOnNav />
           <div id="contenido">
             <Suspense fallback={<RouteLoader />}>
@@ -172,6 +182,8 @@ export function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/simulador" element={<SimRedirect />} />
           <Route path="/comercial" element={<Comercial />} />
+          <Route path="/escenas" element={<Escenas />} />
+          <Route path="/guia" element={<Guia />} />
           <Route path="/arte" element={<Arte />} />
           <Route path="/arte/:id" element={<Arte />} />
           <Route path="/admin" element={<AdminLayout />}>

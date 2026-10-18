@@ -231,6 +231,7 @@ export function loadPrefs(storage: StorageLike | null): Prefs {
     if (raw) {
       const p = { ...DEFAULT_PREFS, ...JSON.parse(raw) } as Prefs
       if (!['system', 'light', 'dark'].includes(p.theme)) p.theme = 'system'
+      p.guide = { ...EMPTY_GUIDE, ...(p.guide ?? {}) }
       return p
     }
   } catch {
@@ -258,9 +259,23 @@ export interface Prefs {
   theme: ThemePref
   /** El selector de rol de bienvenida ya se mostró (se elige o se omite una sola vez). */
   roleIntroSeen: boolean
+  /** P5-L9: progreso de la guía en este navegador (de quien recorre la demo, no datos del negocio). */
+  guide: GuideProgress
+  /** P5-L9: la persona cerró el cierre Eclipse: no se vuelve a abrir solo. */
+  eclipseDismissed: boolean
 }
+export interface GuideProgress {
+  /** `tarea@negocio` hechas (detectadas en la auditoría) u omitidas. */
+  done: string[]
+  skipped: string[]
+  /** Práctica en curso: desde qué largo de auditoría se cuenta. */
+  active: { taskId: string; businessId: string; since: number } | null
+  paused: boolean
+  declined: boolean
+}
+export const EMPTY_GUIDE: GuideProgress = { done: [], skipped: [], active: null, paused: false, declined: false }
 export type ThemePref = 'system' | 'light' | 'dark'
-export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [], uiSounds: false, kdsChime: false, theme: 'system', roleIntroSeen: false }
+export const DEFAULT_PREFS: Prefs = { reducedMotion: 'auto', audio: false, volume: 0.2, favorites: [], uiSounds: false, kdsChime: false, theme: 'system', roleIntroSeen: false, guide: EMPTY_GUIDE, eclipseDismissed: false }
 
 /** Diagnóstico exportable: errores y conteos, sin contenido operable. */
 export function buildDiagnostic(result: Extract<LoadResult, { kind: 'corrupt' | 'future' | 'needs-migration' }>, app: string) {

@@ -1,0 +1,17 @@
+/* P5-L9 · cierre Eclipse a pantalla completa (cerrable) */
+dialog.eclipse { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: #0f0d14; color: #f4f1ea; }
+dialog.eclipse::backdrop { background: #0f0d14; }
+.ec-body { position: relative; max-width: 1080px; margin: 0 auto; padding: 48px 24px 32px; display: grid; gap: 14px; }
+.ec-body .eyebrow { color: #c9b8ff; margin: 0; }
+.ec-body h2 { font-size: clamp(1.8rem, 4.5vw, 2.8rem); margin: 0; color: #fff; }
+.ec-lead { max-width: 70ch; margin: 0; color: #e2ddd2; }
+.ec-close { position: absolute; top: 16px; right: 16px; background: transparent; color: #fff; border-color: #6b6578; }
+.ec-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.ec-grid section { padding: 16px; border-radius: 16px; background: #1b1724; border: 1px solid #332d42; }
+.ec-grid h3 { margin: 0 0 6px; font-size: 1rem; color: #fff; }
+.ec-grid ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.ec-grid p { margin: 0 0 6px; }
+.ec-grid .muted { color: #bdb6c9; }
+.ec-price { font-size: 1.8rem; font-weight: 900; color: #fff; }
+.ec-actions { display: flex; justify-content: flex-end; }
+.ec-actions .btn.secondary { background: transparent; color: #fff; border-color: #6b6578; }

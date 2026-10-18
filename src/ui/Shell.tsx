@@ -104,7 +104,6 @@ export function DemoDock() {
   const onRole = useRoleNav()
   const [resetOpen, setResetOpen] = useState(false)
   const [guide, setGuide] = useState(false)
-  const [trailer, setTrailer] = useState(false)
   const [open, setOpen] = useState(false)
   const [fx, setFx] = useState<FixtureId>('servicio')
   const rootRef = useRef<HTMLDivElement>(null)
@@ -292,13 +291,14 @@ export function DemoDock() {
             <button className="cbtn" type="button" onClick={() => { close(false); setGuide(true) }} data-testid="guide-open" aria-haspopup="dialog">
               <Glyph name="book" size={16} /> Guía de la demo
             </button>
-            <button className="cbtn" type="button" onClick={() => { close(false); setTrailer(true) }} data-testid="trailer-open" aria-haspopup="dialog">
-              <Glyph name="film" size={16} /> Tráiler
+            <button className="cbtn" type="button" onClick={() => { close(false); nav('/escenas') }} data-testid="scenes-open">
+              <Glyph name="film" size={16} /> Escenas guiadas
             </button>
             <button className="cbtn danger" type="button" onClick={() => { close(false); setResetOpen(true) }} data-testid="reset-open" aria-haspopup="dialog">
               <Glyph name="restart" size={16} /> Reiniciar demo
             </button>
           </div>
+          <p className="small muted dock-trailer" data-testid="trailer-status">Tráiler: todavía no existe (no se grabó ningún video). Las escenas guiadas muestran el producto en vivo.</p>
         </section>
       </div>
       <button
@@ -318,16 +318,6 @@ export function DemoDock() {
       </button>
       <Dialog open={guide} onClose={() => setGuide(false)} title="Guía de la demo" className="guide" testId="guide">
         <DemoGuide biz={biz} onDone={() => setGuide(false)} />
-      </Dialog>
-      <Dialog open={trailer} onClose={() => setTrailer(false)} title="Tráiler de la demo" testId="trailer">
-        <p>
-          <strong>Todavía no hay tráiler.</strong> No se grabó ningún video: cuando exista, se va a reproducir acá mismo, sin conexión y con sonido solo si lo activás.
-        </p>
-        <p className="muted">Mientras tanto, la guía tiene recorridos de 60 a 90 segundos para mostrar en vivo.</p>
-        <div className="dialog-actions">
-          <button className="btn secondary" type="button" onClick={() => setTrailer(false)}>Cerrar</button>
-          <button className="btn" type="button" onClick={() => { setTrailer(false); setGuide(true) }}>Abrir la guía</button>
-        </div>
       </Dialog>
       <ConfirmDialog
         open={resetOpen}
@@ -446,6 +436,7 @@ function DemoGuide({ biz, onDone }: { biz: BusinessId; onDone: () => void }) {
           <li><span>Como barra aceptá, prepará y marcá listo; después marcá retirado.</span></li>
         </ol>
       )}
+      <p><button className="linklike" type="button" onClick={() => go('/guia')} data-testid="guide-full">Guía completa por rol y tarea</button> · <button className="linklike" type="button" onClick={() => go('/escenas')}>Escenas guiadas</button></p>
       <h3>Más para mostrar</h3>
       <ul className="guide-links">
         <li><button className="linklike" type="button" onClick={() => go(`/${biz}/regalar`)}>Invitar a alguien a comer</button> · tarjeta, mensaje simulado y canje en el pedido</li>

@@ -149,11 +149,12 @@ test('SH-03: casos y tráiler con estado honesto', async ({ page }) => {
   expect(s.session.businessId).toBe('mesa-clara')
   await ensureConsole(page)
   await expect(page.getByTestId('sim-clock')).toContainText('20:00')
-  await page.getByTestId('trailer-open').click()
-  await expect(page.getByTestId('trailer')).toContainText('Todavía no hay tráiler')
-  await expect(page.getByTestId('trailer').locator('video, iframe')).toHaveCount(0)
-  await page.keyboard.press('Escape')
-  await closeDock(page)
+  // P5-L9 (L9-6): sin pieza reproducible no hay botón de tráiler; se informa el estado y se ofrecen las escenas en vivo
+  await expect(page.getByTestId('trailer-open')).toHaveCount(0)
+  await expect(page.getByTestId('trailer-status')).toContainText('todavía no existe')
+  await expect(page.locator('.dock-panel video, .dock-panel iframe, [data-testid="dock-panel"] video')).toHaveCount(0)
+  await page.getByTestId('scenes-open').click()
+  await expect(page).toHaveURL(/#\/escenas/)
 })
 
 test('FX-01..03: artículo del 404, plural del resumen y contexto de "Pedidos de hoy"', async ({ page }) => {

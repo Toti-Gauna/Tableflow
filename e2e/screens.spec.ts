@@ -231,7 +231,7 @@ test.describe('capturas P5-L3', () => {
     await page.keyboard.press('Escape')
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/#/mesa-clara'); await ensureConsole(page); await shot('08-dock-abierto-oscuro-1440')
-    await page.getByTestId('trailer-open').click(); await shot('09-trailer-estado-honesto-1440')
+    await page.getByTestId('trailer-status').scrollIntoViewIfNeeded(); await shot('09-trailer-estado-honesto-1440') // P5-L9: estado, no botón
   })
 })
 
