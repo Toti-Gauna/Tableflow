@@ -19,3 +19,5 @@
 .guide-coach[data-done] { border-color: var(--ok, #2f8a46); }
 .gc-ok { margin: 0; font-weight: 800; color: var(--ok-deep, #1e5b2d); }
 @media (max-width: 720px) { .guide-coach { left: 8px; right: 8px; width: auto; bottom: 76px; } }
+/* el contenido puede subir por encima de la ayuda de la guía (no queda nada tapado al final de la página) */
+body:has(.guide-coach) #contenido { padding-bottom: 240px; }

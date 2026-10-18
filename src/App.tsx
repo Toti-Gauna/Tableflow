@@ -14,9 +14,8 @@ import { Landing } from './pages/Landing'
 import { Recovery } from './pages/Recovery'
 import { NotFound } from './pages/NotFound'
 import { RouteLoader } from './ui/Loader'
-import { ScenePlayer } from './ui/scenes/ScenePlayer'
 import { EclipseHost } from './ui/eclipseHost'
-import { GuideCoach } from './pages/Guia'
+import { useSceneRun } from './ui/scenes/runState'
 import { useTheme } from './ui/theme'
 
 // Carga diferida por ruta: el recorrido principal (inicio, carta, pedido) va en el bundle inicial;
@@ -58,6 +57,19 @@ const AdminCostos = named(() => import('./pages/admin/Costos'), 'AdminCostos')
 const AdminCodigos = named(() => import('./pages/admin/Codigos'), 'AdminCodigos')
 const Escenas = named(() => import('./pages/Escenas'), 'Escenas')
 const Guia = named(() => import('./pages/Guia'), 'Guia')
+// el reproductor de escenas y la ayuda de la guía se descargan solo cuando hay una escena o una tarea en curso
+const ScenePlayer = named(() => import('./ui/scenes/ScenePlayer'), 'ScenePlayer')
+const GuideCoach = named(() => import('./pages/Guia'), 'GuideCoach')
+function DemoOverlays() {
+  const run = useSceneRun()
+  const { prefs } = useSnapshot()
+  return (
+    <Suspense fallback={null}>
+      {run && <ScenePlayer />}
+      {prefs.guide?.active && <GuideCoach />}
+    </Suspense>
+  )
+}
 const AdminAsistente = named(() => import('./pages/admin/Asistente'), 'AdminAsistente')
 const Beneficios = named(() => import('./pages/client/Beneficios'), 'Beneficios')
 const MisCodigos = named(() => import('./pages/client/Codigos'), 'MisCodigos')
@@ -153,9 +165,8 @@ function Chrome() {
         <>
           <DemoDock />
           <RoleIntro />
-          <ScenePlayer />
+          <DemoOverlays />
           <EclipseHost />
-          <GuideCoach />
           <FocusOnNav />
           <div id="contenido">
             <Suspense fallback={<RouteLoader />}>

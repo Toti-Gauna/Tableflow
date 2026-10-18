@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { setPrefs, useSnapshot, dispatch } from '../store'
+import { getSnapshot, setPrefs, useSnapshot, dispatch } from '../store'
 import { PageHead } from '../ui/Shell'
 import { Callout } from '../ui/kit'
 import { GUIDE_ROLE_LABEL, ROLE_FOR, taskDone, tasksFor, type GuideRole, type GuideTask } from '../domain/guide'
@@ -11,7 +11,12 @@ import '../ui/scenes/guide.css'
 
 const key = (taskId: string, biz: string) => `${taskId}@${biz}`
 const ROLES: GuideRole[] = ['cliente', 'recepcion', 'cocina', 'caja', 'encargado']
-const patch = (g: GuideProgress, p: Partial<GuideProgress>) => setPrefs({ guide: { ...g, ...p } })
+// siempre sobre el progreso más reciente (no sobre el del render): un clic rápido no pisa una tarea recién hecha
+const update = (f: (g: GuideProgress) => Partial<GuideProgress>) => {
+  const g = getSnapshot().prefs.guide ?? EMPTY_GUIDE
+  setPrefs({ guide: { ...g, ...f(g) } })
+}
+const patch = (_g: GuideProgress, p: Partial<GuideProgress>) => update(() => p)
 
 /** Empezar a practicar una tarea: rol de la vista, punto de partida de la auditoría y navegación. */
 function usePractice() {
@@ -20,7 +25,7 @@ function usePractice() {
   return (b: BusinessProfile, t: GuideTask) => {
     if (state.session.businessId !== b.id) dispatch({ type: 'session/setBusiness', businessId: b.id })
     if (state.session.role !== ROLE_FOR[t.role]) dispatch({ type: 'session/setRole', role: ROLE_FOR[t.role] })
-    patch(prefs.guide, { active: { taskId: t.id, businessId: b.id, since: state.audit.length }, paused: false, declined: false })
+    update(() => ({ active: { taskId: t.id, businessId: b.id, since: getSnapshot().state.audit.length }, paused: false, declined: false }))
     nav(t.to(b))
   }
 }
@@ -71,7 +76,7 @@ export function Guia() {
                       <ol className="small gt-steps">{t.steps(biz).map((s) => <li key={s}>{s}</li>)}</ol>
                       <div className="row">
                         <button type="button" className="btn small" onClick={() => practice(biz, t)} data-testid={`gpractice-${t.id}`}>{isDone(t) ? 'Practicar de nuevo' : 'Practicar'}</button>
-                        {!isDone(t) && !isSkipped(t) && <button type="button" className="btn small secondary" onClick={() => patch(g, { skipped: [...g.skipped, key(t.id, biz.id)], active: g.active?.taskId === t.id ? null : g.active })} data-testid={`gskip-${t.id}`}>Omitir</button>}
+                        {!isDone(t) && !isSkipped(t) && <button type="button" className="btn small secondary" onClick={() => update((cur) => ({ skipped: [...cur.skipped, key(t.id, biz.id)], active: cur.active?.taskId === t.id ? null : cur.active }))} data-testid={`gskip-${t.id}`}>Omitir</button>}
                       </div>
                     </li>
                   ))}
@@ -100,14 +105,15 @@ export function GuideCoach() {
   useEffect(() => {
     if (!done || !task || !biz) return
     const k = key(task.id, biz.id)
-    if (g.done.includes(k)) return
-    const doneList = [...g.done, k]
-    setPrefs({ guide: { ...g, done: doneList } })
-    const all = tasksFor(biz).every((t) => doneList.includes(key(t.id, biz.id)) || g.skipped.includes(key(t.id, biz.id)))
+    const cur = getSnapshot().prefs.guide ?? EMPTY_GUIDE
+    if (cur.done.includes(k)) return
+    const doneList = [...cur.done, k]
+    update(() => ({ done: doneList }))
+    const all = tasksFor(biz).every((t) => doneList.includes(key(t.id, biz.id)) || cur.skipped.includes(key(t.id, biz.id)))
     if (all) openEclipse('auto', pathname)
   }, [done])
   if (!task || !biz || g.paused || g.declined || pathname === '/guia') return null
-  const close = () => setPrefs({ guide: { ...g, active: null } })
+  const close = () => update(() => ({ active: null }))
   return (
     <aside className="guide-coach" aria-label="Ayuda de la guía" data-testid="guide-coach" data-done={done || undefined}>
       <p className="eyebrow" style={{ margin: 0 }}>Guía · {GUIDE_ROLE_LABEL[task.role]} · {task.module}</p>
@@ -122,8 +128,8 @@ export function GuideCoach() {
           <button type="button" className="btn small" onClick={() => { close(); nav('/guia') }} data-testid="guide-back">Seguir con la guía</button>
         ) : (
           <>
-            <button type="button" className="btn small secondary" onClick={() => setPrefs({ guide: { ...g, paused: true } })} data-testid="coach-pause">Pausar</button>
-            <button type="button" className="btn small secondary" onClick={() => setPrefs({ guide: { ...g, active: null, skipped: [...g.skipped, key(task.id, biz.id)] } })} data-testid="coach-skip">Omitir</button>
+            <button type="button" className="btn small secondary" onClick={() => update(() => ({ paused: true }))} data-testid="coach-pause">Pausar</button>
+            <button type="button" className="btn small secondary" onClick={() => update((cur) => ({ active: null, skipped: [...cur.skipped, key(task.id, biz.id)] }))} data-testid="coach-skip">Omitir</button>
           </>
         )}
         <Link className="small" to="/guia">Ver la guía</Link>

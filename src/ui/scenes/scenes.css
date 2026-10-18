@@ -56,4 +56,6 @@
 @media (max-width: 720px) {
   .sp-phone { display: none; }
   .sp-mini { display: block; }
+  /* los controles siempre a la vista en el teléfono: el brief se desplaza, la botonera no */
+  .sp-ctrls { position: sticky; bottom: -10px; background: inherit; padding: 8px 0 10px; margin-bottom: -10px; z-index: 1; }
 }
