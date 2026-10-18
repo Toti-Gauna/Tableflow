@@ -57,7 +57,7 @@ export interface MotionPlan {
   timeline: MotionTimeline
 }
 
-export const MAX_LAYERS = 8
+export const MAX_LAYERS = 10
 export const TIMING = { enterMs: 200, staggerMs: 140, layerMs: 320, motifMs: 400, endingMs: 500 } as const
 /** Cota de la pieza completa: entre 1 y 3 segundos, como pide el lote. */
 export const MOTION_BOUNDS = { minMs: 1000, maxMs: 3000 } as const

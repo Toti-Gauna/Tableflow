@@ -1,4 +1,5 @@
 import { QrDisclosure } from '../../ui/Qr'
+import { ReservationMomentFor } from '../../ui/motion/Moments'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useBiz } from '../../ui/hooks'
@@ -52,6 +53,7 @@ export function ReservaDetalle() {
       >
         <StatusBadge s={RES_LABEL[r.status]} />
       </PageHead>
+      <ReservationMomentFor reservation={r} />
       {r.status === 'confirmada' && <QrDisclosure businessId={r.businessId} kind="reserva" reference={r.id} title={`Reserva ${r.id}`} caption={`${r.party} ${r.party === 1 ? 'persona' : 'personas'}`} summary="Mostrar el QR de mi reserva" />}
       {r.status === 'solicitada' && <Callout>Solicitud recibida; el equipo todavía debe confirmarla.</Callout>}
       {r.status === 'confirmada' && <Callout tone="ok">Confirmada{table ? ` en mesa ${table.label} (${table.sector === 'terraza' ? 'terraza' : 'salón'})` : ''}. La preferencia de sector no está garantizada.</Callout>}
