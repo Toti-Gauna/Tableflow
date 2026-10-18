@@ -1551,6 +1551,8 @@ footer.site { border-top: 1px solid var(--rule); padding: 22px 0 110px; color: v
 /* cargador de sección (carga diferida): aparece solo si tarda; esqueleto con brillo que se desplaza (transform) */
 .route-loader { display: flex; gap: 20px; align-items: flex-start; padding: var(--s6) 0 var(--s7); opacity: 0; animation: tf-loader-in var(--dur-state) var(--ease) 180ms forwards; }
 .route-loader.admin { padding-top: var(--s3); }
+/* mientras baja el código de la pantalla, el pie queda debajo del pliegue: no salta cuando llega el contenido */
+#contenido:has(.route-loader) { min-height: 100svh; }
 .route-loader .sk { flex: 1; display: grid; gap: 12px; max-width: 720px; }
 .route-loader .sk span, .route-loader .sk-rows span { display: block; position: relative; overflow: hidden; border-radius: 8px; background: var(--paper-2); }
 .route-loader .sk span::after, .route-loader .sk-rows span::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--shimmer), transparent); transform: translateX(-100%); animation: tf-shimmer 1.3s ease-in-out infinite; }

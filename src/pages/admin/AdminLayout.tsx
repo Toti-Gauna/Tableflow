@@ -62,7 +62,7 @@ export function AdminLayout() {
             {others.map(link)}
           </nav>
         </aside>
-        <div className="admin-main">
+        <main className="admin-main">
           {isClientRole(role) && (
             <DemoHint className="role-hint">
               Estás mirando pantallas del equipo con un rol de cliente (las vistas no son permisos). <Link to={`/${biz.id}`}>Volver a la vista cliente</Link>
@@ -71,7 +71,7 @@ export function AdminLayout() {
           <Suspense fallback={<RouteLoader variant="admin" />}>
             <Outlet />
           </Suspense>
-        </div>
+        </main>
       </div>
       <TabBar
         className="admin-tabs"

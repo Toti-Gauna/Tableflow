@@ -78,8 +78,8 @@ export function ClientLayout({ biz }: { biz: BusinessId }) {
       <header className="client-head">
         <div className="wrap">
           <div className="masthead">
-            <Link to={`/${biz}`} className="wordmark" aria-label={`${b.name}, inicio`}>
-              <span className="name">{b.name}</span>
+            <Link to={`/${biz}`} className="wordmark" aria-label={`${b.name} ${KIND_LABEL[b.kind]}: ir al inicio`}>
+              <span className="name">{b.name}</span>{' '}
               <span className="kind">{KIND_LABEL[b.kind]}</span>
             </Link>
             <div className="masthead-aside">
