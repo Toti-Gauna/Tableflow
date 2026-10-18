@@ -138,7 +138,8 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Juego infantil propio (L5) | C P · memoria | C P · poner la mesa | C P · copiá el helado | C P · ¿dónde está? | C P · armá la hamburguesa |
 | Growth y asistentes (L6) | C P | C P | C P | C P | C P |
 | QR y códigos (L7) | C P | C P | C P (sin mesas: sede, campaña, pedido y beneficio) | C P | C P (sin mesas: igual que Copo) |
-| Animación transaccional (L8) | E | E | E | E | E |
+| Animación transaccional (L8) | C P · bandeja: medialunas, dorado y vapor | C P · plato con cubiertos; mesa en la reserva | C P · bochas de los gustos elegidos | C P · tabla y bebida sin alcohol | C P · hamburguesa con los ingredientes reales |
+| Temporada propia (L8) | C P · merienda de invierno | C P · mesa de celebración | C P · verano en el mostrador | C P · noche de música | C P · bolsa familiar |
 | Escenas y guía (L9) | E | E | E | E | E |
 | QA y kit (L10) | E | E | E | E | E |
 
@@ -343,3 +344,35 @@ Construido el 17/10/2026 sobre `main` (con L6 integrado). **No cambia el esquema
 - **Cámara física no verificada:** solo con dispositivo falso de Chromium; los errores de permiso se probaron por reglas, no con un teléfono real.
 - **Beneficios:** el comercio verifica el código pero no lo consume: se canjea al enviar el pedido (L6).
 - **Hash de rutas:** los QR apuntan a `#/…` porque la app se aloja en una ruta de GitHub Pages sin servidor de rutas.
+
+## L8 · Motion graphics, animaciones transaccionales y temporadas (SDD)
+Construido el 18/10/2026 sobre `main` (con L7 integrado). La coreografía completa (principios, línea de tiempo, piezas, interrupción y aceptación) está en `motion.md`, sección "P5-L8". **Esquema 4 → 5:** se agrega `settings.seasonWindowByBusiness`, con migrador explícito.
+
+### Requisito → escenario → estados → componentes → aceptación → prueba
+| ID | Escenario | Estados | Componentes | Aceptación | Prueba |
+|---|---|---|---|---|---|
+| MO-CAF/HEL/RES/BAR/FR | Al aceptarse el pedido, la composición de su contenido real termina en su comprobante | enviado (tilde "Enviado (simulado)") → aceptado: se reproduce → cierre quieto | `motion-plan.ts` (puro), `OrderMoment`, `Moments` en el seguimiento | entre 1,4 y 2,7 s; capas del pedido real (gustos elegidos, ingredientes sin lo sacado, medialunas y tazas del pedido); alcohol nunca dibujado; sin pieza → glifo de su categoría | `motion-plan.test.ts` (13); e2e: las cinco piezas y el pago en el local |
+| MO-RES (reserva) | Al confirmarse la reserva de Mesa Clara, la mesa se prepara para la cantidad de personas | solicitada → confirmada | `ReservationMomentFor` en el detalle de la reserva | hasta 6 lugares y panera; termina en el folio | e2e MO-RES con reserva |
+| MO-REGLAS | Reproducir no crea, cobra ni canjea; se persiste el evento, no la animación | se reproduce una vez por pestaña; abierto ya aceptado → quieto | regla de visto (`sessionStorage`), `plan` sin efectos | "Ver de nuevo" no toca el store; un rechazado o un comando fallido no muestra aceptación | e2e: error, doble clic, navegación |
+| MO-INT | Interrupción y accesibilidad | reproduciendo → (Omitir / Escape) → quieto | botón "Omitir" aparte de "Ver de nuevo" (deshabilitado mientras corre) | sin animaciones vivas ni temporizadores después de omitir, terminar o salir; escenario decorativo con rótulo y comprobante en texto | e2e interrupción; axe a 1280 y 390 px |
+| MO-RM, MO-SND | Movimiento reducido y sonido | reducido → cierre directo | `prefersReducedMotion`, `sfx` | por sistema y por consola: sin animaciones ni "Ver de nuevo"; sonido apagado: 0 `AudioContext` | e2e (dos variantes de movimiento reducido, sonido) |
+| MO-PERF | Rendimiento medido | — | solo transform/opacity; `PerformanceObserver('longtask')` y `requestAnimationFrame` en la prueba | MO-FR medido: 60 cuadros/s y ninguna tarea larga, con 0 animaciones vivas al terminar | e2e rendimiento |
+| MO-LOAD | Carga técnica | carga del chunk → esqueleto con forma (carta, seguimiento, tablero) | `RouteLoader` (`data-shape`) | aparece solo si tarda (retardo de 180 ms en CSS), sin duración mínima | e2e carga (chunk demorado a propósito) |
+| TE-01 | Temporadas independientes del modo claro u oscuro | automática · manual sin fin · manual con inicio y fin (fuera de rango rige la automática) | `config/season` con `window`, `activeSeason`, `SeasonSettings`, `SeasonScene` | vista previa sin activar; cada identidad tiene su escena (composición, arte y movimiento ambiental de dos ciclos); nunca crea campañas ni beneficios | `season-window.test.ts` (6); e2e TE-01 |
+| TE-KIDS | Juegos con variante de temporada | — | `GameFrame` con `season` | el marco muestra el acento de la temporada; el juego del bar sigue sin alcohol | e2e TE-01 |
+
+### Clips y capturas
+- Clips WebM reales de las cinco piezas en `screens/p5-l8/clips/`, con un cuadro de mitad de pieza cada uno.
+- **Cómo se grabaron:** cuadros del screencast de Chromium (CDP) codificados con el ffmpeg que ya trae el entorno de Playwright. El grabador de video de Playwright pedía otra versión de ffmpeg y no se descargó nada.
+- Capturas del cierre de cada pieza y de la reserva, escenas de temporada por identidad (claro y algunas en oscuro), Configuración con modo manual y vista previa, y el juego con el acento.
+
+### Qué cambió en lo existente (con motivo)
+- `SCHEMA_VERSION` 4 → 5. Los tests que fijaban la 4 (persistencia, L5, growth y la migración e2e de P3) se actualizaron con ese motivo.
+- La banda de temporada del inicio muestra la escena de la identidad en lugar del ornamento solo.
+- Configuración reemplaza el selector único por modo automático o manual (con fechas) más una vista previa.
+- El vino de Mesa Clara no tiene la etiqueta `+18`, así que el plan lo reconoce también por su descripción.
+
+### Límites declarados de L8
+- La regla de "se reproduce una vez" es por pestaña: otra pestaña o un recargo con almacenamiento bloqueado muestran el cierre quieto.
+- El ritmo de los clips depende de los cuadros que entrega el screencast (entre 100 y 170 en 3 s). Para llegar a 25 cuadros/s se repite el último recibido; no se interpola.
+- Las escenas de temporada fuera de la característica de cada identidad usan su composición base con el acento de la época.

@@ -403,7 +403,7 @@ export function OrderMoment({ plan, autoplay }: { plan: MotionPlan; autoplay: bo
   return (
     <section className="mo" data-phase={phase} data-motion-id={plan.id} data-testid="order-moment" aria-labelledby={`mo-h-${plan.entity.id}`} onKeyDown={onKey}
       style={{ ['--layer' as string]: `${plan.timeline.layerMs}ms`, ['--motif' as string]: `${plan.timeline.motifMs}ms`, ['--ed' as string]: `${endingDelay(plan)}ms`, ['--ending' as string]: `${plan.timeline.endingMs}ms` }}>
-      <h2 id={`mo-h-${plan.entity.id}`} className="mo-title">{TITLE[plan.id]}</h2>
+      <h2 id={`mo-h-${plan.entity.id}`} className="mo-title">{plan.entity.type === 'reserva' ? 'Tu mesa, preparada' : TITLE[plan.id]}</h2>
       <div className="mo-body">
         <div className="mo-stage" key={run} role="img" aria-label={plan.label} data-container={plan.container} data-motif={plan.motif}>
           <Stage plan={plan} />

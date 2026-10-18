@@ -87,7 +87,10 @@ test('temporada: automática por el reloj simulado (Día de la Madre) y forzada 
   await expect(page.getByTestId('season-band')).toContainText('Fue ayer')
   await setRole(page, /Encargado/)
   await page.goto('/#/admin/configuracion')
+  // P5-L8: la temporada forzada pasó a ser "manual" (con fechas opcionales) y se guarda con un botón
+  await page.getByTestId('season-manual').check()
   await page.getByTestId('cfg-season').selectOption('fiestas')
+  await page.getByTestId('season-save').click()
   await setRole(page, /invitado/)
   await page.goto('/#/mesa-clara')
   await expect(page.getByTestId('season-band')).toContainText('Fiestas en Mesa Clara')

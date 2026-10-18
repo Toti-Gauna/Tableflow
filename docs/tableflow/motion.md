@@ -64,10 +64,10 @@ Definida antes de implementar. La composición la decide `src/domain/motion-plan
 | Fase | Duración | Qué se mueve | Curva |
 |---|---|---|---|
 | Entrada | 200 ms | el escenario: opacity 0→1 y translateY 6→0 px | `--ease` |
-| Capas | 320 ms cada una, desfase 140 ms (máx. 8 capas) | cada capa entra desde su dirección natural (cae, se apoya o crece desde la base) | `cubic-bezier(.25,.8,.25,1)`, sin rebote |
+| Capas | 320 ms cada una, desfase 140 ms (máx. 10 capas) | cada capa entra desde su dirección natural (cae, se apoya o crece desde la base) | `cubic-bezier(.25,.8,.25,1)`, sin rebote |
 | Gesto del negocio | 400 ms (0 si no aplica) | dorado, vapor, apilado, llenado o prensado | `--ease` |
 | Cierre | 500 ms | la composición se achica al 72 % y se corre; entra el comprobante (translateY 12→0, opacity) | `--ease` |
-| **Total** | **1,4 s (1 capa) a 2,4 s (8 capas)** | probado entre 1 y 3 s | — |
+| **Total** | **1,4 s (1 capa) a 2,7 s (10 capas)** | probado entre 1 y 3 s | — |
 
 ### Las cinco piezas
 | ID | Propósito | Disparador | Capas (según el pedido real) | Gesto | Cierre | Respaldo |
@@ -79,7 +79,7 @@ Definida antes de implementar. La composición la decide `src/domain/motion-plan
 | MO-FR | Ver tu combo armado y quedarte con el número | pedido de Brasa → `aceptado` | ingredientes reales de la hamburguesa (sin lo que se sacó y con el cheddar extra), acompañamiento y bebida del combo | **ensamblar**: las capas caen y la tapa "prensa" (scaleY 0,96→1) | número de retiro grande | glifo bolsa |
 
 - **Sin pieza propia** (ensalada, limonada de Brasa, pan sin TACC): glifo de su categoría, nunca una pieza inventada.
-- **Lo que no entra en 8 capas** se nombra en el comprobante y en `plan.omitted`.
+- **Lo que no entra en 10 capas** se nombra en el comprobante y en `plan.omitted`. Al implementar se subió de 8 a 10: con 8, el combo doble con todos sus ingredientes dejaba afuera la bebida.
 
 ### Interrupción, repetición y errores
 | Caso | Comportamiento |
@@ -97,7 +97,7 @@ Definida antes de implementar. La composición la decide `src/domain/motion-plan
 |---|---|---|
 | Carga técnica | pantalla de carga estática (`index.html`) y esqueletos por ruta con la forma del contenido (carta en grilla, seguimiento, tablero). Aparecen a los 180 ms, sin duración mínima | lo que tarde de verdad |
 | Envío simulado | en el seguimiento recién creado, "Enviado (simulado)" con un tilde que se dibuja por escala | 400 ms |
-| Aceptación | la pieza transaccional del negocio | 1,4–2,4 s |
+| Aceptación | la pieza transaccional del negocio | 1,4–2,7 s |
 | Preparación | el paso actual de la línea de tiempo (ya existe `tf-state`) | 220 ms |
 | Entrega / listo | el personaje en "festejo" (ya existe) | — |
 

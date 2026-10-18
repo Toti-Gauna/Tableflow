@@ -1,3 +1,63 @@
+# Checkpoint P5-L8 · TableFlow: motion graphics, animaciones transaccionales y temporadas
+
+> L7 (PR #9) está en `main`. La coreografía está en `motion.md` (sección P5-L8); el SDD, los cambios y los límites, en `p5-spec.md` (sección L8).
+
+## Identificación
+- Fecha real: 18/10/2026. Rama `claude/tableflow-p5-l8`, creada desde `main` (`8a67d9a`).
+- **Esquema:** 4 → **5**, con el migrador `MIGRATIONS[4]`. Solo agrega `settings.seasonWindowByBusiness`, en null.
+- **Dependencias nuevas:** ninguna.
+
+## Qué se hizo
+- **Coreografía primero:** para cada pieza se definieron propósito, disparador, estados, duración, curva, interrupción, movimiento reducido y respaldo.
+- **Plan puro** (`motion-plan.ts`): arma la composición desde el pedido real.
+  - Café: las medialunas y tazas del pedido, con dorado y vapor (el cold brew no humea).
+  - Heladería: los gustos elegidos, en orden, sobre su formato.
+  - Restaurante: plato con cubiertos; en las reservas, la mesa para N personas.
+  - Bar: tapas y bebida sin alcohol.
+  - Rápida: los ingredientes reales, sin lo que se sacó y con el cheddar extra.
+  - El alcohol nunca se dibuja; sin pieza propia se usa el glifo de su categoría.
+- **Pieza** (`OrderMoment`):
+  - se reproduce una sola vez por pestaña cuando el pedido pasa a aceptado;
+  - "Omitir" y Escape van al cierre; "Ver de nuevo" no toca el store;
+  - con movimiento reducido se monta directo el cierre;
+  - el sonido es opcional.
+- **Momentos diferenciados:** esqueletos con la forma de la carta, del seguimiento o del tablero; "Enviado (simulado)"; aceptación; preparación y listo (ya existían).
+- **Temporadas:**
+  - automática, o manual con inicio y fin (fuera del rango rige la automática);
+  - vista previa sin activar;
+  - escena propia por identidad, con movimiento ambiental de dos ciclos;
+  - acento de temporada en el juego infantil;
+  - no crean promociones y no tocan el modo claro u oscuro.
+
+## Pruebas
+- **Nuevas:**
+  - `tests/motion-plan.test.ts` (13);
+  - `tests/season-window.test.ts` (6): fechas, validación, duplicado, sin promociones y migración v4 → v5;
+  - `e2e/p5-l8.spec.ts` (15): las cinco piezas, alcohol, interrupción, doble clic, error, navegación a mitad, sonido, movimiento reducido por sistema y por consola, rendimiento, reserva, temporadas, carga y axe a 1280 y 390 px.
+- **Actualizadas, con el motivo anotado:**
+  - versión de esquema 4 → 5 en persistencia, L5, growth y la migración e2e de P3;
+  - `p3.spec.ts`: la temporada forzada ahora se elige en modo manual y se guarda con un botón.
+- No se quitó ningún test.
+- **Hallazgo de las pruebas:** el vino de Mesa Clara no tenía la etiqueta `+18` y se iba a animar. Ahora se reconoce también por su descripción.
+
+## Rendimiento medido (e2e, Chromium headless)
+- MO-FR completa: 2,8 s, **60 cuadros/s**, **ninguna tarea larga** (> 50 ms).
+- Cero animaciones vivas y cero piezas activas al terminar, al omitir y al salir de la pantalla.
+
+## Comandos y resultados
+| Comando | Exit | Resultado |
+|---|---|---|
+| `npx tsc --noEmit` | 0 | sin errores |
+| `npx vitest run` | 0 | 22 archivos, 952 pruebas (19 nuevas) |
+| `npm run build` | 0 | OK. JS inicial ~830 kB (L7: ~820 kB). La pieza transaccional (22 kB + 5 kB de CSS) va en un chunk diferido |
+| `npx playwright test` | 0 | 122 pasadas (107 + 15 de L8), 11 omitidas (capturas, solo con CAPTURE=1). Una corrida anterior tuvo 1 fallo en `p3.spec.ts` (temporada): usaba el selector viejo; se adaptó al modo manual y la corrida completa limpia pasó entera |
+| `CAPTURE=1 npx playwright test e2e/screens.spec.ts -g "P5-L8"` | 0 | 18 capturas y 5 clips WebM reales (con su cuadro de mitad de pieza) en `screens/p5-l8/`: 1,7 MB |
+
+## Siguiente tarea exacta
+PR de L8 a `main`, seguimiento hasta verde y espera del ok de Ignacio. Después, **L9**: escenas autoguiadas, guía completa y cierre Eclipse.
+
+---
+
 # Checkpoint P5-L7 · TableFlow: QR, códigos y continuidad cliente–comercio
 
 > L6 (PR #8) está en `main`. Especificación SDD, qué lleva un QR, verificación de lectura y límites: `p5-spec.md`, sección "L7".
