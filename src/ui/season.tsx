@@ -3,6 +3,7 @@ import { activeSeason, specialDay } from '../domain/season'
 import { dateKeyOf, fmtDateShort } from '../domain/time'
 import type { AppState, BusinessId } from '../domain/types'
 import { SeasonArt } from './art/season'
+import { SeasonScene } from './motion/SeasonScene'
 import { Plate } from './glyphs'
 import { Glyph } from './glyphs'
 
@@ -38,7 +39,7 @@ export function SeasonBand({ state, biz }: { state: AppState; biz: BusinessId })
   const items = s.picks[biz].map((id) => state.menuItems.find((m) => m.id === id)).filter((m) => !!m)
   return (
     <section className="season-band fx-scene" aria-labelledby="temporada" data-testid="season-band">
-      <SeasonArt id={s.id} size={132} />
+      <SeasonScene biz={biz} season={s.id} />
       <div>
         <p className="eyebrow">{s.kind === 'fecha' ? s.name : `Temporada de ${s.name.toLowerCase()}`} · {note ?? s.when}</p>
         <h2 id="temporada">{s.headline[biz]}</h2>

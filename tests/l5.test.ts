@@ -169,7 +169,7 @@ describe('NEG-05 · migración explícita desde la versión detectada', () => {
   }
   // P5-L6 sube el esquema a 4; L5 lo había llevado de 2 a 3
   it('el esquema vigente es 4 (la versión detectada antes de L5 era 2)', () => {
-    expect(SCHEMA_VERSION).toBe(4)
+    expect(SCHEMA_VERSION).toBe(5) // P5-L8: temporada con inicio y fin
   })
   it('v2 → v3 suma los tres negocios y los cuatro clásicos del café sin tocar lo existente', () => {
     const old = v2Save()
@@ -177,7 +177,7 @@ describe('NEG-05 · migración explícita desde la versión detectada', () => {
     expect(r.ok).toBe(true)
     if (!r.ok) return
     const s = r.state as AppState
-    expect(s.schemaVersion).toBe(4) // la cadena sigue hasta la versión vigente (P5-L6)
+    expect(s.schemaVersion).toBe(5) // la cadena sigue hasta la versión vigente (P5-L8)
     expect(validateState(s)).toEqual([])
     expect(s.businesses.map((b) => b.id).sort()).toEqual([...BIZ_IDS].sort())
     expect(s.businesses.find((b) => b.id === 'ritual-cafe')!.paysAtCounter).toBe(true)

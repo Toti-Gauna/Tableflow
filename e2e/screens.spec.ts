@@ -386,3 +386,129 @@ test('capturas P5-L7 (QR y códigos)', async ({ page }) => {
   await role('caja')
   await page.goto('/#/admin/codigos'); await settle(page); await page.screenshot({ path: `${OUT}/10-validar-390.png`, fullPage: true })
 })
+
+/** P5-L8 · pedido real por comandos (como la UI) para grabar la pieza de cada negocio. */
+const L8_CASES: Record<string, { loc?: string; lines: [string, number, Record<string, string[]>][]; kind: 'retiro' | 'mesa'; advance?: number }> = {
+  'ritual-cafe': { loc: 'L-RC-centro', lines: [['RC-11', 2, {}], ['RC-03', 1, { 'MG-leche': ['le-entera'] }]], kind: 'retiro' },
+  copo: { lines: [['CO-02', 1, { 'MG-CO-gustos-2': ['hg-pistacho', 'hg-frutilla'], 'MG-CO-bano': ['hb-chocolate'] }]], kind: 'retiro' },
+  brasa: { lines: [['BR-01', 1, { 'MG-BR-combo': ['bc-mediano'], 'MG-BR-acomp': ['ba-papas'], 'MG-BR-bebida': ['bb-cola'], 'MG-BR-sin': ['bs-pepino'] }]], kind: 'retiro' },
+  'mesa-clara': { lines: [['MC-12', 1, { 'MG-guarnicion': ['gu-papas-fritas'] }], ['MC-26', 1, {}]], kind: 'mesa', advance: 150 },
+  compas: { lines: [['TC-01', 1, { 'MG-TC-racion': ['tr-tapa'] }], ['TC-02', 1, {}], ['TC-09', 1, {}]], kind: 'mesa', advance: 1860 },
+}
+async function l8Order(page: import('@playwright/test').Page, biz: string): Promise<string> {
+  return page.evaluate(({ biz, c }) => {
+    const t = (window as any).__tableflow
+    t.dispatch({ type: 'session/setBusiness', businessId: biz })
+    if (c.advance) t.dispatch({ type: 'clock/advance', minutes: c.advance })
+    t.dispatch({ type: 'session/setRole', role: 'cliente-recurrente' })
+    const s0 = t.getState()
+    const loc = c.loc ?? s0.session.locationByBusiness[biz]
+    for (const [itemId, qty, selections] of c.lines) t.dispatch({ type: 'cart/add', businessId: biz, locationId: loc, itemId, qty, selections })
+    const cartId = `CART-${loc}`
+    for (const sm of c.kind === 'mesa' ? [null] : Array.from({ length: 40 }, (_, i) => 10 * 60 + 30 + i * 15)) {
+      const f = c.kind === 'mesa' ? { kind: 'mesa', tableId: s0.tables.find((x: any) => x.locationId === loc).id } : { kind: 'retiro', startMin: sm }
+      t.dispatch({ type: 'cart/setFulfillment', cartId, fulfillment: f, alias: 'Prueba' })
+      const o = t.dispatch({ type: 'order/submit', cartId, operationId: t.dispatch({ type: 'cart/begin', cartId }).data?.operationId })
+      if (o.ok) return o.data.orderId
+    }
+    return ''
+  }, { biz, c: L8_CASES[biz] })
+}
+
+/**
+ * Clip real: cuadros del screencast de Chromium (CDP) a ritmo constante de 25 cuadros/s, codificados a WebM (VP8) con el
+ * ffmpeg que ya trae el entorno de Playwright. Sin ese binario no se graba (y se avisa), nunca se descarga nada.
+ */
+async function recordClip(page: import('@playwright/test').Page, file: string, ms: number, act: () => Promise<unknown>) {
+  const { existsSync } = await import('node:fs')
+  const { spawnSync } = await import('node:child_process')
+  const ff = ['/opt/pw-browsers/ffmpeg-1011/ffmpeg-linux', '/opt/pw-browsers/ffmpeg-1013/ffmpeg-linux'].find((x) => existsSync(x))
+  const cdp = await page.context().newCDPSession(page)
+  const frames: { buf: Buffer; t: number }[] = []
+  cdp.on('Page.screencastFrame', (f: any) => {
+    frames.push({ buf: Buffer.from(f.data, 'base64'), t: f.metadata.timestamp })
+    void cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => undefined)
+  })
+  await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 85, everyNthFrame: 1 })
+  await page.waitForTimeout(150)
+  const t0 = Date.now() / 1000
+  await act()
+  await page.waitForTimeout(ms)
+  await cdp.send('Page.stopScreencast')
+  await cdp.detach()
+  if (!ff || !frames.length) return { ok: false, frames: frames.length, reason: ff ? 'sin cuadros' : 'sin ffmpeg en el entorno' }
+  // ritmo constante: cada 40 ms se repite el último cuadro recibido
+  const out: Buffer[] = []
+  const end = t0 + ms / 1000
+  for (let ts = t0, k = 0; ts <= end; ts += 0.04) {
+    while (k + 1 < frames.length && frames[k + 1].t <= ts) k++
+    out.push(frames[k].buf)
+  }
+  // el ffmpeg de Playwright solo trae el demuxer image2pipe: los cuadros JPEG van concatenados en un archivo
+  const { mkdtempSync, writeFileSync: write, rmSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const dir = mkdtempSync(`${tmpdir()}/tf-clip-`)
+  write(`${dir}/frames.mjpeg`, Buffer.concat(out))
+  write(file.replace(/\.webm$/, '-cuadro-medio.jpg'), out[Math.floor(out.length * 0.3)])
+  const r = spawnSync(ff, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', '25', '-i', `${dir}/frames.mjpeg`, '-c:v', 'vp8', '-b:v', '900k', '-pix_fmt', 'yuv420p', file])
+  rmSync(dir, { recursive: true, force: true })
+  return { ok: r.status === 0, frames: frames.length, reason: r.stderr?.toString() }
+}
+
+test('capturas y clips P5-L8 (animaciones transaccionales y temporadas)', async ({ browser }) => {
+  test.skip(!process.env.CAPTURE, 'Solo con CAPTURE=1 (npm run screens)')
+  test.setTimeout(300_000)
+  const { mkdirSync, writeFileSync } = await import('node:fs')
+  const OUT = process.env.OUT11 ?? 'docs/tableflow/screens/p5-l8'
+  mkdirSync(`${OUT}/clips`, { recursive: true })
+  const page = await browser.newPage({ viewport: { width: 820, height: 600 } })
+  await fresh(page, '/#/ritual-cafe')
+  const MO: Record<string, string> = { 'ritual-cafe': 'MO-CAF', copo: 'MO-HEL', brasa: 'MO-FR', 'mesa-clara': 'MO-RES', compas: 'MO-BAR' }
+  const log: string[] = []
+  for (const biz of Object.keys(L8_CASES)) {
+    const id = await l8Order(page, biz)
+    await page.goto(`/#/${biz}/pedido/${id}`)
+    await page.getByTestId('sent-tick').waitFor()
+    // la pieza se monta al aceptar: en el mismo cuadro se la deja centrada en la vista
+    const r = await recordClip(page, `${OUT}/clips/${MO[biz]}-${biz}.webm`, 3000, () => page.evaluate((x) => {
+      ;(window as any).__tableflow.dispatch({ type: 'order/accept', orderId: x, actor: 'encargado' })
+      return new Promise<void>((ok) => requestAnimationFrame(() => { document.querySelector('[data-testid="order-moment"]')?.scrollIntoView({ block: 'center' }); ok() }))
+    }, id))
+    log.push(`${MO[biz]} (${biz}, pedido ${id}): ${r.ok ? `${r.frames} cuadros reales entregados por Chromium; para 25 cuadros/s se repite el último recibido (no se interpola nada)` : `sin clip: ${r.reason}`}`)
+    await page.getByTestId('order-moment').screenshot({ path: `${OUT}/${MO[biz]}-${biz}-cierre.png` })
+  }
+  await page.close()
+  writeFileSync(`${OUT}/clips/README.txt`, `Clips reales grabados con Chromium (screencast CDP, 820×600), 3 s desde la aceptación del pedido.\n${log.join('\n')}\n`)
+  // reserva de Mesa Clara
+  const p2 = await browser.newPage({ viewport: { width: 1100, height: 800 } })
+  await fresh(p2, '/#/mesa-clara')
+  const r = (await p2.evaluate(() => (window as any).__tableflow.getState())).reservations.find((x: any) => x.businessId === 'mesa-clara' && x.status === 'solicitada')
+  await p2.goto(`/#/mesa-clara/reservas/${r.id}`)
+  await p2.locator('h1').waitFor()
+  await p2.evaluate((id) => (window as any).__tableflow.dispatch({ type: 'res/accept', id, actor: 'recepcion' }), r.id)
+  await p2.waitForTimeout(3000)
+  await p2.getByTestId('order-moment').screenshot({ path: `${OUT}/MO-RES-reserva-cierre.png` })
+  // temporadas: escena propia por identidad, en claro y en oscuro
+  const SIG: Record<string, string> = { 'ritual-cafe': 'invierno', copo: 'verano', 'mesa-clara': 'fiestas', compas: 'amigo', brasa: 'madre' }
+  for (const mode of ['light', 'dark'] as const) {
+    await p2.emulateMedia({ colorScheme: mode, reducedMotion: 'reduce' })
+    for (const [biz, s] of Object.entries(SIG)) {
+      await p2.evaluate(({ biz, s }) => { const t = (window as any).__tableflow; t.dispatch({ type: 'config/season', businessId: biz, season: s, actor: 'encargado' }); t.dispatch({ type: 'session/setRole', role: 'cliente-invitado' }) }, { biz, s })
+      await p2.goto(`/#/${biz}`)
+      await settle(p2)
+      if (mode === 'light' || biz === 'ritual-cafe' || biz === 'brasa') await p2.getByTestId('season-band').screenshot({ path: `${OUT}/temporada-${biz}-${s}-${mode === 'light' ? 'claro' : 'oscuro'}.png` })
+    }
+  }
+  await p2.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await p2.evaluate(() => { const t = (window as any).__tableflow; t.dispatch({ type: 'session/setBusiness', businessId: 'ritual-cafe' }); t.dispatch({ type: 'session/setRole', role: 'encargado' }) })
+  await p2.goto('/#/admin/configuracion')
+  await p2.getByTestId('season-manual').check()
+  await p2.getByTestId('season-dated').check()
+  await p2.getByTestId('season-preview-select').selectOption('otono')
+  await settle(p2)
+  await p2.locator('[aria-labelledby="exp-h"]').screenshot({ path: `${OUT}/configuracion-temporada-manual-y-vista-previa.png` })
+  await p2.goto('/#/compas/chicos')
+  await settle(p2)
+  await p2.locator('.game-head').screenshot({ path: `${OUT}/juego-con-acento-de-temporada.png` })
+  await p2.close()
+})

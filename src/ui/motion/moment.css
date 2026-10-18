@@ -1,0 +1,66 @@
+/* P5-L8 · pieza transaccional. Solo transform y opacity (lo controla e2e/motion.spec.ts). Los tiempos vienen del plan. */
+.mo { position: relative; margin-top: 16px; padding: 14px 16px 12px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); max-width: 720px; }
+.mo-title { font-size: 1.05rem; margin: 0 0 8px; }
+.mo-body { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; }
+.mo-stage { position: relative; flex: 1 1 260px; max-width: 380px; aspect-ratio: 5 / 3; overflow: hidden; border-radius: calc(var(--radius) - 2px); background: var(--surface-2, var(--bg)); }
+.mo-layer { position: absolute; transform-box: fill-box; transform-origin: 50% 100%; }
+.mo-layer > svg, .mo-layer .art { display: block; width: 100%; height: auto; }
+.mo-svg { position: absolute; bottom: 0; height: auto; overflow: visible; }
+.mo-glyph { display: grid; place-items: center; aspect-ratio: 1; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--line-strong); color: var(--ink); }
+.mo-base { position: absolute; }
+.mo-tray { left: 3%; right: 3%; bottom: 6%; height: 30%; border-radius: 50%; background: #c99a63; box-shadow: inset 0 -6px 0 #a87a45; }
+.mo-placemat > span { display: block; width: 100%; height: 100%; border-radius: 14px; background: repeating-linear-gradient(90deg, #f3e6d3 0 12px, #ecdcc4 12px 24px); border: 2px solid #d9c3a3; }
+.mo-cloth > span { display: block; width: 100%; height: 100%; border-radius: 10px; background: repeating-linear-gradient(45deg, #f6efe4 0 10px, #f0e3d0 10px 20px); border: 2px solid #c42b22; }
+.mo-cut svg { width: 100%; height: auto; }
+.mo-board .art { overflow: visible; }
+.mo-burger { transform-box: fill-box; transform-origin: 50% 100%; }
+.mo-steam { position: absolute; left: 22%; right: 22%; top: -16%; height: 40%; pointer-events: none; }
+.mo-steam i { position: absolute; bottom: 0; left: calc(18% + var(--s) * 28%); width: 10%; height: 70%; border-radius: 50%; border-left: 2px solid rgba(140, 120, 100, .55); opacity: 0; }
+.mo-dorado { position: absolute; height: 34%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 196, 84, .65), rgba(255, 196, 84, 0)); opacity: .35; pointer-events: none; z-index: 30; }
+.mo-ticket { flex: 0 1 220px; min-width: 180px; padding: 12px 14px; border-radius: 10px; background: #fffdf8; color: #2a1f18; border: 1px dashed #c8b49a; box-shadow: 0 6px 16px -10px rgba(0, 0, 0, .35); }
+.mo-ticket-title { margin: 0; font-size: .82rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #6b5a4a; }
+.mo-number { margin: 2px 0 6px; font-size: 2rem; line-height: 1; font-weight: 900; font-variant-numeric: tabular-nums; }
+.mo-ticket[data-kind='numero'] .mo-number { font-size: 2.6rem; }
+.mo-lines { list-style: none; padding: 0; margin: 0; font-size: .86rem; display: grid; gap: 2px; }
+.mo-pay { margin: 8px 0 0; padding: 4px 8px; display: inline-block; border-radius: 6px; background: #fff1cf; color: #6b4a00; font-weight: 800; font-size: .82rem; }
+.mo-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 10px; }
+.mo-skip { position: absolute; top: 10px; right: 12px; z-index: 40; }
+.mo-omitted { margin: 6px 0 0; }
+
+/* reproducción: el final de cada keyframe es igual al estado quieto, así al terminar no hay salto */
+.mo[data-phase='playing'] .mo-stage { animation: mo-enter var(--dur-state, 220ms) var(--ease) both; }
+.mo[data-phase='playing'] .mo-layer { animation: mo-drop var(--layer) cubic-bezier(.25, .8, .25, 1) var(--d) both; }
+.mo[data-phase='playing'] .mo-rise { animation-name: mo-rise; }
+.mo[data-phase='playing'] .mo-grow { animation-name: mo-grow; transform-origin: 50% 50%; }
+.mo[data-phase='playing'] .mo-fade { animation-name: mo-fade; }
+.mo[data-phase='playing'] .mo-side-l { animation-name: mo-side-l; }
+.mo[data-phase='playing'] .mo-side-r { animation-name: mo-side-r; }
+.mo[data-phase='playing'] .mo-squash { animation-name: mo-squash; }
+.mo[data-phase='playing'] .mo-fill { animation-name: mo-fill; }
+.mo[data-phase='playing'] .mo-steam i { animation: mo-steam calc(var(--motif) + var(--ending)) var(--ease) calc(var(--md) + var(--s) * 120ms) 1 both; }
+.mo[data-phase='playing'] .mo-dorado { animation: mo-dorado var(--motif) var(--ease) var(--md) both; }
+.mo[data-phase='playing'] .mo-burger { animation: mo-press var(--motif) var(--ease) var(--md) both; }
+.mo[data-phase='playing'] .mo-ticket { animation: mo-ticket var(--ending) var(--ease) var(--ed) both; }
+
+@keyframes mo-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes mo-drop { from { opacity: 0; transform: translateY(-18%); } to { opacity: 1; transform: none; } }
+@keyframes mo-rise { from { opacity: 0; transform: translateY(10%); } to { opacity: 1; transform: none; } }
+@keyframes mo-grow { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes mo-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mo-side-l { from { opacity: 0; transform: translateX(-120%); } to { opacity: 1; transform: none; } }
+@keyframes mo-side-r { from { opacity: 0; transform: translateX(120%); } to { opacity: 1; transform: none; } }
+@keyframes mo-squash { 0% { opacity: 0; transform: translateY(-14px); } 70% { opacity: 1; transform: translateY(0) scaleY(.94); } 100% { opacity: 1; transform: none; } }
+@keyframes mo-fill { from { opacity: 0; transform: scaleY(.2); } to { opacity: 1; transform: none; } }
+@keyframes mo-steam { 0% { opacity: 0; transform: translateY(4px); } 45% { opacity: .85; } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes mo-dorado { 0% { opacity: 0; } 60% { opacity: .6; } 100% { opacity: .35; } }
+@keyframes mo-press { 0% { transform: none; } 50% { transform: scaleY(.96); } 100% { transform: none; } }
+@keyframes mo-ticket { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* envío simulado: tilde breve en el seguimiento recién enviado */
+.sent-tick { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 2px 10px 2px 4px; border-radius: 999px; background: var(--ok-bg, #e7f4ea); color: var(--ok-deep, #1e5b2d); font-weight: 700; font-size: .85rem; }
+.sent-tick .tick { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--ok, #2f8a46); color: #fff; animation: mo-grow 400ms var(--ease) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mo *, .mo, .sent-tick .tick { animation: none !important; }
+}
+:root[data-motion='reduced'] .mo *, :root[data-motion='reduced'] .mo, :root[data-motion='reduced'] .sent-tick .tick { animation: none !important; }

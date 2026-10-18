@@ -197,14 +197,22 @@ export function specialDay(id: SeasonId, key: string): string | null {
 }
 
 /** Temporada vigente para un negocio: la forzada en Configuración o la automática del día simulado. */
-export function activeSeason(s: AppState, businessId: BusinessId): Season & { forced: boolean } {
+export function activeSeason(s: AppState, businessId: BusinessId): Season & { forced: boolean; window: { from: string; to: string } | null; outside: boolean } {
   const forced = s.settings.seasonByBusiness[businessId]
+  const win = s.settings.seasonWindowByBusiness?.[businessId] ?? null
   const key = dateKeyOf(s.clock.nowMs)
   if (forced && forced !== 'auto') {
+    // P5-L8: fuera del rango manual vale la automática (y se informa que hay una programada)
+    if (win && (key < win.from || key > win.to)) return { ...seasonForDate(key), forced: false, window: win, outside: true }
     const auto = seasonForDate(key)
-    return { ...S[forced], when: auto.id === forced ? auto.when : 'forzada desde Configuración', forced: true }
+    const when = win ? `del ${dmy(win.from)} al ${dmy(win.to)}` : auto.id === forced ? auto.when : 'manual, sin fecha de fin'
+    return { ...S[forced], when, forced: true, window: win, outside: false }
   }
-  return { ...seasonForDate(key), forced: false }
+  return { ...seasonForDate(key), forced: false, window: null, outside: false }
+}
+const dmy = (key: string) => {
+  const [, m, d] = parts(key)
+  return `${d}/${m}`
 }
 
 export function seasonById(id: SeasonId): Omit<Season, 'when'> {

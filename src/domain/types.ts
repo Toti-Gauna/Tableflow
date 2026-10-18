@@ -2,7 +2,7 @@ import type { BaseUnit, Unit } from './units'
 
 // P5-L5: la versión detectada era 2 (P3, regalos y temporadas); la 3 suma los tres negocios nuevos y el pago en el local.
 // P5-L6: la 4 suma costos, historial, campañas, beneficios por cliente, envíos simulados y referidos.
-export const SCHEMA_VERSION = 4 as const
+export const SCHEMA_VERSION = 5 as const
 export const STORAGE_NS = 'tableflow.demo.v1'
 
 export type BusinessId = 'mesa-clara' | 'ritual-cafe' | 'copo' | 'compas' | 'brasa'
@@ -620,6 +620,11 @@ export interface Referral extends Entity {
 export interface DemoSettings {
   /** Temática por época: automática según el reloj simulado o forzada desde Configuración. */
   seasonByBusiness: Record<BusinessId, SeasonId | 'auto'>
+  /**
+   * P5-L8: activación manual con inicio y fin (días del reloj simulado, inclusive). Fuera de ese rango, o sin temporada
+   * forzada, vale la automática. null = forzada sin fecha de fin (hasta volver a automática).
+   */
+  seasonWindowByBusiness: Record<BusinessId, { from: string; to: string } | null>
 }
 
 export interface Session {

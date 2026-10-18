@@ -87,7 +87,10 @@ test('temporada: automática por el reloj simulado (Día de la Madre) y forzada 
   await expect(page.getByTestId('season-band')).toContainText('Fue ayer')
   await setRole(page, /Encargado/)
   await page.goto('/#/admin/configuracion')
+  // P5-L8: la temporada forzada pasó a ser "manual" (con fechas opcionales) y se guarda con un botón
+  await page.getByTestId('season-manual').check()
   await page.getByTestId('cfg-season').selectOption('fiestas')
+  await page.getByTestId('season-save').click()
   await setRole(page, /invitado/)
   await page.goto('/#/mesa-clara')
   await expect(page.getByTestId('season-band')).toContainText('Fiestas en Mesa Clara')
@@ -195,7 +198,7 @@ test('migración: un guardado v1 (P2) se abre en la versión vigente sin pantall
   await page.reload()
   await expect(page.getByRole('link', { name: 'Mi pedido (1)' }).first()).toBeAttached()
   const s = await state(page)
-  expect(s.schemaVersion).toBe(4) // P5-L6: la cadena llega a la versión vigente
+  expect(s.schemaVersion).toBe(5) // P5-L8: la cadena llega a la versión vigente
   expect(s.gifts).toEqual([])
   expect(s.carts[0].lines).toHaveLength(1)
   expect(s.businesses).toHaveLength(5)

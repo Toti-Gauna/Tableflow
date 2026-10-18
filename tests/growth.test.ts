@@ -337,7 +337,7 @@ describe('MG-02 · migración v3 → v4', () => {
     expect(r.ok).toBe(true)
     if (!r.ok) return
     const m = r.state as AppState
-    expect(m.schemaVersion).toBe(4)
+    expect(m.schemaVersion).toBe(5) // P5-L8: la cadena sigue hasta la versión vigente
     expect(validateState(m)).toEqual([])
     expect(m.menuItems.find((x) => x.id === 'MC-12')!.costCents).toBe(700000)
     expect(m.menuItems.find((x) => x.id === 'RC-11')!.costCents).toBe(60000)

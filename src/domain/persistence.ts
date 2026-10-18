@@ -111,6 +111,13 @@ export const MIGRATIONS: Record<number, (old: unknown) => unknown> = {
       referrals: Array.isArray(s.referrals) ? s.referrals : [],
     }
   },
+  /** v4 → v5 (P5-L8): temporada con inicio y fin. Solo agrega el campo; lo forzado sigue forzado, sin fecha de fin. */
+  4: (old) => {
+    const s = old as Record<string, any>
+    const forced = (s.settings?.seasonByBusiness ?? {}) as Record<string, unknown>
+    const windows = Object.fromEntries(Object.keys(forced).map((b) => [b, null]))
+    return { ...s, schemaVersion: 5, settings: { ...(s.settings ?? {}), seasonWindowByBusiness: { ...windows, ...(s.settings?.seasonWindowByBusiness ?? {}) } } }
+  },
 }
 
 /** Aplica las migraciones en cadena desde la versión guardada hasta la actual. */

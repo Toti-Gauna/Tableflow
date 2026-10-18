@@ -1,3 +1,5 @@
+import { SeasonArt } from '../../../ui/art/season'
+import type { SeasonId } from '../../../domain/types'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Glyph } from '../../../ui/glyphs'
 import { sfx } from '../../../ui/sfx'
@@ -30,7 +32,7 @@ function prefersReduced() {
  * JG-FRAME · Marco común de los cinco juegos de la zona familiar: inicio con instrucciones, partida con progreso,
  * pausa (botón o Escape), éxito, reintento y salida. Sin tiempo límite, sin puntajes públicos, sin datos y sin premios.
  */
-export function GameFrame({ id, title, tagline, art, howTo, children }: { id: string; title: string; tagline: string; art: ReactNode; howTo: ReactNode[]; children: (api: GameApi) => ReactNode }) {
+export function GameFrame({ id, title, tagline, art, howTo, season, children }: { id: string; title: string; tagline: string; art: ReactNode; howTo: ReactNode[]; season?: { id: SeasonId; name: string }; children: (api: GameApi) => ReactNode }) {
   const [phase, setPhase] = useState<Phase>('inicio')
   const [level, setLevel] = useState(1)
   const [seed, setSeed] = useState(1)
@@ -75,6 +77,7 @@ export function GameFrame({ id, title, tagline, art, howTo, children }: { id: st
       <header className="game-head">
         <p className="eyebrow">Juego opcional · sin tiempo · sin datos · sin compras</p>
         <h2 id={`${id}-t`}>{title}</h2>
+        {season && <p className="game-season" data-testid="game-season"><SeasonArt id={season.id} size={32} /> Edición {season.name.toLowerCase()}</p>}
       </header>
       <p className="sr-only" role="status" aria-live="polite">{live}</p>
 

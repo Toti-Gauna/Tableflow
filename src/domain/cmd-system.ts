@@ -1,7 +1,7 @@
 import { BIZ_IDS, bizRecord } from './business'
 import { audit, byId, dup, emit, fail, nextId, ok } from './core'
 import { ensureCustomer } from './customers'
-import { atLocal, dateKeyOf, minutesOfDay, MINUTE } from './time'
+import { atLocal, dateKeyOf, minutesOfDay, MINUTE, isValidDateKey } from './time'
 import type { AppState, BusinessId, Role } from './types'
 import type { Handler } from './cmd-commerce'
 
@@ -109,9 +109,18 @@ const seasonSet: Handler = (s, c, ctx) => {
   const b = byId(s.businesses, c.businessId)
   if (!b) return fail('negocio-inexistente', 'Negocio inexistente.')
   if (!SEASONS_OK.includes(c.season)) return fail('temporada-invalida', 'Temporada inválida.')
-  if (s.settings.seasonByBusiness[b.id] === c.season) return dup()
+  // P5-L8: activación manual con inicio y fin opcionales (días del reloj simulado, inclusive)
+  const w = c.season === 'auto' || !c.window ? null : { from: String(c.window.from ?? ''), to: String(c.window.to ?? '') }
+  if (w) {
+    if (!isValidDateKey(w.from) || !isValidDateKey(w.to)) return fail('fechas-invalidas', 'Elegí una fecha de inicio y una de fin.')
+    if (w.from > w.to) return fail('fechas-invertidas', 'La fecha de fin no puede ser anterior al inicio.')
+    if (Date.parse(`${w.to}T12:00:00Z`) - Date.parse(`${w.from}T12:00:00Z`) > 366 * 86400000) return fail('fechas-largas', 'Una temporada manual dura como mucho un año.')
+  }
+  const prev = s.settings.seasonWindowByBusiness[b.id] ?? null
+  if (s.settings.seasonByBusiness[b.id] === c.season && JSON.stringify(prev) === JSON.stringify(w)) return dup()
   s.settings.seasonByBusiness[b.id] = c.season
-  audit(s, ctx, b.id, 'config.season', 'BusinessProfile', b.id, c.season === 'auto' ? 'Temporada automática (según el reloj simulado)' : `Temporada forzada: ${c.season}`)
+  s.settings.seasonWindowByBusiness[b.id] = w
+  audit(s, ctx, b.id, 'config.season', 'BusinessProfile', b.id, c.season === 'auto' ? 'Temporada automática (según el reloj simulado)' : `Temporada manual: ${c.season}${w ? ` del ${w.from} al ${w.to}` : ' sin fecha de fin'} (solo cambia la temática: no crea promociones)`)
   return ok()
 }
 

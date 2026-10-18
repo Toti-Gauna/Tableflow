@@ -12,6 +12,7 @@ import { GameFrame, type GameApi } from './games/GameFrame'
 import { Art, DondeBoard, HamburguesaBoard, HeladoBoard, MemoriaBoard, MesaBoard } from './games/boards'
 import { itemUnavailable } from '../../domain/menu'
 import { sfx } from '../../ui/sfx'
+import { activeSeason } from '../../domain/season'
 
 /** Sección para chicos: menú sugerido, memotest y "Armá tu plato". Juegos sin tiempo límite ni puntajes públicos. */
 /** Juego propio de cada negocio (JG-CAF, JG-RES, JG-HEL, JG-FR, JG-BAR): uno distinto por identidad, no un recolor. */
@@ -46,6 +47,7 @@ export function Chicos() {
   const { state, biz, locationId } = useBiz()
   const gameId = GAME_BY_BIZ[biz.id]
   const g = GAMES[gameId]
+  const season = activeSeason(state, biz.id)
   const menu = (KIDS_MENU[biz.id] ?? []).map((k) => ({ ...k, item: state.menuItems.find((m) => m.id === k.itemId)! })).filter((k) => k.item && !k.item.tags?.includes('+18'))
   return (
     <main className="kids">
@@ -60,7 +62,7 @@ export function Chicos() {
         </div>
       </section>
 
-      <GameFrame key={biz.id} id={gameId} title={g.title} tagline={g.tagline} art={<Art k={g.art} size={180} />} howTo={g.howTo}>
+      <GameFrame key={biz.id} id={gameId} season={{ id: season.id, name: season.name }} title={g.title} tagline={g.tagline} art={<Art k={g.art} size={180} />} howTo={g.howTo}>
         {(api) => <g.Board api={api} />}
       </GameFrame>
 

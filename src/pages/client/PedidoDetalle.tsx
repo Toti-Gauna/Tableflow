@@ -10,6 +10,7 @@ import { act, Callout, DemoHint, Empty, ReasonDialog, StatusBadge } from '../../
 import { ORDER_LABEL, sedeShort, STATION_LABEL } from '../../ui/format'
 import { fmtARS } from '../../domain/money'
 import { QrDisclosure } from '../../ui/Qr'
+import { OrderMomentFor } from '../../ui/motion/Moments'
 import { hhmm, minutesOfDay, HOUR } from '../../domain/time'
 import type { AppState, Order, OrderStatus } from '../../domain/types'
 
@@ -108,6 +109,7 @@ export function PedidoDetalle() {
             {STATUS_COPY[o.status].text(o)}
             {o.status === 'listo' && notice && notice.status !== 'fallida' && <span className="sh-note"> {notice.detail}</span>}
           </p>
+          {o.status === 'enviado' && <p className="sent-tick" data-testid="sent-tick"><span className="tick" aria-hidden="true">✓</span> Enviado (simulado)</p>}
         </div>
         {o.kind === 'retiro' && !['rechazado', 'cancelado'].includes(o.status) && (
           <div className="pickup-code" aria-label={`Código de retiro ${o.pickupCode}`}>
@@ -116,6 +118,7 @@ export function PedidoDetalle() {
           </div>
         )}
       </section>
+      <OrderMomentFor order={o} />
       {!['rechazado', 'cancelado', 'cerrado'].includes(o.status) && <QrDisclosure businessId={o.businessId} kind="pedido" reference={o.id} title={`Pedido ${o.id}`} caption={o.kind === 'retiro' ? `Retiro · N.º ${o.pickupCode}` : 'En la mesa'} summary="Mostrar el QR de este pedido" />}
       <OrderTimeline o={o} />
       {(o.status === 'rechazado' || o.status === 'cancelado') && <Callout tone="err" role="alert">{ORDER_LABEL[o.status].label}: {o.reason ?? 'sin motivo registrado'}.</Callout>}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp, resetDemo, setPrefs, useSnapshot } from '../../store'
 import { activeSeason, SEASON_IDS, SEASON_NAME } from '../../domain/season'
 import { SeasonArt } from '../../ui/art/season'
+import { SeasonScene, SIGNATURE, SIGNATURE_LABEL } from '../../ui/motion/SeasonScene'
 import { sfx } from '../../ui/sfx'
 import { PageHead } from '../../ui/Shell'
 import { act, Callout, ConfirmDialog, ErrorText } from '../../ui/kit'
@@ -22,7 +23,6 @@ export function AdminConfig() {
   const [times, setTimes] = useState<Record<string, { s: string; e: string }>>({})
   const { prefs } = useSnapshot()
   const season = activeSeason(state, bizId)
-  const seasonSel = state.settings.seasonByBusiness[bizId]
 
   const save = () => {
     const o = act({ type: 'config/set', businessId: bizId, patch: { serviceMinutes: Number(f.serviceMinutes), bufferMinutes: Number(f.bufferMinutes), maxPartyAuto: Number(f.maxPartyAuto), pickupPerSlot: Number(f.pickupPerSlot) } }, 'Configuración guardada')
@@ -85,22 +85,7 @@ export function AdminConfig() {
         </section>
         <section className="card" aria-labelledby="exp-h" data-season={season.id}>
           <h2 id="exp-h">Experiencia del cliente</h2>
-          <div className="season-preview">
-            <SeasonArt id={season.id} size={84} />
-            <div>
-              <p className="eyebrow" style={{ margin: 0 }}>Temporada {season.forced ? 'forzada' : 'automática'}</p>
-              <p className="season-name">{season.name}</p>
-              <p className="small muted" style={{ margin: 0 }}>{season.when} · {season.headline[bizId]}</p>
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="cfg-season">Temática por época</label>
-            <select id="cfg-season" value={seasonSel} data-testid="cfg-season" onChange={(e) => act({ type: 'config/season', businessId: bizId, season: e.target.value as SeasonId | 'auto' }, e.target.value === 'auto' ? 'Temporada automática según el reloj simulado' : `Temporada: ${SEASON_NAME[e.target.value as SeasonId]}`)}>
-              <option value="auto">Automática (según el reloj simulado)</option>
-              {SEASON_IDS.map((s) => <option key={s} value={s}>{SEASON_NAME[s]}</option>)}
-            </select>
-            <p className="hint">Cambia el acento, el ornamento, la propuesta del inicio y las tarjetas de regalo. No cambia precios ni la carta.</p>
-          </div>
+          <SeasonSettings />
           <h3>Sonidos (apagados por defecto)</h3>
           <label className="choice"><input type="checkbox" checked={prefs.uiSounds} onChange={(e) => setPrefs({ uiSounds: e.target.checked })} data-testid="cfg-sfx" /> Sonidos de interfaz en este navegador (agregar, enviar, regalo, sello)</label>
           <label className="choice"><input type="checkbox" checked={prefs.kdsChime} onChange={(e) => setPrefs({ kdsChime: e.target.checked })} data-testid="cfg-kds-chime" /> Aviso sonoro de comandas nuevas en Cocina / barra</label>
@@ -133,5 +118,80 @@ export function AdminConfig() {
         </fieldset>
       </ConfirmDialog>
     </>
+  )
+}
+
+/**
+ * P5-L8 · Temporada: automática (calendario) o manual con inicio y fin; vista previa sin activar nada. Independiente del
+ * modo claro u oscuro y sin efecto comercial: no crea promociones ni cambia precios.
+ */
+function SeasonSettings() {
+  const state = useApp()
+  const bizId = state.session.businessId
+  const season = activeSeason(state, bizId)
+  const sel = state.settings.seasonByBusiness[bizId]
+  const win = state.settings.seasonWindowByBusiness[bizId]
+  const [mode, setMode] = useState<'auto' | 'manual'>(sel === 'auto' ? 'auto' : 'manual')
+  const [pick, setPick] = useState<SeasonId>(sel === 'auto' ? SIGNATURE[bizId][0] : sel)
+  const [dated, setDated] = useState(!!win)
+  const [from, setFrom] = useState(win?.from ?? '')
+  const [to, setTo] = useState(win?.to ?? '')
+  const [err, setErr] = useState('')
+  const [preview, setPreview] = useState<SeasonId>(season.id)
+  const saveManual = () => {
+    const o = act({ type: 'config/season', businessId: bizId, season: pick, window: dated ? { from, to } : null }, `Temporada manual: ${SEASON_NAME[pick]}${dated ? ` del ${from} al ${to}` : ''}`)
+    setErr(o.ok ? '' : o.message)
+  }
+  const toAuto = () => {
+    setMode('auto')
+    setErr('')
+    if (sel !== 'auto') act({ type: 'config/season', businessId: bizId, season: 'auto' }, 'Temporada automática según el reloj simulado')
+  }
+  return (
+    <div className="season-settings">
+      <div className="season-preview">
+        <SeasonArt id={season.id} size={84} />
+        <div>
+          <p className="eyebrow" style={{ margin: 0 }}>Rige hoy · {season.forced ? 'manual' : 'automática'}</p>
+          <p className="season-name" data-testid="season-now">{season.name}</p>
+          <p className="small muted" style={{ margin: 0 }}>{season.when} · {season.headline[bizId]}</p>
+          {season.outside && win && <p className="small" style={{ margin: '4px 0 0' }} data-testid="season-scheduled">Programada: {SEASON_NAME[sel as SeasonId]} del {win.from} al {win.to}. Fuera de esas fechas rige la automática.</p>}
+        </div>
+      </div>
+      <fieldset className="season-mode">
+        <legend>Temática por época</legend>
+        <label className="choice"><input type="radio" name="season-mode" checked={mode === 'auto'} onChange={toAuto} data-testid="season-auto" /> Automática (según el calendario y el reloj simulado)</label>
+        <label className="choice"><input type="radio" name="season-mode" checked={mode === 'manual'} onChange={() => setMode('manual')} data-testid="season-manual" /> Manual, con inicio y fin</label>
+      </fieldset>
+      {mode === 'manual' && (
+        <div className="season-manual">
+          <div className="field">
+            <label htmlFor="cfg-season">Temporada</label>
+            <select id="cfg-season" value={pick} onChange={(e) => setPick(e.target.value as SeasonId)} data-testid="cfg-season">
+              {SEASON_IDS.map((s) => <option key={s} value={s}>{SEASON_NAME[s]}</option>)}
+            </select>
+          </div>
+          <label className="choice"><input type="checkbox" checked={dated} onChange={(e) => setDated(e.target.checked)} data-testid="season-dated" /> Con fecha de inicio y fin</label>
+          {dated && (
+            <div className="field-row">
+              <div className="field"><label htmlFor="season-from">Inicio</label><input id="season-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} data-testid="season-from" /></div>
+              <div className="field"><label htmlFor="season-to">Fin</label><input id="season-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} data-testid="season-to" /></div>
+            </div>
+          )}
+          <button className="btn" type="button" onClick={saveManual} data-testid="season-save">Guardar temporada</button>
+          <ErrorText id="season-err">{err}</ErrorText>
+        </div>
+      )}
+      <p className="hint">Cambia la composición, el arte y el movimiento de cada identidad, la propuesta del inicio y las tarjetas de regalo. No cambia precios, la carta ni el modo claro u oscuro, y no crea promociones.</p>
+      <div className="season-preview-box">
+        <div className="field">
+          <label htmlFor="season-prev">Vista previa (no activa nada)</label>
+          <select id="season-prev" value={preview} onChange={(e) => setPreview(e.target.value as SeasonId)} data-testid="season-preview-select">
+            {SEASON_IDS.map((s) => <option key={s} value={s}>{SEASON_NAME[s]}{SIGNATURE[bizId].includes(s) ? ` · ${SIGNATURE_LABEL[bizId]}` : ''}</option>)}
+          </select>
+        </div>
+        <SeasonScene key={preview} biz={bizId} season={preview} />
+      </div>
+    </div>
   )
 }

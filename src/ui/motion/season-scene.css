@@ -1,0 +1,41 @@
+/* P5-L8 · escena de temporada por identidad. Solo transform/opacity; el ambiente dura dos ciclos y se detiene. */
+.season-scene { position: relative; width: 100%; max-width: 300px; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--surface) 75%, transparent); }
+.season-scene .ss-item { position: absolute; display: block; }
+.season-scene .ss-item svg { display: block; width: 100%; height: auto; }
+.ss-surface { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; }
+.ss-wood { background: #a87245; box-shadow: inset 0 6px 0 #c48b55; }
+.ss-counter { background: #f3e9dc; box-shadow: inset 0 5px 0 #e2d2bd; }
+.ss-cloth { background: repeating-linear-gradient(90deg, #f6efe4 0 12px, #efe2cf 12px 24px); box-shadow: inset 0 4px 0 #c42b22; }
+.ss-tray { background: #d6261d; box-shadow: inset 0 5px 0 #a81c15; }
+.ss-accent { position: absolute; right: 6px; top: 6px; opacity: .95; }
+.ss-steam-wrap { position: absolute; height: 26%; }
+.ss-steam { position: absolute; inset: 0; }
+.ss-steam i { position: absolute; bottom: 0; left: calc(15% + var(--s) * 30%); width: 12%; height: 100%; border-radius: 50%; border-left: 2px solid rgba(120, 100, 80, .55); opacity: .5; }
+.ss-leaves { position: absolute; left: 0; top: 0; width: 100%; height: 60%; }
+.ss-sun-wrap { position: absolute; left: 6%; top: 6%; width: 18%; }
+.ss-sun-wrap svg, .ss-notes-wrap svg, .ss-bag { display: block; width: 100%; height: auto; }
+.ss-lights { position: absolute; left: 0; top: 2%; width: 100%; height: auto; }
+.ss-notes-wrap { position: absolute; left: 40%; top: 0; width: 28%; }
+.ss-spin, .ss-fall, .ss-float, .ss-twinkle { transform-box: fill-box; transform-origin: 50% 50%; }
+
+.season-scene.is-live .ss-steam i { animation: ss-steam 1.8s var(--ease) calc(var(--s) * 200ms) 2 both; }
+.season-scene.is-live .ss-fall { animation: ss-fall 2.4s var(--ease) calc(var(--s) * 300ms) 2 both; }
+.season-scene.is-live .ss-spin { animation: ss-spin 6s linear 0s 2; }
+.season-scene.is-live .ss-twinkle { animation: ss-twinkle 1.4s var(--ease) calc(var(--s) * 240ms) 2; }
+.season-scene.is-live .ss-float { animation: ss-float 2s var(--ease) calc(var(--s) * 260ms) 2; }
+.season-scene.is-live .ss-bob { animation: ss-bob 1.6s var(--ease) 0s 2; }
+@keyframes ss-steam { 0% { opacity: 0; transform: translateY(4px); } 50% { opacity: .8; } 100% { opacity: .5; transform: none; } }
+@keyframes ss-fall { 0% { opacity: 0; transform: translateY(-12px) rotate(-20deg); } 100% { opacity: 1; transform: none; } }
+@keyframes ss-spin { to { transform: rotate(36deg); } }
+@keyframes ss-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+@keyframes ss-float { 0% { opacity: .3; transform: translateY(6px); } 100% { opacity: 1; transform: none; } }
+@keyframes ss-bob { 0%, 100% { transform: none; } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .season-scene * { animation: none !important; } }
+:root[data-motion='reduced'] .season-scene * { animation: none !important; }
+.season-mode { border: 0; padding: 0; margin: 8px 0; }
+.season-mode legend { font-weight: 800; margin-bottom: 4px; }
+.season-manual { padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--line-strong); margin-bottom: 10px; display: grid; gap: 6px; justify-items: start; }
+.season-manual .field-row { display: flex; flex-wrap: wrap; gap: 0 14px; }
+.season-preview-box { display: grid; gap: 8px; margin: 10px 0 16px; }
+.season-band .season-scene { width: min(300px, 40vw); }
+@media (max-width: 640px) { .season-band .season-scene { width: 100%; } }
