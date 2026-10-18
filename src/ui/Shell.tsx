@@ -307,12 +307,12 @@ export function DemoDock() {
         className="dock-toggle"
         aria-expanded={open}
         aria-controls="dock-panel"
-        aria-label={`Controles de la demo (reloj ${dayShort} ${hhmm(minutesOfDay(now))})`}
+        aria-label={`Demo ${dayShort} ${hhmm(minutesOfDay(now))}: controles de la demo`}
         data-testid="dock-toggle"
         onClick={() => setOpen((v) => !v)}
       >
         <Glyph name="sliders" size={16} />
-        <span>Demo</span>
+        <span>Demo</span>{' '}
         <span className="when" aria-hidden="true">{dayShort} {hhmm(minutesOfDay(now))}</span>
         <Glyph name="chevron" size={14} className="chev" />
       </button>

@@ -141,7 +141,8 @@ Leyenda: E especificado · C construido · P probado · — pendiente · B bloqu
 | Animación transaccional (L8) | C P · bandeja: medialunas, dorado y vapor | C P · plato con cubiertos; mesa en la reserva | C P · bochas de los gustos elegidos | C P · tabla y bebida sin alcohol | C P · hamburguesa con los ingredientes reales |
 | Temporada propia (L8) | C P · merienda de invierno | C P · mesa de celebración | C P · verano en el mostrador | C P · noche de música | C P · bolsa familiar |
 | Escenas y guía (L9) | C P · WhatsApp, QR de mesa, retiro con pago en local, campaña | C P · llamada con reserva, QR de mesa, campaña | C P · WhatsApp, retiro con pago en local | C P · llamada de grupo grande a revisión, QR de mesa | C P · WhatsApp, retiro con pago en local |
-| QA y kit (L10) | E | E | E | E | E |
+| QA (L10a) | C P · axe en 165 pantallas, Lighthouse | C P | C P | C P | C P |
+| Tráiler y kit comercial (L10b, L10c) | E | E | E | E | E |
 
 **Aceptación de L1**: cada requisito nuevo tiene ID y lote; ningún negocio queda reducido a una portada o a una escena (cada uno tiene al menos un RP y un RO de punta a punta).
 
