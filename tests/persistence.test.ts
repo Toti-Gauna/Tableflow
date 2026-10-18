@@ -76,7 +76,7 @@ describe('Persistencia local tableflow.demo.v1', () => {
   })
   it('versión futura o sin migrador: no se pisa; se pide migrar o reiniciar', () => {
     const st = new FakeStorage()
-    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 5, savedAt: 0, state: {} }))
+    st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 6, savedAt: 0, state: {} })) // P5-L8: la vigente es 5
     expect(loadState(st).kind).toBe('future')
     st.data.set(KEY_STATE, JSON.stringify({ schemaVersion: 0, savedAt: 0, state: {} }))
     expect(loadState(st).kind).toBe('needs-migration')
@@ -92,7 +92,7 @@ describe('Persistencia local tableflow.demo.v1', () => {
     const r = loadState(st)
     expect(r.kind).toBe('ok')
     if (r.kind !== 'ok') return
-    expect(r.state.schemaVersion).toBe(4)
+    expect(r.state.schemaVersion).toBe(5) // P5-L8: la cadena llega a la versión vigente
     expect(r.state.gifts).toEqual([])
     expect(r.state.settings.seasonByBusiness).toEqual({ 'mesa-clara': 'auto', 'ritual-cafe': 'auto', copo: 'auto', compas: 'auto', brasa: 'auto' })
     expect(r.state.carts[0].lines[0]).toMatchObject({ itemId: 'RC-01', qty: 2 })

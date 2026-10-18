@@ -2041,3 +2041,12 @@ dialog.role-intro { max-width: min(720px, calc(100vw - 24px)); }
 .benefit-box { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
 .benefit-box input { flex: 1; min-width: 0; min-height: 40px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--line-strong); background: var(--field); color: var(--ink); font: inherit; }
 .benefit-box .linklike { margin-right: 10px; font-weight: 700; }
+.game-season { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 0; font-weight: 700; font-size: .9rem; } /* P5-L8 · acento de temporada del juego */
+/* P5-L8 · esqueletos con la forma del contenido (sin duración mínima: aparecen solo si la carga tarda) */
+.route-loader .sk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 8px; }
+.route-loader .sk-grid span { height: 150px; border-radius: 14px; }
+.route-loader .sk-detail { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+.route-loader .sk-detail .sk-hero { flex: 1 1 280px; height: 140px; border-radius: 16px; }
+.route-loader .sk-detail .sk-ticket { flex: 0 1 200px; height: 140px; border-radius: 10px; }
+.route-loader .sk-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+.route-loader .sk-cols span { height: 220px; border-radius: 12px; }

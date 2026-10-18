@@ -212,7 +212,7 @@ export function baseState(fixtureId: FixtureId): AppState {
     audit: [],
     campaignPreviews: [],
     gifts: [],
-    settings: { seasonByBusiness: bizRecord(() => 'auto' as const) },
+    settings: { seasonByBusiness: bizRecord(() => 'auto' as const), seasonWindowByBusiness: bizRecord(() => null) },
     customerHistory: [],
     campaigns: [],
     benefits: [],

@@ -1,3 +1,4 @@
+import { isValidDateKey } from './time'
 import { SCHEMA_VERSION, type AppState } from './types'
 
 const ENTITY_COLLECTIONS = [
@@ -26,6 +27,13 @@ export function validateState(input: unknown): string[] {
   if (!isObj(s.session) || !isObj(s.session.locationByBusiness) || !isObj(s.session.customerByBusiness)) err('La sesión de vista es inválida.')
   for (const k of [...ENTITY_COLLECTIONS, ...PLAIN_COLLECTIONS]) if (!Array.isArray(s[k])) err(`Falta la colección ${k}.`)
   if (!isObj(s.settings) || !isObj(s.settings.seasonByBusiness)) err('Faltan los ajustes de la demo (temporada).')
+  else if (!isObj(s.settings.seasonWindowByBusiness)) err('Faltan las fechas de temporada de la demo.')
+  else {
+    for (const [b, w] of Object.entries(s.settings.seasonWindowByBusiness as Record<string, any>)) {
+      if (w === null) continue
+      if (!isObj(w) || !isValidDateKey(w.from) || !isValidDateKey(w.to) || w.from > w.to) err(`Fechas de temporada inválidas en ${b}.`)
+    }
+  }
   if (errors.length) return errors
 
   const st = s as AppState
